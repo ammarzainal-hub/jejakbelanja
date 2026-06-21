@@ -55,8 +55,8 @@ function getCategories() {
 function getTransactions(month, year) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 4).getValues()
-    .map(function(row, index) { return { rowId: index + 2, date: row[0], amount: row[1], category: row[2], note: row[3] }; })
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues()
+.map(function(row, index) { return { rowId: index + 2, date: row[0], amount: row[1], category: row[2], note: row[3], payment: row[4] }; })
     .filter(function(item) { var d = new Date(item.date); return (month ? (d.getMonth()+1) == month : true) && (d.getFullYear() == year); })
     .map(function(item) { return Object.assign({}, item, { date: item.date instanceof Date ? Utilities.formatDate(item.date,'GMT+8','yyyy-MM-dd') : item.date }); });
 }
@@ -96,7 +96,7 @@ function getCategoryTrend(month, year) {
     };
   });
   
-  var allData = sheet.getRange(2, 1, sheet.getLastRow() - 1, 4).getValues();
+  var allData = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues();
   
   allData.forEach(function(row) {
     var d = new Date(row[0]);
@@ -142,9 +142,10 @@ function addTransaction(data) {
   var safeAmount = parseFloat(data.amount);
   var safeCategory = sanitize(data.category, 100);
   var safeNote = sanitize(data.note, 500);
+  var safePayment = sanitize(data.payment, 50) || '💵 Cash';
   
   SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET)
-    .appendRow([new Date(data.date), safeAmount, safeCategory, safeNote]);
+.appendRow([new Date(data.date), safeAmount, safeCategory, safeNote, safePayment]);
   return { status: 'success', message: 'Transaksi berjaya ditambah' };
 }
 
@@ -159,10 +160,11 @@ function updateTransaction(data) {
   var safeAmount = parseFloat(data.amount);
   var safeCategory = sanitize(data.category, 100);
   var safeNote = sanitize(data.note, 500);
+  var safePayment = sanitize(data.payment, 50) || '💵 Cash';
   
   SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET)
-    .getRange(safeRowId, 1, 1, 4)
-    .setValues([[new Date(data.date), safeAmount, safeCategory, safeNote]]);
+    .getRange(safeRowId, 1, 1, 5)
+.setValues([[new Date(data.date), safeAmount, safeCategory, safeNote, safePayment]]);
   return { status: 'success', message: 'Transaksi berjaya dikemaskini' };
 }
 
@@ -187,15 +189,16 @@ function addBulkTransactions(rows) {
     if (!r.amount || parseFloat(r.amount) <= 0) throw new Error('Baris ' + (i+1) + ': Amaun mesti lebih dari 0');
     if (!r.category) throw new Error('Baris ' + (i+1) + ': Kategori diperlukan');
     
-    dataToAppend.push([
-      new Date(r.date),
-      parseFloat(r.amount),
-      sanitize(r.category, 100),
-      sanitize(r.note, 500)
-    ]);
+dataToAppend.push([
+  new Date(r.date),
+  parseFloat(r.amount),
+  sanitize(r.category, 100),
+  sanitize(r.note, 500),
+  sanitize(r.payment, 50) || '💵 Cash'
+]);
   }
   
-  sheet.getRange(sheet.getLastRow() + 1, 1, dataToAppend.length, 4).setValues(dataToAppend);
+  sheet.getRange(sheet.getLastRow() + 1, 1, dataToAppend.length, 5).setValues(dataToAppend);
   return { status: 'success', message: dataToAppend.length + ' transaksi berjaya ditambah' };
 }
 

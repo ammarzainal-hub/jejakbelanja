@@ -274,7 +274,7 @@
       <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden overflow-x-auto">
         <table class="w-full text-left text-sm min-w-[600px]">
           <thead class="bg-slate-50 text-slate-400 font-black uppercase text-[9px] tracking-widest border-b">
-            <tr><th class="px-6 py-5 text-center w-32">Aksi</th><th class="px-6 py-5 sortable text-center" onclick="handleSort('date')">Tarikh <span id="sort-date">&#x25BC;</span></th><th class="px-6 py-5 sortable" onclick="handleSort('category')">Kategori <span id="sort-category"></span></th><th class="px-6 py-5 sortable text-center" onclick="handleSort('note')">Nota <span id="sort-note"></span></th><th class="px-6 py-5 text-right sortable" onclick="handleSort('amount')">Amaun <span id="sort-amount"></span></th></tr>
+           <tr><th class="px-6 py-5 text-center w-32">Aksi</th><th class="px-6 py-5 sortable text-center" onclick="handleSort('date')">Tarikh <span id="sort-date">▼</span></th><th class="px-6 py-5 sortable" onclick="handleSort('category')">Kategori <span id="sort-category"></span></th><th class="px-6 py-5 text-center">Bayar</th><th class="px-6 py-5 sortable text-center" onclick="handleSort('note')">Nota <span id="sort-note"></span></th><th class="px-6 py-5 text-right sortable" onclick="handleSort('amount')">Amaun <span id="sort-amount"></span></th></tr>
           </thead>
           <tbody id="transactionBody" class="divide-y divide-slate-50"></tbody>
         </table>
@@ -388,10 +388,20 @@
       <h3 id="modalTitle" class="text-xl font-black mb-8 text-center uppercase text-slate-800 tracking-widest">Rekod Belanja</h3>
       <form id="expenseForm" onsubmit="handleFormSubmit(this); return false;" class="space-y-4">
         <input type="hidden" id="editRowId" name="rowId">
-        <input type="date" id="formDate" name="date" required class="w-full rounded-2xl border-slate-100 bg-slate-50 p-4 font-bold outline-none">
-        <input type="number" id="formAmount" name="amount" step="0.01" required placeholder="0.00" class="w-full rounded-2xl border-slate-100 bg-slate-50 p-4 font-black text-lg outline-none text-emerald-600">
-        <select id="catDropdown" name="category" class="w-full rounded-2xl border-slate-100 bg-slate-50 p-4 text-xs font-bold outline-none"></select>
-        <input type="text" id="formNote" name="note" placeholder="..." class="w-full rounded-2xl border-slate-100 bg-slate-50 p-4 text-sm outline-none font-medium">
+     <input type="date" id="formDate" name="date" required class="w-full rounded-2xl border-slate-100 bg-slate-50 p-4 font-bold outline-none">
+
+<select id="catDropdown" name="category" class="w-full rounded-2xl border-slate-100 bg-slate-50 p-4 text-xs font-bold outline-none"></select>
+
+<select id="formPayment" name="payment" class="w-full rounded-2xl border-slate-100 bg-slate-50 p-4 text-sm font-bold outline-none">
+  <option value="💳 CC">💳 CC</option>
+  <option value="𖣯 QR">𖣯 QR</option>
+  <option value="🏦 Transfer">🏦 Transfer</option>
+  <option value="💵 Cash" selected>💵 Cash</option>
+</select>
+
+<input type="number" id="formAmount" name="amount" step="0.01" required placeholder="0.00" class="w-full rounded-2xl border-slate-100 bg-slate-50 p-4 font-black text-lg outline-none text-emerald-600">
+
+<input type="text" id="formNote" name="note" placeholder="..." class="w-full rounded-2xl border-slate-100 bg-slate-50 p-4 text-sm outline-none font-medium">
         <div class="flex gap-4 pt-4"><button type="button" onclick="toggleModal('expenseModal', false)" class="flex-1 py-4 text-slate-400 font-bold uppercase text-[10px] tracking-widest text-center">Batal</button><button type="submit" class="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg uppercase text-[10px] tracking-widest text-center">Simpan</button></div>
       </form>
     </div>
@@ -1353,10 +1363,10 @@ function confirmPetrolDelete(id) {
     function addBulkRow() {
       var con = document.getElementById('bulkRowsContainer');
       var div = document.createElement('div');
-      div.className = 'bulk-row grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 p-4 rounded-2xl border mb-3 text-left';
+      div.className = 'bulk-row grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-2xl border mb-3 text-left';
       var opts = '';
       globalCategories.forEach(function(c) { opts += '<option value="' + c.name + '">' + c.icon + ' ' + c.name + '</option>'; });
-      div.innerHTML = '<div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Kategori</label><select class="bulk-cat w-full rounded-xl border p-3 text-xs font-bold">' + opts + '</select></div><div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">RM</label><input type="number" step="0.01" placeholder="0.00" class="bulk-amt w-full rounded-xl border p-3 font-black text-sm"></div><div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Nota</label><div class="flex gap-2"><input type="text" placeholder="..." class="bulk-note w-full rounded-xl border p-3 text-xs"><button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-red-400 font-bold text-xl">x</button></div></div>';
+     div.innerHTML = '<div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Kategori</label><select class="bulk-cat w-full rounded-xl border p-3 text-xs font-bold">' + opts + '</select></div><div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Bayar</label><select class="bulk-pay w-full rounded-xl border p-3 text-xs font-bold"><option>💳 CC</option><option>𖣯 QR</option><option>🏦 Transfer</option><option selected>💵 Cash</option></select></div><div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">RM</label><input type="number" step="0.01" placeholder="0.00" class="bulk-amt w-full rounded-xl border p-3 font-black text-sm"></div><div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Nota</label><div class="flex gap-2"><input type="text" placeholder="..." class="bulk-note w-full rounded-xl border p-3 text-xs"><button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-red-400 font-bold text-xl">x</button></div></div>';
       con.appendChild(div);
     }
 
@@ -1430,6 +1440,7 @@ function confirmPetrolDelete(id) {
       document.getElementById('formDate').value = it.date;
       document.getElementById('formAmount').value = it.amount;
       document.getElementById('catDropdown').value = it.category;
+      document.getElementById('formPayment').value = it.payment || '💵 Cash';
       document.getElementById('formNote').value = it.note;
       toggleModal('expenseModal', true);
     }
@@ -1441,7 +1452,7 @@ function confirmPetrolDelete(id) {
       submitBtn.innerText = 'MENYIMPAN...';
       showLoader(true);
       
-      var d = { rowId: f.rowId.value, date: f.date.value, amount: f.amount.value, category: f.category.value, note: f.note.value };
+    var d = { rowId: f.rowId.value, date: f.date.value, amount: f.amount.value, category: f.category.value, note: f.note.value, payment: f.payment.value };
       var a = d.rowId ? 'updateTransaction' : 'addTransaction';
       
       google.script.run
@@ -1465,7 +1476,7 @@ function confirmPetrolDelete(id) {
       var rows = [];
       document.querySelectorAll('.bulk-row').forEach(function(r) {
         var a = r.querySelector('.bulk-amt').value;
-        if (a && parseFloat(a) > 0) rows.push({ date: date, category: r.querySelector('.bulk-cat').value, amount: a, note: r.querySelector('.bulk-note').value });
+      if (a && parseFloat(a) > 0) rows.push({ date: date, category: r.querySelector('.bulk-cat').value, amount: a, note: r.querySelector('.bulk-note').value, payment: r.querySelector('.bulk-pay').value });
       });
       if (!rows.length) { showToast('Tiada data untuk disimpan', 'info'); return; }
       showLoader(true);
@@ -1500,16 +1511,17 @@ function confirmPetrolDelete(id) {
       data.forEach(function(item) {
         total += parseFloat(item.amount);
         var d = item.date.split('-');
-        html += '<tr class="hover:bg-slate-50 transition-colors text-left">';
-        html += '<td class="px-6 py-4"><div class="flex justify-center gap-6">';
-        html += '<button onclick="openEditModal(' + item.rowId + ')" class="action-btn text-slate-300 hover:text-emerald-600 transition-all transform hover:scale-125"><svg xmlns="http://www.w3.org/2000/svg" class="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg></button>';
-        html += '<button onclick="confirmDelete(' + item.rowId + ')" class="action-btn text-slate-300 hover:text-red-600 transition-all transform hover:scale-125"><svg xmlns="http://www.w3.org/2000/svg" class="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>';
-        html += '</div></td>';
-        html += '<td class="px-6 py-4 text-[10px] font-black text-slate-400 font-mono tracking-tighter text-center">' + d[2] + '/' + d[1] + '/' + d[0].substr(-2) + '</td>';
-        html += '<td class="px-6 py-4 text-left"><span class="bg-emerald-50 text-emerald-700 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest">' + item.category + '</span></td>';
-        html += '<td class="px-6 py-4 text-slate-500 font-medium text-xs text-center">' + (item.note || '-') + '</td>';
-        html += '<td class="px-6 py-4 text-right font-black text-slate-900 text-sm">RM ' + fRM(item.amount) + '</td>';
-        html += '</tr>';
+html += '<tr class="hover:bg-slate-50 transition-colors text-left">';
+html += '<td class="px-6 py-4"><div class="flex justify-center gap-6">';
+html += '<button onclick="openEditModal(' + item.rowId + ')" class="action-btn text-slate-300 hover:text-emerald-600 transition-all transform hover:scale-125"><svg xmlns="http://www.w3.org/2000/svg" class="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg></button>';
+html += '<button onclick="confirmDelete(' + item.rowId + ')" class="action-btn text-slate-300 hover:text-red-600 transition-all transform hover:scale-125"><svg xmlns="http://www.w3.org/2000/svg" class="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>';
+html += '</div></td>';
+html += '<td class="px-6 py-4 text-[10px] font-black text-slate-400 font-mono tracking-tighter text-center">' + d[2] + '/' + d[1] + '/' + d[0].substr(-2) + '</td>';
+html += '<td class="px-6 py-4 text-left"><span class="bg-emerald-50 text-emerald-700 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest">' + item.category + '</span></td>';
+html += '<td class="px-6 py-4 text-center text-sm">' + (item.payment || '💵 Cash') + '</td>';
+html += '<td class="px-6 py-4 text-slate-500 font-medium text-xs text-center">' + (item.note || '-') + '</td>';
+html += '<td class="px-6 py-4 text-right font-black text-slate-900 text-sm">RM ' + fRM(item.amount) + '</td>';
+html += '</tr>';
       });
       tbody.innerHTML = html;
       document.getElementById('totalAmount').innerText = fRM(total);
@@ -1582,4 +1594,4 @@ function executeDelete() {
 document.getElementById('deleteConfirmBtn').addEventListener('click', executeDelete);
   </script>
 </body>
-</html>      
+</html>
