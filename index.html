@@ -317,10 +317,17 @@
   
   <!-- PAGE: BELANJA -->
   <div id="page-expense" class="hidden">
-    <header class="bg-white border-b sticky top-0 z-20 shadow-sm px-6 py-4 text-center sm:text-left">
-      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h1 class="text-xl font-black text-emerald-600 tracking-tighter uppercase">ExpensePro</h1>
-        <div class="flex flex-wrap justify-center gap-2">
+    <header class="bg-white border-b sticky top-0 z-20 shadow-sm px-6 py-4">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div class="flex items-center gap-2">
+          <button onclick="exportCSV('expense')" title="Eksport CSV" class="text-slate-400 hover:text-emerald-600 transition-all hover:scale-110 text-lg leading-none">📥</button>
+          <h1 class="text-xl font-black text-emerald-600 tracking-tighter uppercase">ExpensePro</h1>
+        </div>
+        <div class="flex flex-wrap justify-center items-center gap-2">
+          <div class="relative">
+            <input type="text" id="expenseSearch" placeholder="🔍 Cari..." oninput="debouncedExpenseSearch()" class="w-28 sm:w-40 rounded-xl border-slate-200 text-xs font-bold p-2 pr-7 bg-slate-50 outline-none focus:ring-2 focus:ring-emerald-400 focus:w-40 sm:focus:w-56 transition-all">
+            <button id="expenseSearchClear" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[10px] font-bold" onclick="clearExpenseSearch()">✕</button>
+          </div>
           <input type="date" id="filterSpecificDate" onchange="loadAllData()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-emerald-50 outline-none" title="Tapis Hari Tertentu">
           <select id="filterMonth" onchange="clearSpecificDate(); debouncedLoadAllData();" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
             <option value="">Semua Bulan</option>
@@ -406,9 +413,16 @@
   <!-- PAGE: EV CAS -->
   <div id="page-ev" class="hidden">
     <header class="bg-white border-b sticky top-0 z-20 shadow-sm px-6 py-4">
-      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h1 class="text-xl font-black text-blue-600 tracking-tighter uppercase">EV CAS Tracker</h1>
-        <div class="flex flex-wrap justify-center gap-2">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div class="flex items-center gap-2">
+            <button onclick="exportCSV('ev')" title="Eksport CSV" class="text-slate-400 hover:text-blue-600 transition-all hover:scale-110 text-lg leading-none">📥</button>
+            <h1 class="text-xl font-black text-blue-600 tracking-tighter uppercase">EV CAS Tracker</h1>
+          </div>
+        <div class="flex flex-wrap justify-center items-center gap-2">
+          <div class="relative">
+            <input type="text" id="evSearch" placeholder="🔍 Cari..." oninput="debouncedEVSearch()" class="w-28 sm:w-40 rounded-xl border-slate-200 text-xs font-bold p-2 pr-7 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-400 focus:w-40 sm:focus:w-56 transition-all">
+            <button id="evSearchClear" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[10px] font-bold" onclick="clearEVSearch()">✕</button>
+          </div>
           <input type="date" id="evFilterSpecificDate" onchange="loadAllData()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-blue-50 outline-none" title="Tapis Hari Tertentu">
           <select id="evFilterMonth" onchange="clearEVSpecificDate(); debouncedLoadAllData();" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
             <option value="">Semua Bulan</option>
@@ -469,7 +483,10 @@
   <div id="page-bil" class="hidden">
     <header class="bg-white border-b sticky top-0 z-20 shadow-sm px-6 py-4">
       <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h1 class="text-xl font-black text-purple-600 tracking-tighter uppercase">Bil Bulanan</h1>
+        <div class="flex items-center gap-2">
+          <button onclick="exportCSV('bil')" title="Eksport CSV" class="text-slate-400 hover:text-purple-600 transition-all hover:scale-110 text-lg leading-none">📥</button>
+          <h1 class="text-xl font-black text-purple-600 tracking-tighter uppercase">Bil Bulanan</h1>
+        </div>
         <div class="flex flex-wrap justify-center gap-2">
           <select id="bilFilterMonth" onchange="switchBilMonth()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
             <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mac</option>
@@ -1002,7 +1019,16 @@ var CATEGORY_COLORS = {
         filteredTransactions = filteredTransactions.filter(function(t) { return (t.payment || '💵 Cash') === activePaymentFilter; });
       }
 
-      updateExpenseUI(filteredTransactions, !!activePaymentFilter || (activeFilters.length > 0 && activeFilters.length < Object.keys(categoryFilter).length));
+      if (expenseSearchQuery) {
+        filteredTransactions = filteredTransactions.filter(function(t) {
+          return (t.category && t.category.toLowerCase().indexOf(expenseSearchQuery) !== -1)
+              || (t.note && t.note.toLowerCase().indexOf(expenseSearchQuery) !== -1)
+              || (t.amount && t.amount.toString().indexOf(expenseSearchQuery) !== -1)
+              || (t.payment && t.payment.toLowerCase().indexOf(expenseSearchQuery) !== -1);
+        });
+      }
+
+      updateExpenseUI(filteredTransactions, !!activePaymentFilter || (activeFilters.length > 0 && activeFilters.length < Object.keys(categoryFilter).length) || !!expenseSearchQuery);
       
       renderCategoryChart();
     }
@@ -1512,6 +1538,14 @@ function confirmEVDelete(id) {
             return false;
           });
         }
+      }
+
+      if (evSearchQuery) {
+        filtered = filtered.filter(function(r) {
+          var jen = r.jenis === 'Elektrik' ? 'elektrik ' : 'petrol ';
+          var txt = jen + (r.cpo || '') + ' ' + (r.station || '') + ' ' + (r.location || '') + ' ' + (r.note || '') + ' ' + (r._loc || '') + ' ' + (r._nota || '') + ' ' + (r.total || '');
+          return txt.toLowerCase().indexOf(evSearchQuery) !== -1;
+        });
       }
 
       filtered.sort(function(a, b) {
@@ -2211,6 +2245,90 @@ function confirmPetrolDelete(id) {
     }
 
     google.script.run.withSuccessHandler(function(t) { bilTemplate = t; }).getBilTemplate();
+
+    var expenseSearchQuery = '';
+    var evSearchQuery = '';
+    var expenseSearchTimeout, evSearchTimeout;
+
+    function debouncedExpenseSearch() {
+      clearTimeout(expenseSearchTimeout);
+      expenseSearchTimeout = setTimeout(function() { applyExpenseSearch(); }, 300);
+    }
+
+    function applyExpenseSearch() {
+      var q = document.getElementById('expenseSearch').value.toLowerCase().trim();
+      expenseSearchQuery = q;
+      document.getElementById('expenseSearchClear').classList.toggle('hidden', !q);
+      applyCategoryFilterAndUpdate();
+    }
+
+    function clearExpenseSearch() {
+      document.getElementById('expenseSearch').value = '';
+      applyExpenseSearch();
+    }
+
+    function debouncedEVSearch() {
+      clearTimeout(evSearchTimeout);
+      evSearchTimeout = setTimeout(function() { applyEVSearch(); }, 300);
+    }
+
+    function applyEVSearch() {
+      var q = document.getElementById('evSearch').value.toLowerCase().trim();
+      evSearchQuery = q;
+      document.getElementById('evSearchClear').classList.toggle('hidden', !q);
+      renderEVRows(evAllRows);
+    }
+
+    function clearEVSearch() {
+      document.getElementById('evSearch').value = '';
+      applyEVSearch();
+    }
+
+    function exportCSV(modul) {
+      var rows = [];
+      var filename = '';
+
+      if (modul === 'expense') {
+        var data = allFilteredData.length > 0 ? allFilteredData : transactionsData;
+        filename = 'jejak_belanja_transaksi.csv';
+        rows.push(['Tarikh', 'Kategori', 'Amaun', 'Nota', 'Bayaran']);
+        data.forEach(function(r) {
+          rows.push([r.date, r.category, r.amount, (r.note || ''), (r.payment || '💵 Cash')]);
+        });
+      } else if (modul === 'ev') {
+        var data = evAllData.length > 0 ? evAllData : evAllRows;
+        filename = 'jejak_belanja_ev_minyak.csv';
+        rows.push(['Tarikh', 'Jenis', 'CPO/Stesen', 'kWh/Liter', 'RM', 'Lokasi/Nota']);
+        data.forEach(function(r) {
+          var jenis = r.jenis || 'Elektrik';
+          var loc = jenis === 'Elektrik' ? (r.cpo || r._loc || '') : (r.station || r._loc || '');
+          var qty = jenis === 'Elektrik' ? (r.kwh || r._qty || '') : (r.liter || r._qty || '');
+          rows.push([r.date, jenis, loc, qty, r.total, (jenis === 'Elektrik' ? (r.location || r._nota || '') : (r.note || r._nota || ''))]);
+        });
+      } else if (modul === 'bil') {
+        var data = kolomBil.length > 0 ? kolomBil : [];
+        filename = 'jejak_belanja_bil.csv';
+        rows.push(['Lokasi', 'Nama', 'Kategori', 'Amaun', 'Status', 'Tarikh Bayar']);
+        data.forEach(function(r) {
+          rows.push([r.lokasi, r.nama, (r.kategori || ''), r.amaun, r.status, (r.tarikhBayar || '')]);
+        });
+      }
+
+      var csv = rows.map(function(row) {
+        return row.map(function(cell) { return '"' + (cell || '') + '"'; }).join(',');
+      }).join('\n');
+
+      var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Dieksport: ' + filename, 'success');
+    }
 
     var pendingDelete = null;
 
