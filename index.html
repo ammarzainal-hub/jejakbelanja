@@ -27,6 +27,7 @@
     .accent-blue::before { background: linear-gradient(90deg, #1d4ed8, #3b82f6, #93c5fd); }
     .accent-orange::before { background: linear-gradient(90deg, #c2410c, #f97316, #fdba74); }
     .accent-indigo::before { background: linear-gradient(90deg, #4338ca, #6366f1, #a5b4fc); }
+    .accent-purple::before { background: linear-gradient(90deg, #7e22ce, #9333ea, #c4b5fd); }
 
     body.dark { background: #0b1120; color: #e2e8f0; }
     body.dark .card-glass { background: rgba(30,41,59,0.7); backdrop-filter: blur(12px); border-color: rgba(51,65,85,0.5); }
@@ -56,6 +57,16 @@
     body.dark .nav-active-sum { background: rgba(99,102,241,0.2) !important; color: #a5b4fc !important; }
     body.dark .nav-active-exp { background: rgba(16,185,129,0.2) !important; color: #6ee7b7 !important; }
     body.dark .nav-active-ev  { background: rgba(59,130,246,0.2) !important; color: #93c5fd !important; }
+    body.dark .nav-active-bil { background: rgba(147,51,234,0.2) !important; color: #c4b5fd !important; }
+    body.dark .bg-purple-50   { background-color: rgba(147,51,234,0.15) !important; border-color: rgba(147,51,234,0.25) !important; }
+    body.dark .bg-purple-100  { background-color: rgba(147,51,234,0.2) !important; }
+    body.dark .border-purple-100 { border-color: rgba(147,51,234,0.25) !important; }
+    body.dark .border-purple-200 { border-color: rgba(147,51,234,0.35) !important; }
+    body.dark .bg-amber-50  { background-color: rgba(251,191,36,0.12) !important; }
+    body.dark .border-amber-300 { border-color: rgba(251,191,36,0.35) !important; }
+    body.dark .border-amber-200 { border-color: rgba(251,191,36,0.25) !important; }
+    body.dark .text-amber-800 { color: #fbbf24 !important; }
+    body.dark .text-amber-600 { color: #f59e0b !important; }
     body.dark .loading-overlay { background: rgba(11,17,32,0.95) !important; }
     body.dark .toast { color: #fff !important; }
     body.dark .bg-gradient-to-br.from-indigo-600.to-indigo-800 { background-image: linear-gradient(to bottom right, #312e81, #1e1b4b) !important; }
@@ -85,6 +96,7 @@
     .nav-active-sum { color: #6366f1; border-top: 3px solid #6366f1; background: #eef2ff; }
     .nav-active-exp { color: #10b981; border-top: 3px solid #10b981; background: #f0fdf4; }
     .nav-active-ev  { color: #3b82f6; border-top: 3px solid #3b82f6; background: #eff6ff; }
+    .nav-active-bil { color: #9333ea; border-top: 3px solid #9333ea; background: #faf5ff; }
     .summary-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
     
     .toast {
@@ -214,6 +226,10 @@
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
       <span class="text-[10px] font-bold uppercase">EV Cas</span>
     </button>
+    <button onclick="switchTab('bil')" id="nav-bil" class="flex flex-col items-center gap-1 w-full h-full justify-center text-slate-400">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span class="text-[10px] font-bold uppercase">Bil</span>
+    </button>
   </nav>
 
   <!-- PAGE: RINGKASAN -->
@@ -285,6 +301,15 @@
           </thead>
           <tbody id="sumMonthlyBody" class="divide-y divide-slate-50"></tbody>
         </table>
+      </div>
+      <div id="sumBilSection" class="space-y-3 pt-2">
+        <div class="flex items-center gap-2 px-1"><span class="text-sm">📋</span><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Bil Bulanan</p></div>
+        <div class="summary-card shadow-card bg-white rounded-3xl p-5 border border-slate-100 transition-all accent-border-top accent-purple">
+          <div class="flex items-center justify-between mb-3"><div class="bg-purple-100 rounded-2xl p-2"><svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><span id="sumBilStatus" class="text-[9px] font-black bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">0/0</span></div>
+          <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Bil Dibayar</p>
+          <p class="text-2xl font-black text-slate-900 mt-1">RM <span id="sumBilTotal">0.00</span></p>
+          <div class="mt-3 bg-purple-50 rounded-2xl h-1.5 overflow-hidden"><div id="sumBilBar" class="bg-purple-500 h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
+        </div>
       </div>
     </main>
   </div>
@@ -435,6 +460,50 @@
             <button onclick="evGoToPage(evTotalPages)" id="evBtnLast" class="px-3 py-1.5 text-[10px] font-bold rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-40 transition-all">Akhir</button>
           </div>
         </div>
+      </div>
+    </main>
+  </div>
+
+  
+  <!-- PAGE: BIL BULANAN -->
+  <div id="page-bil" class="hidden">
+    <header class="bg-white border-b sticky top-0 z-20 shadow-sm px-6 py-4">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+        <h1 class="text-xl font-black text-purple-600 tracking-tighter uppercase">Bil Bulanan</h1>
+        <div class="flex flex-wrap justify-center gap-2">
+          <select id="bilFilterMonth" onchange="switchBilMonth()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
+            <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mac</option>
+            <option value="4">Apr</option><option value="5">Mei</option><option value="6">Jun</option>
+            <option value="7">Jul</option><option value="8">Ogos</option><option value="9">Sep</option>
+            <option value="10">Okt</option><option value="11">Nov</option><option value="12">Dis</option>
+          </select>
+          <select id="bilFilterYear" onchange="switchBilMonth()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
+            <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+            <option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option>
+          </select>
+        </div>
+      </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6 text-left">
+      <div class="shadow-card bg-gradient-to-br from-purple-600 to-purple-800 rounded-3xl p-6 shadow-xl text-white">
+        <p class="text-[10px] font-black uppercase tracking-[0.3em] opacity-70 mb-1">Progress Bil</p>
+        <p class="text-3xl font-black tracking-tighter"><span id="bilDoneCount">0</span> / <span id="bilTotalCount">0</span> Dibayar</p>
+        <div class="mt-4 bg-white/20 rounded-full h-2.5 overflow-hidden"><div id="bilProgressBar" class="bg-white h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
+        <div class="mt-4 pt-4 border-t border-white/20 flex justify-between items-center">
+          <div><p class="text-[9px] opacity-60 font-bold uppercase tracking-widest">Dibayar</p><p id="bilDibayarAmount" class="font-black text-lg">RM 0.00</p></div>
+          <div class="text-right"><p class="text-[9px] opacity-60 font-bold uppercase tracking-widest">Belum</p><p id="bilBelumAmount" class="font-black text-lg opacity-80">RM 0.00</p></div>
+        </div>
+      </div>
+      <div id="bilWarningCard" class="hidden shadow-card rounded-3xl border border-amber-300 bg-amber-50 p-5">
+        <div class="flex items-start gap-3">
+          <span class="text-xl flex-shrink-0">⚠️</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-2">Peringatan — Bil Belum Dibayar</p>
+            <div id="bilWarningContent" class="space-y-1.5"></div>
+          </div>
+        </div>
+      </div>
+      <div id="bilLokasiContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
       </div>
     </main>
   </div>
@@ -770,12 +839,15 @@ var CATEGORY_COLORS = {
       document.getElementById('page-summary').classList.toggle('hidden', tab !== 'summary');
       document.getElementById('page-expense').classList.toggle('hidden', tab !== 'expense');
       document.getElementById('page-ev').classList.toggle('hidden', tab !== 'ev');
+      document.getElementById('page-bil').classList.toggle('hidden', tab !== 'bil');
       document.getElementById('nav-summary').classList.toggle('nav-active-sum', tab === 'summary');
       document.getElementById('nav-summary').classList.toggle('text-slate-400', tab !== 'summary');
       document.getElementById('nav-expense').classList.toggle('nav-active-exp', tab === 'expense');
       document.getElementById('nav-expense').classList.toggle('text-slate-400', tab !== 'expense');
       document.getElementById('nav-ev').classList.toggle('nav-active-ev', tab === 'ev');
       document.getElementById('nav-ev').classList.toggle('text-slate-400', tab !== 'ev');
+      document.getElementById('nav-bil').classList.toggle('nav-active-bil', tab === 'bil');
+      document.getElementById('nav-bil').classList.toggle('text-slate-400', tab !== 'bil');
       loadAllData();
     }
 
@@ -787,7 +859,7 @@ var CATEGORY_COLORS = {
         var y = document.getElementById('sumFilterYear').value;
         google.script.run
           .withSuccessHandler(function(b) {
-            updateSummaryUI(b.expData, b.evData, b.petrolData, b.prevExpData, b.prevEvData, b.prevPetData, m, y);
+            updateSummaryUI(b.expData, b.evData, b.petrolData, b.bilData, b.prevExpData, b.prevEvData, b.prevPetData, b.prevBilData, m, y);
             renderSumBarChart(b.expYearly, b.evYearly, y);
             showLoader(false);
           })
@@ -811,7 +883,7 @@ var CATEGORY_COLORS = {
               
               if (sDate) {
                 displayedData = transactionsData.filter(function(t) { return t.date === sDate; });
-              } else {
+      } else if (activeTab === 'ev') {
                 displayedData = transactionsData.slice();
               }
               
@@ -831,7 +903,7 @@ var CATEGORY_COLORS = {
           })
           .getBatchExpenseData(m, y);
 
-      } else {
+      } else if (activeTab === 'ev') {
         var m = document.getElementById('evFilterMonth').value;
         var y = document.getElementById('evFilterYear').value;
         var sDate = document.getElementById('evFilterSpecificDate').value;
@@ -850,6 +922,10 @@ var CATEGORY_COLORS = {
             showToast('Error: ' + e.message, 'error');
           })
           .getBatchEVData(m, y);
+
+      } else if (activeTab === 'bil') {
+        loadBilData();
+        showLoader(false);
       }
     }
 
@@ -1208,10 +1284,11 @@ var CATEGORY_COLORS = {
     //   SUMMARY PAGE FUNCTIONS
     // ============================================================
 
-    function updateSummaryUI(expArr, evArr, petArr, prevExpArr, prevEVArr, prevPetArr, month, year) {
+    function updateSummaryUI(expArr, evArr, petArr, bilSummary, prevExpArr, prevEVArr, prevPetArr, prevBilSummary, month, year) {
       var eT = expArr.reduce(function(s,i) { return s + parseFloat(i.amount); }, 0);
       var vT = evArr.reduce(function(s,i) { return s + parseFloat(i.total); }, 0);
       var pT = petArr.reduce(function(s,i) { return s + parseFloat(i.total); }, 0);
+      var bT = bilSummary ? (bilSummary.jumlahKeseluruhan || 0) : 0;
       var gT = eT + vT + pT;
       var prevT = prevExpArr.reduce(function(s,i) { return s + parseFloat(i.amount); }, 0)
                 + prevEVArr.reduce(function(s,i) { return s + parseFloat(i.total); }, 0)
@@ -1253,6 +1330,14 @@ var CATEGORY_COLORS = {
       document.getElementById('sumPetrolBar').style.width = pP + '%';
 
       renderSumPieChart(eT, vT, pT);
+
+      if (bilSummary) {
+        var rekod = bilSummary.rekod || [];
+        var done = 0; rekod.forEach(function(r) { if (r.status === 'Dibayar') done++; });
+        document.getElementById('sumBilTotal').innerText = fRM(bT);
+        document.getElementById('sumBilStatus').innerText = done + '/' + rekod.length;
+        document.getElementById('sumBilBar').style.width = rekod.length > 0 ? ((done / rekod.length) * 100) + '%' : '0%';
+      }
 
       var tw = document.getElementById('sumMonthlyTableWrap');
       if (!month) {
@@ -1917,6 +2002,215 @@ function confirmPetrolDelete(id) {
         renderCategoryChart();
       }
     });
+
+    var bilData = [];
+    var bilTemplate = [];
+
+    function switchBilMonth() {
+      var m = document.getElementById('bilFilterMonth').value;
+      var y = document.getElementById('bilFilterYear').value;
+      initAndLoadBil(m, y);
+    }
+
+    function loadBilData() {
+      var today = new Date();
+      var m = today.getMonth() + 1;
+      var y = today.getFullYear();
+      document.getElementById('bilFilterMonth').value = m;
+      document.getElementById('bilFilterYear').value = y;
+      initAndLoadBil(m, y);
+    }
+
+    function initAndLoadBil(m, y) {
+      showLoader(true);
+      google.script.run
+        .withSuccessHandler(function(r) {
+          if (r.status === 'error') { showToast(r.message, 'error'); showLoader(false); return; }
+          if (r.created > 0) showToast(r.created + ' bil baru dijana untuk bulan ini', 'info');
+          google.script.run.withSuccessHandler(function(t) { bilTemplate = t; }).getBilTemplate();
+          google.script.run
+            .withSuccessHandler(function(summary) {
+              bilData = summary;
+              updateBilUI(summary);
+              showLoader(false);
+            })
+            .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
+            .getBilSummary(m, y);
+        })
+        .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
+        .initBilMonth(m, y);
+    }
+
+    function updateBilUI(summary) {
+      var rekod = summary.rekod || [];
+      var done = 0;
+      rekod.forEach(function(r) { if (r.status === 'Dibayar') done++; });
+
+      document.getElementById('bilDoneCount').innerText = done;
+      document.getElementById('bilTotalCount').innerText = rekod.length;
+      document.getElementById('bilDibayarAmount').innerText = 'RM ' + fRM(summary.jumlahDibayar || 0);
+      document.getElementById('bilBelumAmount').innerText = 'RM ' + fRM(summary.jumlahBelum || 0);
+      var pct = rekod.length > 0 ? (done / rekod.length) * 100 : 0;
+      document.getElementById('bilProgressBar').style.width = pct + '%';
+
+      renderBilWarning(rekod, summary);
+      renderBilLokasiGrid(rekod, summary);
+    }
+
+    function renderBilWarning(rekod, summary) {
+      var warn = document.getElementById('bilWarningCard');
+      var content = document.getElementById('bilWarningContent');
+      var belumList = rekod.filter(function(r) { return r.status !== 'Dibayar'; });
+
+      if (belumList.length === 0) { warn.classList.add('hidden'); return; }
+      warn.classList.remove('hidden');
+
+      var byLok = {};
+      belumList.forEach(function(r) {
+        if (!byLok[r.lokasi]) byLok[r.lokasi] = [];
+        byLok[r.lokasi].push(r);
+      });
+
+      var lokIcons = {};
+      bilTemplate.forEach(function(t) { if (t.ikonLokasi && !lokIcons[t.lokasi]) lokIcons[t.lokasi] = t.ikonLokasi; });
+
+      var html = '';
+      var totalBelum = 0;
+      for (var lk in byLok) {
+        var icon = lokIcons[lk] || '📍';
+        var items = byLok[lk].map(function(r) {
+          totalBelum += r.amaun;
+          var katIkon = r._ikonKategori || '';
+          return (katIkon ? katIkon + ' ' : '') + r.nama + ' (RM' + fRM(r.amaun) + ')';
+        }).join(', ');
+        html += '<p class="text-xs font-bold text-amber-800"><span class="text-sm">' + icon + '</span> <span class="uppercase tracking-wider">' + lk + '</span>: ' + items + '</p>';
+      }
+
+      html += '<p class="text-xs font-black text-amber-600 mt-2 pt-2 border-t border-amber-200 uppercase tracking-widest">Jumlah Belum: RM ' + fRM(totalBelum) + '</p>';
+      content.innerHTML = html;
+    }
+
+    function renderBilLokasiGrid(rekod, summary) {
+      var lokasiIcons = {};
+      var templateMap = {};
+      bilTemplate.forEach(function(t) { 
+        if (t.ikonLokasi && !lokasiIcons[t.lokasi]) lokasiIcons[t.lokasi] = t.ikonLokasi;
+        templateMap[t.nama] = t;
+      });
+
+      var katIcons = {};
+      bilTemplate.forEach(function(t) { if (t.ikonKategori) katIcons[t.kategori] = t.ikonKategori; });
+
+      rekod.forEach(function(r) {
+        r._ikonKategori = katIcons[r.kategori] || '';
+      });
+
+      var byLokasi = summary.byLokasi || {};
+      var lokasiOrder = Object.keys(byLokasi).sort();
+      if (lokasiOrder.length === 0) {
+        document.getElementById('bilLokasiContainer').innerHTML = '<div class="col-span-full text-center py-12 text-slate-400"><p class="text-lg mb-2">📋</p><p class="font-bold">Tiada rekod bil untuk bulan ini</p><p class="text-xs mt-1">Pastikan BIL_TEMPLATE sudah diisi</p></div>';
+        return;
+      }
+
+      var html = '';
+      kolomBil = rekod;
+
+      lokasiOrder.forEach(function(lok) {
+        var l = byLokasi[lok];
+        var allDone = l.done === l.count && l.count > 0;
+        var icon = lokasiIcons[lok] || '📍';
+        var items = rekod.filter(function(r) { return r.lokasi === lok; });
+
+        html += '<div class="shadow-card bg-white rounded-3xl border border-slate-100 overflow-hidden bil-lokasi-card" data-lokasi="' + lok + '" data-collapsed="' + allDone + '">';
+        html += '<div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 cursor-pointer bil-header" onclick="toogleBilLokasi(this)">';
+        html += '<div class="flex items-center gap-2.5"><span class="text-lg">' + icon + '</span><h4 class="font-black text-sm text-slate-700 uppercase tracking-wider">' + lok + '</h4></div>';
+        html += '<div class="flex items-center gap-3">';
+        html += '<span class="text-xs font-bold ' + (allDone ? 'text-emerald-600' : 'text-amber-600') + '">' + l.done + '/' + l.count + (allDone ? ' ✅' : ' ⏳') + '</span>';
+        html += '<span class="text-xs font-bold text-purple-600">RM ' + fRM(l.dibayar) + '</span>';
+        if (!allDone) html += '<button onclick="tandaiSemuaLokasi(\'' + lok + '\')" class="text-[9px] font-bold uppercase bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded-lg transition-all whitespace-nowrap">✅ Semua</button>';
+        html += '<svg class="bil-arrow w-4 h-4 text-slate-400 transform transition-transform ' + (allDone ? 'rotate-0' : 'rotate-180') + '" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
+        html += '</div></div>';
+
+        html += '<div class="bil-items ' + (allDone ? 'hidden' : '') + '">';
+        items.forEach(function(r) {
+          var isDone = r.status === 'Dibayar';
+          var tpl = templateMap[r.nama] || {};
+          var isTetap = tpl.tetap || false;
+          var katIkon = r._ikonKategori || '';
+
+          html += '<div class="flex items-center gap-3 px-5 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors">';
+          html += '<input type="checkbox" ' + (isDone ? 'checked' : '') + ' onclick="toggleBilItem(' + r.rowId + ', this)" class="w-4 h-4 rounded accent-purple-600 cursor-pointer flex-shrink-0">';
+          html += '<div class="flex-1 min-w-0"><p class="font-bold text-xs text-slate-800 truncate">' + (katIkon ? katIkon + ' ' : '') + r.nama + '</p></div>';
+          html += '<div class="flex items-center gap-2 flex-shrink-0">';
+          if (isTetap) {
+            html += '<span class="font-black text-xs text-slate-600">RM ' + fRM(r.amaun) + '</span><span class="text-[10px] text-slate-300">🔒</span>';
+          } else {
+            html += '<input type="number" step="0.01" value="' + r.amaun + '" onchange="editBilAmount(' + r.rowId + ', this)" class="w-20 text-right rounded-xl border bg-slate-50 p-1 font-black text-xs outline-none focus:ring-2 focus:ring-purple-400">';
+          }
+          if (isDone) {
+            html += '<span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full whitespace-nowrap">✅ ' + (r.tarikhBayar ? r.tarikhBayar.substr(-5) : '') + '</span>';
+          } else {
+            html += '<span class="text-[9px] text-slate-400">⏳</span>';
+          }
+          html += '</div></div>';
+        });
+        html += '</div></div>';
+      });
+
+      document.getElementById('bilLokasiContainer').innerHTML = html;
+    }
+
+    var kolomBil = [];
+
+    function toogleBilLokasi(headerEl) {
+      var card = headerEl.parentElement;
+      var items = card.querySelector('.bil-items');
+      var arrow = card.querySelector('.bil-arrow');
+      var isOpen = !items.classList.contains('hidden');
+      items.classList.toggle('hidden', isOpen);
+      arrow.classList.toggle('rotate-180', !isOpen);
+    }
+
+    function tandaiSemuaLokasi(lokasi) {
+      var m = document.getElementById('bilFilterMonth').value;
+      var y = document.getElementById('bilFilterYear').value;
+      showLoader(true);
+      google.script.run
+        .withSuccessHandler(function(r) {
+          if (r.count > 0) showToast(r.count + ' bil ditanda dibayar untuk ' + lokasi, 'success');
+          loadBilData();
+        })
+        .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
+        .tandaiSemuaBilLokasi(m, y, lokasi);
+    }
+
+    function toggleBilItem(rowId, checkbox) {
+      checkbox.disabled = true;
+      google.script.run
+        .withSuccessHandler(function(r) {
+          showToast(r.bilStatus === 'Dibayar' ? '✅ Bil ditanda dibayar' : 'Bil dikembalikan ke belum', r.bilStatus === 'Dibayar' ? 'success' : 'info');
+          loadBilData();
+        })
+        .withFailureHandler(function(e) {
+          checkbox.checked = !checkbox.checked;
+          checkbox.disabled = false;
+          showToast('Error: ' + e.message, 'error');
+        })
+        .toggolBilStatus(rowId);
+    }
+
+    function editBilAmount(rowId, input) {
+      var val = parseFloat(input.value);
+      if (isNaN(val) || val <= 0) { showToast('Amaun mesti lebih dari 0', 'error'); loadBilData(); return; }
+      google.script.run
+        .withSuccessHandler(function() {
+          showToast('Amaun dikemaskini', 'success');
+        })
+        .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); })
+        .kemaskiniBilAmount(rowId, input.value);
+    }
+
+    google.script.run.withSuccessHandler(function(t) { bilTemplate = t; }).getBilTemplate();
 
     var pendingDelete = null;
 

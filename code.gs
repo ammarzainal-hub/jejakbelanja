@@ -6,6 +6,8 @@ const CATEGORY_SHEET = 'KATEGORI';
 const EV_SHEET       = 'EV_CHARGING';
 const CPO_SHEET      = 'JENIS_CPO';
 const PETROL_SHEET   = 'MINYAK';
+const BIL_TEMPLATE_SHEET = 'BIL_TEMPLATE';
+const BIL_REKOD_SHEET    = 'BIL_REKOD';
 
 // ============================================================
 //   CACHE SERVICE HELPERS
@@ -459,6 +461,192 @@ function deletePetrolRecord(rowId) {
   return { status: 'success', message: 'Rekod minyak berjaya dipadam' };
 }
 
+
+// ============================================================
+//   MODUL 4: BIL BULANAN
+// ============================================================
+
+function getBilTemplate() {
+  var ck = 'bil_template';
+  var cached = cacheGet(ck);
+  if (cached) return JSON.parse(cached);
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_TEMPLATE_SHEET);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues();
+  var result = data.map(function(row, idx) {
+    return {
+      rowId: idx + 2,
+      nama: row[0] || '',
+      kategori: row[1] || 'Lain-lain',
+      anggaran: parseFloat(row[2]) || 0,
+      tetap: (row[3] || '').toString().toLowerCase() === 'ya',
+      lokasi: row[4] || 'Lain-lain',
+      ikonLokasi: row[5] || '',
+      ikonKategori: row[6] || ''
+    };
+  }).filter(function(b) { return b.nama; });
+
+  cacheSet(ck, JSON.stringify(result), TTL_LONG);
+  return result;
+}
+
+function initBilMonth(month, year) {
+  var m = parseInt(month);
+  var y = parseInt(year);
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_REKOD_SHEET);
+  if (!sheet) return { status: 'error', message: 'Sheet BIL_REKOD tidak wujud' };
+
+  var lastRow = sheet.getLastRow();
+  var existing = {};
+  if (lastRow >= 2) {
+    var all = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+    all.forEach(function(row) {
+      if (parseInt(row[0]) === y && parseInt(row[1]) === m) {
+        existing[row[3]] = true;
+      }
+    });
+  }
+
+  var template = getBilTemplate();
+  var newRows = [];
+
+  template.forEach(function(t) {
+    if (!existing[t.nama]) {
+      newRows.push([y, m, t.lokasi, t.nama, t.kategori, t.anggaran, 'Belum', '']);
+    }
+  });
+
+  if (newRows.length > 0) {
+    if (lastRow < 2) {
+      sheet.getRange(2, 1, newRows.length, 8).setValues(newRows);
+    } else {
+      sheet.getRange(lastRow + 1, 1, newRows.length, 8).setValues(newRows);
+    }
+  }
+
+  invalidateBilCache();
+  return { status: 'success', created: newRows.length, already: Object.keys(existing).length };
+}
+
+function getBilRekod(month, year) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_REKOD_SHEET);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues()
+    .map(function(row, index) {
+      return {
+        rowId: index + 2,
+        tahun: parseInt(row[0]),
+        bulan: parseInt(row[1]),
+        lokasi: row[2] || '',
+        nama: row[3] || '',
+        kategori: row[4] || '',
+        amaun: parseFloat(row[5]) || 0,
+        status: row[6] || 'Belum',
+        tarikhBayar: row[7] instanceof Date ? Utilities.formatDate(row[7], 'GMT+8', 'yyyy-MM-dd') : (row[7] || '')
+      };
+    })
+    .filter(function(item) {
+      return (month ? item.bulan == month : true) && (item.tahun == year);
+    });
+}
+
+function toggolBilStatus(rowId) {
+  if (!rowId) throw new Error('ID rekod diperlukan');
+  var safeRowId = parseInt(rowId);
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_REKOD_SHEET);
+  var row = sheet.getRange(safeRowId, 1, 1, 8).getValues()[0];
+  var currentStatus = row[6] || 'Belum';
+  var newStatus = currentStatus === 'Dibayar' ? 'Belum' : 'Dibayar';
+  var bayarDate = newStatus === 'Dibayar' ? new Date() : '';
+
+  sheet.getRange(safeRowId, 7, 1, 2).setValues([[newStatus, bayarDate]]);
+  invalidateBilCache();
+  return { status: 'success', bilStatus: newStatus, tarikhBayar: bayarDate instanceof Date ? Utilities.formatDate(bayarDate, 'GMT+8', 'yyyy-MM-dd') : '' };
+}
+
+function kemaskiniBilAmount(rowId, amaunBaru) {
+  if (!rowId) throw new Error('ID rekod diperlukan');
+  var amt = parseFloat(amaunBaru);
+  if (isNaN(amt) || amt <= 0) throw new Error('Amaun mesti lebih dari 0');
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_REKOD_SHEET);
+  sheet.getRange(parseInt(rowId), 6).setValue(amt);
+  invalidateBilCache();
+  return { status: 'success', amaun: amt };
+}
+
+function getBilSummary(month, year) {
+  var rekod = getBilRekod(month, year);
+  var dibayar = 0, belum = 0;
+  var byLokasi = {};
+
+  rekod.forEach(function(r) {
+    if (r.status === 'Dibayar') dibayar += r.amaun;
+    else belum += r.amaun;
+
+    if (!byLokasi[r.lokasi]) byLokasi[r.lokasi] = { total: 0, dibayar: 0, count: 0, done: 0 };
+    byLokasi[r.lokasi].total += r.amaun;
+    byLokasi[r.lokasi].count++;
+    if (r.status === 'Dibayar') { byLokasi[r.lokasi].dibayar += r.amaun; byLokasi[r.lokasi].done++; }
+  });
+
+  return {
+    rekod: rekod,
+    jumlahDibayar: dibayar,
+    jumlahBelum: belum,
+    jumlahKeseluruhan: dibayar,
+    byLokasi: byLokasi
+  };
+}
+
+function getBilYearlyData(year) {
+  var data = Array(12).fill(0);
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_REKOD_SHEET);
+  if (!sheet || sheet.getLastRow() < 2) return data;
+  sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues().forEach(function(row) {
+    if (parseInt(row[0]) == year && row[6] === 'Dibayar') {
+      data[parseInt(row[1]) - 1] += parseFloat(row[5] || 0);
+    }
+  });
+  return data;
+}
+
+function invalidateBilCache() {
+  cacheDel('bil_template');
+}
+
+function tandaiSemuaBilLokasi(month, year, lokasi) {
+  var m = parseInt(month);
+  var y = parseInt(year);
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_REKOD_SHEET);
+  if (!sheet || sheet.getLastRow() < 2) return { status: 'success', count: 0 };
+
+  var lastRow = sheet.getLastRow();
+  var allData = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+  var today = new Date();
+  var count = 0;
+  var updates = [];
+
+  for (var i = 0; i < allData.length; i++) {
+    var row = allData[i];
+    if (parseInt(row[0]) === y && parseInt(row[1]) === m && row[2] === lokasi && (row[6] !== 'Dibayar')) {
+      updates.push({ range: sheet.getRange(i + 2, 7, 1, 2), values: [['Dibayar', today]] });
+      count++;
+    }
+  }
+
+  if (count > 0) {
+    for (var j = 0; j < updates.length; j++) {
+      updates[j].range.setValues(updates[j].values);
+    }
+  }
+
+  invalidateBilCache();
+  return { status: 'success', count: count };
+}
+
+
 function getBatchSummaryData(month, year) {
   var prevMonth = month ? (parseInt(month) === 1 ? 12        : parseInt(month) - 1) : '';
   var prevYear  = month ? (parseInt(month) === 1 ? parseInt(year) - 1 : year)       : year;
@@ -473,10 +661,13 @@ function getBatchSummaryData(month, year) {
     expData      : expData,
     evData       : getEVData(month, year),
     petrolData   : getPetrolData(month, year),
+    bilData      : getBilSummary(month, year),
     prevExpData  : prevExpData,
     prevEvData   : prevMonth ? getEVData(prevMonth, prevYear) : [],
     prevPetData  : prevMonth ? getPetrolData(prevMonth, prevYear) : [],
+    prevBilData  : prevMonth ? getBilSummary(prevMonth, prevYear) : { jumlahKeseluruhan: 0 },
     expYearly    : getYearlyData(year),
-    evYearly     : getEVYearlyData(year)
+    evYearly     : getEVYearlyData(year),
+    bilYearly    : getBilYearlyData(year)
   };
 }
