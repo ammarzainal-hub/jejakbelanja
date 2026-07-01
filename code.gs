@@ -7,6 +7,51 @@ const EV_SHEET       = 'EV_CHARGING';
 const CPO_SHEET      = 'JENIS_CPO';
 const PETROL_SHEET   = 'MINYAK';
 
+// ============================================================
+//   CACHE SERVICE HELPERS
+// ============================================================
+const CACHE = CacheService.getScriptCache();
+const TTL_SHORT = 7200;   // 2 jam — untuk yearly & trend
+const TTL_LONG  = 21600;  // 6 jam — untuk kategori & CPO
+
+function cacheGet(key) {
+  try { return CACHE.get(key); } catch (e) { return null; }
+}
+function cacheSet(key, val, ttl) {
+  try { CACHE.put(key, val, ttl || TTL_SHORT); } catch (e) { /* penuh */ }
+}
+function cacheDel(key) {
+  try { CACHE.remove(key); } catch (e) { /* abaikan */ }
+}
+
+function invalidateExpenseCache() {
+  // Kosongkan semua cache berkaitan perbelanjaan
+  var keys = ['yearly_data', 'trend', 'categories'];
+  keys.forEach(function(k) { cacheDel(k); });
+}
+
+function invalidateEVCache() {
+  cacheDel('evyearly_data');
+}
+
+function clearDashboardCache() {
+  invalidateExpenseCache();
+  invalidateEVCache();
+  cacheDel('cpo_types');
+  return { status: 'success', message: '✅ Cache dikosongkan. Data segar akan dimuatkan.' };
+}
+
+function refreshExpenseOnly() {
+  invalidateExpenseCache();
+  return { status: 'success', message: '✅ Cache belanja dikosongkan.' };
+}
+
+function refreshEVOnly() {
+  invalidateEVCache();
+  cacheDel('cpo_types');
+  return { status: 'success', message: '✅ Cache EV/Minyak dikosongkan.' };
+}
+
 /**
  * HELPER: Sanitize input untuk elakkan XSS
  */
@@ -38,18 +83,24 @@ function doGet() {
 // ============================================================
 
 function getCategories() {
+  var cached = cacheGet('categories');
+  if (cached) return JSON.parse(cached);
+
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CATEGORY_SHEET);
   if (!sheet) return [{ name: 'Umum', icon: '🕵🏼' }];
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return [{ name: 'Umum', icon: '🕵🏼' }];
   
   var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
-  return data.map(function(row) {
+  var result = data.map(function(row) {
     return {
       name: row[0] || 'Umum',
       icon: row[1] || '🕵🏼'
     };
   }).filter(function(cat) { return cat.name; });
+
+  cacheSet('categories', JSON.stringify(result), TTL_LONG);
+  return result;
 }
 
 function getTransactions(month, year) {
@@ -62,13 +113,21 @@ function getTransactions(month, year) {
 }
 
 function getYearlyData(year) {
+  var ck = 'yearly_data_' + year;
+  var cached = cacheGet(ck);
+  if (cached) return JSON.parse(cached);
+
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET);
   var data  = Array(12).fill(0);
-  if (!sheet || sheet.getLastRow() < 2) return data;
+  if (!sheet || sheet.getLastRow() < 2) {
+    cacheSet(ck, JSON.stringify(data));
+    return data;
+  }
   sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues().forEach(function(row) {
     var d = new Date(row[0]);
     if (d.getFullYear() == year) data[d.getMonth()] += parseFloat(row[1] || 0);
   });
+  cacheSet(ck, JSON.stringify(data));
   return data;
 }
 
@@ -76,6 +135,9 @@ function getYearlyData(year) {
  * NEW FUNCTION: Get 3-month category trend
  */
 function getCategoryTrend(month, year) {
+    var ck = 'trend_' + month + '_' + year;
+  var cached = cacheGet(ck);
+  if (cached) return JSON.parse(cached);
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return {};
     var today = new Date();
@@ -114,7 +176,7 @@ function getCategoryTrend(month, year) {
       }
     });
   });
-  
+    cacheSet(ck, JSON.stringify(result));
   return result;
 }
 
@@ -146,6 +208,7 @@ function addTransaction(data) {
   
   SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET)
 .appendRow([new Date(data.date), safeAmount, safeCategory, safeNote, safePayment]);
+invalidateExpenseCache();
   return { status: 'success', message: 'Transaksi berjaya ditambah' };
 }
 
@@ -165,6 +228,7 @@ function updateTransaction(data) {
   SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET)
     .getRange(safeRowId, 1, 1, 5)
 .setValues([[new Date(data.date), safeAmount, safeCategory, safeNote, safePayment]]);
+invalidateExpenseCache();
   return { status: 'success', message: 'Transaksi berjaya dikemaskini' };
 }
 
@@ -172,6 +236,7 @@ function deleteTransaction(rowId) {
   if (!rowId) throw new Error('ID transaksi diperlukan');
   var safeRowId = parseInt(rowId);
   SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET).deleteRow(safeRowId);
+  invalidateExpenseCache();
   return { status: 'success', message: 'Transaksi berjaya dipadam' };
 }
 
@@ -199,6 +264,7 @@ dataToAppend.push([
   }
   
   sheet.getRange(sheet.getLastRow() + 1, 1, dataToAppend.length, 5).setValues(dataToAppend);
+  invalidateExpenseCache();
   return { status: 'success', message: dataToAppend.length + ' transaksi berjaya ditambah' };
 }
 
@@ -223,11 +289,17 @@ function getBatchExpenseData(month, year) {
 // ============================================================
 
 function getCPOTypes() {
+  var cached = cacheGet('cpo_types');
+  if (cached) return JSON.parse(cached);
+
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CPO_SHEET);
   if (!sheet) return ['Lain-lain'];
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return ['Lain-lain'];
-  return sheet.getRange(2, 1, lastRow - 1, 1).getValues().flat().filter(String);
+  var result = sheet.getRange(2, 1, lastRow - 1, 1).getValues().flat().filter(String);
+
+  cacheSet('cpo_types', JSON.stringify(result), TTL_LONG);
+  return result;
 }
 
 function addEVCharging(data) {
@@ -247,6 +319,7 @@ function addEVCharging(data) {
   
   SpreadsheetApp.getActiveSpreadsheet().getSheetByName(EV_SHEET)
     .appendRow([new Date(data.date), safeType, cpo, safeKwh, safePrice, location, total]);
+    invalidateEVCache();
   return { status: 'success', message: 'Rekod cas berjaya ditambah' };
 }
 
@@ -270,6 +343,7 @@ function updateEVCharging(data) {
   SpreadsheetApp.getActiveSpreadsheet().getSheetByName(EV_SHEET)
     .getRange(safeRowId, 1, 1, 7)
     .setValues([[new Date(data.date), safeType, cpo, safeKwh, safePrice, location, total]]);
+    invalidateEVCache();
   return { status: 'success', message: 'Rekod cas berjaya dikemaskini' };
 }
 
@@ -287,10 +361,15 @@ function deleteEVData(rowId) {
   if (!rowId) throw new Error('ID rekod diperlukan');
   var safeRowId = parseInt(rowId);
   SpreadsheetApp.getActiveSpreadsheet().getSheetByName(EV_SHEET).deleteRow(safeRowId);
+  invalidateEVCache();
   return { status: 'success', message: 'Rekod cas berjaya dipadam' };
 }
 
 function getEVYearlyData(year) {
+  var ck = 'evyearly_data_' + year;
+  var cached = cacheGet(ck);
+  if (cached) return JSON.parse(cached);
+
   var data = Array(12).fill(0);
   var evSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(EV_SHEET);
   if (evSheet && evSheet.getLastRow() >= 2) {
@@ -306,6 +385,7 @@ function getEVYearlyData(year) {
       if (d.getFullYear() == year) data[d.getMonth()] += parseFloat(row[4] || 0);
     });
   }
+  cacheSet(ck, JSON.stringify(data));
   return data;
 }
 
@@ -336,6 +416,7 @@ function addPetrolRecord(data) {
   
   SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PETROL_SHEET)
     .appendRow([new Date(data.date), safeStation, liter, price, total, safeNote]);
+    invalidateEVCache();
   return { status: 'success', message: 'Rekod minyak berjaya ditambah' };
 }
 
@@ -356,6 +437,7 @@ function updatePetrolRecord(data) {
   SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PETROL_SHEET)
     .getRange(safeRowId, 1, 1, 6)
     .setValues([[new Date(data.date), safeStation, liter, price, total, safeNote]]);
+    invalidateEVCache();
   return { status: 'success', message: 'Rekod minyak berjaya dikemaskini' };
 }
 
@@ -373,6 +455,7 @@ function deletePetrolRecord(rowId) {
   if (!rowId) throw new Error('ID rekod diperlukan');
   var safeRowId = parseInt(rowId);
   SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PETROL_SHEET).deleteRow(safeRowId);
+  invalidateEVCache();
   return { status: 'success', message: 'Rekod minyak berjaya dipadam' };
 }
 
@@ -380,13 +463,19 @@ function getBatchSummaryData(month, year) {
   var prevMonth = month ? (parseInt(month) === 1 ? 12        : parseInt(month) - 1) : '';
   var prevYear  = month ? (parseInt(month) === 1 ? parseInt(year) - 1 : year)       : year;
 
+  // Baca transaksi semua bulan dari satu bacaan sheet
+  var allExp = getTransactions('', year);  // kosong = semua bulan
+  
+  var expData     = month ? allExp.filter(function(t) { var d = new Date(t.date); return (d.getMonth()+1) == month; }) : allExp;
+  var prevExpData = month ? allExp.filter(function(t) { var d = new Date(t.date); return (d.getMonth()+1) == prevMonth; }) : [];
+
   return {
-    expData      : getTransactions(month, year),
+    expData      : expData,
     evData       : getEVData(month, year),
     petrolData   : getPetrolData(month, year),
-    prevExpData  : getTransactions(prevMonth, prevYear),
-    prevEvData   : getEVData(prevMonth, prevYear),
-    prevPetData  : getPetrolData(prevMonth, prevYear),
+    prevExpData  : prevExpData,
+    prevEvData   : prevMonth ? getEVData(prevMonth, prevYear) : [],
+    prevPetData  : prevMonth ? getPetrolData(prevMonth, prevYear) : [],
     expYearly    : getYearlyData(year),
     evYearly     : getEVYearlyData(year)
   };
