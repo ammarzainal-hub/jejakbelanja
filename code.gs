@@ -75,7 +75,7 @@ function isValidDate(dateStr) {
 
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('index')
-      .setTitle('ExpensePro & EV Tracker')
+      .setTitle('🔒 Main Finance Hub 🔒')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }

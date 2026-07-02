@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ExpensePro & EV Tracker</title>
+  <title>🔒 Main Finance Hub 🔒</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -267,7 +267,7 @@
       <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
         <div>
           <h1 class="text-xl font-black text-indigo-600 tracking-tighter uppercase">Ringkasan Bulanan</h1>
-          <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Belanja + EV Cas + Minyak</p>
+          <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Belanja + EV Cas + Minyak + Bil + Solar</p>
         </div>
         <div class="flex flex-wrap justify-center gap-2">
           <select id="sumFilterMonth" onchange="debouncedLoadAllData()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-indigo-50 outline-none">
@@ -278,11 +278,11 @@
             <option value="10">Okt</option><option value="11">Nov</option><option value="12">Dis</option>
           </select>
           <select id="sumFilterYear" onchange="debouncedLoadAllData()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
-            <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+            <option value="2026" selected>2026</option><option value="2027">2027</option>
             <option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option>
           </select>
           <button onclick="forceRefreshAll()" title="Refresh & Kosongkan Cache" class="rounded-xl border border-indigo-200 text-[10px] font-bold px-4 py-2 bg-white text-indigo-600 hover:bg-indigo-50 active:scale-95 transition-all uppercase tracking-widest">
-            🔄 Refresh
+            🔄
           </button>
         </div>
       </div>
@@ -359,7 +359,7 @@
       <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
         <div class="flex items-center gap-2">
           <button onclick="exportCSV('expense')" title="Eksport CSV" class="text-slate-400 hover:text-emerald-600 transition-all hover:scale-110 text-lg leading-none">📥</button>
-          <h1 class="text-xl font-black text-emerald-600 tracking-tighter uppercase">ExpensePro</h1>
+          <h1 class="text-xl font-black text-emerald-600 tracking-tighter uppercase">💸 EXPENSEPRO</h1>
         </div>
         <div class="flex flex-wrap justify-center items-center gap-2">
           <div class="relative">
@@ -375,11 +375,11 @@
             <option value="10">Okt</option><option value="11">Nov</option><option value="12">Dis</option>
           </select>
           <select id="filterYear" onchange="debouncedLoadAllData()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
-            <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+            <option value="2026" selected>2026</option><option value="2027">2027</option>
             <option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option>
           </select>
           <button onclick="forceRefreshExpense()" title="Refresh Cache Belanja" class="rounded-xl border border-emerald-200 text-[10px] font-bold px-4 py-2 bg-white text-emerald-600 hover:bg-emerald-50 active:scale-95 transition-all uppercase tracking-widest">
-            🔄 Refresh
+            🔄
           </button>
         </div>
       </div>
@@ -454,7 +454,7 @@
       <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
           <div class="flex items-center gap-2">
             <button onclick="exportCSV('ev')" title="Eksport CSV" class="text-slate-400 hover:text-blue-600 transition-all hover:scale-110 text-lg leading-none">📥</button>
-            <h1 class="text-xl font-black text-blue-600 tracking-tighter uppercase">EV CAS Tracker</h1>
+            <h1 class="text-xl font-black text-blue-600 tracking-tighter uppercase">🔋 ⛽ ENERGY TRACKER</h1>
           </div>
         <div class="flex flex-wrap justify-center items-center gap-2">
           <div class="relative">
@@ -470,11 +470,11 @@
             <option value="10">Okt</option><option value="11">Nov</option><option value="12">Dis</option>
           </select>
           <select id="evFilterYear" onchange="debouncedLoadAllData()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
-            <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+            <option value="2026" selected>2026</option><option value="2027">2027</option>
             <option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option>
           </select>
           <button onclick="forceRefreshEV()" title="Refresh Cache EV/Minyak" class="rounded-xl border border-blue-200 text-[10px] font-bold px-4 py-2 bg-white text-blue-600 hover:bg-blue-50 active:scale-95 transition-all uppercase tracking-widest">
-            🔄 Refresh
+            🔄
           </button>
         </div>
       </div>
@@ -523,7 +523,7 @@
       <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
         <div class="flex items-center gap-2">
           <button onclick="exportCSV('bil')" title="Eksport CSV" class="text-slate-400 hover:text-purple-600 transition-all hover:scale-110 text-lg leading-none">📥</button>
-          <h1 class="text-xl font-black text-purple-600 tracking-tighter uppercase">Bil Bulanan</h1>
+          <h1 class="text-xl font-black text-purple-600 tracking-tighter uppercase">🧾 BIL BULANAN</h1>
         </div>
         <div class="flex flex-wrap justify-center gap-2">
           <select id="bilFilterMonth" onchange="switchBilMonth()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
@@ -533,7 +533,7 @@
             <option value="10">Okt</option><option value="11">Nov</option><option value="12">Dis</option>
           </select>
           <select id="bilFilterYear" onchange="switchBilMonth()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
-            <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+            <option value="2026" selected>2026</option><option value="2027">2027</option>
             <option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option>
           </select>
         </div>
@@ -573,18 +573,19 @@
           <h1 class="text-xl font-black text-amber-600 tracking-tighter uppercase">☀️ Solar Tracker</h1>
         </div>
         <div class="flex flex-wrap justify-center gap-2">
-          <select id="solarFilterMonth" onchange="loadSolarData()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
+          <select id="solarFilterMonth" onchange="switchSolarMonth()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
+            <option value="">Semua Bulan</option>
             <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mac</option>
             <option value="4">Apr</option><option value="5">Mei</option><option value="6">Jun</option>
             <option value="7">Jul</option><option value="8">Ogos</option><option value="9">Sep</option>
             <option value="10">Okt</option><option value="11">Nov</option><option value="12">Dis</option>
           </select>
-          <select id="solarFilterYear" onchange="loadSolarData()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
-            <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+          <select id="solarFilterYear" onchange="switchSolarMonth()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
+            <option value="2026" selected>2026</option><option value="2027">2027</option>
             <option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option>            <option value="2031">2031</option>
           </select>
           <button onclick="forceRefreshSolar()" title="Refresh Cache Solar" class="rounded-xl border border-amber-200 text-[10px] font-bold px-4 py-2 bg-white text-amber-600 hover:bg-amber-50 active:scale-95 transition-all uppercase tracking-widest">
-            🔄 Refresh
+            🔄
           </button>
         </div>
       </div>
@@ -909,7 +910,7 @@ var CATEGORY_COLORS = {
       var sel = document.getElementById('pageSelect');
       sel.innerHTML = '';
       for (var i = 1; i <= totalPages; i++) {
-        sel.innerHTML += '<option value="' + i + '"' + (i === currentPage ? ' selected' : '') + '>Hal ' + i + '</option>';
+        sel.innerHTML += '<option value="' + i + '"' + (i === currentPage ? ' selected' : '') + '>Muka ' + i + '</option>';
       }
       document.getElementById('btnFirst').disabled = currentPage === 1;
       document.getElementById('btnPrev').disabled = currentPage === 1;
@@ -1763,7 +1764,7 @@ function confirmEVDelete(id) {
       var sel = document.getElementById('evPageSelect');
       sel.innerHTML = '';
       for (var i = 1; i <= evTotalPages; i++) {
-        sel.innerHTML += '<option value="' + i + '"' + (i === evCurrentPage ? ' selected' : '') + '>Hal ' + i + '</option>';
+        sel.innerHTML += '<option value="' + i + '"' + (i === evCurrentPage ? ' selected' : '') + '>Muka ' + i + '</option>';
       }
       document.getElementById('evBtnFirst').disabled = evCurrentPage === 1;
       document.getElementById('evBtnPrev').disabled = evCurrentPage === 1;
@@ -2472,12 +2473,20 @@ function confirmPetrolDelete(id) {
 
     function loadSolarData() {
       showLoader(true);
-      var today = new Date();
-      var m = today.getMonth() + 1;
-      var y = today.getFullYear();
-      document.getElementById('solarFilterMonth').value = m;
-      document.getElementById('solarFilterYear').value = y;
+      var m = document.getElementById('solarFilterMonth').value;
+      var y = document.getElementById('solarFilterYear').value;
+      fetchSolarBatch(m, y);
+    }
 
+    function switchBilMonth() {
+      var m = document.getElementById('bilFilterMonth').value;
+      var y = document.getElementById('bilFilterYear').value;
+      initAndLoadBil(m, y);
+    }
+
+    function switchSolarMonth() {
+      var m = document.getElementById('solarFilterMonth').value;
+      var y = document.getElementById('solarFilterYear').value;
       fetchSolarBatch(m, y);
     }
 
