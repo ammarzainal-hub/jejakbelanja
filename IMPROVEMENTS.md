@@ -33,21 +33,56 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 
 ---
 
+## Modul Baharu: Solar Tracker (Tab 5)
+
+### Backend (`code.gs`)
+- **`SOLAR`** — Sheet rekod penjanaan solar bulanan
+- **`getSolarData()`** — Baca rekod solar ikut bulan/tahun dengan caching TTL 2 jam
+- **`addSolarRecord()`** — Tambah rekod + auto-kira Baki, Jumlah Baki, Luar Grid
+- **`updateSolarRecord()`** — Kemaskini + auto-kira semula
+- **`deleteSolarRecord()`** — Padam rekod
+- **`getSolarYearlyData()`** — Data 12 bulan untuk chart (jana, guna, baki, kumulatif, luar grid) dengan caching
+- **`getSolarBatch()`** — Gabungan data + yearly
+- **`invalidateSolarCache()`** — Hapus semua cache Solar (dipanggil bila CRUD)
+
+### Frontend (`index.html`)
+- Tab ke-5 di nav bar — ikon matahari, warna amber
+- **Grid Stats 4×2** — Jana TNB, Guna TNB, Jana Apps, Luar Grid | Baki, Jml Baki, +Rekod Baru
+- **2 Carta** — Bar stacked (Jana vs Guna vs Luar Grid) + Line (Baki kumulatif)
+- **Jadual Bulanan** — 12 baris dengan edit/delete per bulan
+- **Form Modal** — Input 3 medan (Jana TNB, Guna TNB, Jana Apps) + auto-kira Baki & Luar Grid (read-only)
+- **Edit instant** — Data disimpan client-side, cari terus tanpa API call
+- **Default bulan semasa** — Bila buka tab Solar, auto ke bulan/tahun semasa
+- **Kad Ringkasan** — 3 line (⚡ Jana / 🏠 Guna / 📊 Baki) dalam kad gradient amber di Ringkasan
+
+---
+
 ## Ringkasan — Bil Diasingkan
 
 - Bil **tidak** termasuk dalam Jumlah Keseluruhan, Pie Chart, Bar Chart
 - Bil dipapar sebagai **section berasingan** di bawah jadual bulanan
 - Kad Bil tunjuk status "4/7 Dibayar" dengan progress bar
+- Solar dipapar sebagai kad ke-4 dalam grid Ringkasan (berasingan dari 3 kad utama)
+
+---
+
+## Kard Gradient Ringkasan
+
+- 4 kad utama di Ringkasan kini guna **gradient background** ikut tema: emerald (Belanja), blue (EV), orange (Minyak), amber (Solar)
+- Kad Bil di bawah jadual juga guna gradient purple
+- Teks putih, icon `bg-white/20`, progress bar `bg-white/20`
+- Accent-border-top dibuang — tak relevan pada kad gradient
+- Dark mode: gradient kekal menyerlah
 
 ---
 
 ## Dark Mode
 
-- Toggle 🌙/☀️ di pojok kanan atas
+- Toggle 🌙/☀️ di pojok kanan atas (kecil: `top-2 right-2 p-1.5`)
 - Preference disimpan di `localStorage`
 - Palet warna gelap: `#0b1120` background, `#111827` cards
 - CSS overrides untuk semua background, text, border, input, select, shadow
-- Card berwarna (emerald/blue/orange/indigo/purple) guna opacity tinted
+- Card berwarna guna opacity tinted
 - Nav bar dengan glass effect `backdrop-filter: blur`
 - Active nav tab dengan glow ikut warna modul
 - Hero gradient card dengan indigo glow shadow
@@ -55,12 +90,22 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 
 ---
 
+## Nav Hover Effects
+
+- 5 butang nav — setiap satu ada `:hover` state ikut warna tema
+- Light mode: background pastel + teks ikut tema
+- Dark mode: background `rgba(theme, 0.12)` + teks glow
+- Tidak ganggu `nav-active` state sedia ada
+
+---
+
 ## UI Polish
 
-- **Gradient Buttons** — Semua butang utama guna gradient: emerald, slate, blue, orange
+- **Gradient Buttons** — Semua butang utama guna gradient: emerald, slate, blue, orange, amber
 - **Card Shadows** — `shadow-card` 2-layer shadow dengan hover elevate
-- **Accent Borders** — 3px gradient top border pada setiap summary card
 - **Background** — Light mode: `#f1f5f9` (lebih cerah dan segar)
+- **Loader** — Spinner + teks "Memuat sistem"
+- **Toggle Dark Mode** — Lebih kecil & tinggi, tak bertindih content
 
 ---
 
@@ -75,12 +120,13 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 
 ## Eksport CSV
 
-- Butang 📥 di kiri tajuk setiap header
+- Butang 📥 di kiri tajuk setiap header (5 modul)
 - **Belanja** — Eksport tarikh, kategori, amaun, nota, bayaran
 - **EV Cas** — Eksport tarikh, jenis, CPO/stesen, kWh/liter, RM, lokasi
 - **Bil** — Eksport lokasi, nama, kategori, amaun, status, tarikh bayar
+- **Solar** — Eksport tahun, bulan, jana TNB, guna TNB, jana apps, luar grid, baki, jumlah baki
 - BOM UTF-8 — terus buka di Excel tanpa masalah aksara Melayu
-- Ikut filter + carian semasa
+- Ikut filter + carian semasa. Solar guna async fetch.
 
 ---
 
@@ -98,6 +144,7 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - **Belanja**: amaun > 0, kategori dipilih, tarikh tak boleh masa depan
 - **EV Cas**: kWh > 0, harga/kWh > 0, CPO dipilih (untuk Luar)
 - **Minyak**: liter > 0, stesen dipilih
+- **Solar**: Jana TNB ≥ 0, Guna TNB ≥ 0
 - Instant feedback tanpa tunggu API call
 
 ---
@@ -108,16 +155,22 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - Fix `filteredTransactions` stale data selepas tukar bulan/tahun
 - Fix `noSpendDays` — kini tunjuk kiraan hari tanpa belanja yang betul (per tahun)
 - Fix bil filter month default ke bulan semasa
+- Fix solar filter month default ke bulan semasa
 - Fix icon edit di EV Cas disamakan dengan Belanja
 - Fix category hover background (tak putih lagi, guna opacity)
 - Fix `toggolBilStatus` — tarikh bayar auto-set bila ditanda
+- Fix `openSolarModal` — cari client-side, elak 1-2 saat sela
+- Fix `getSolarData` filter — handle null month/year dengan betul
+- Fix `initCategoryFilter` — sentiasa aktifkan semua kategori, elak jadual kosong
+- Fix exportCSV Solar — tambah loader + error handler
+- Fix kad Solar di Ringkasan — tambah error handler
 
 ---
 
 ## `code.gs` — Penambahbaikan Lain
 
-- **CacheService** — Cache untuk kategori, CPO, data tahunan, template bil
-- **`invalidateCache()`** — Fungsi untuk invalidate cache bila data berubah
+- **CacheService** — Cache untuk semua modul: kategori, CPO, data tahunan, template bil, solar data, solar yearly
+- **`invalidateCache()`** — Fungsi untuk invalidate cache bila data berubah (setiap modul ada fungsi sendiri)
 - **`getBatchSummaryData()`** — Dioptimumkan untuk baca semua data dalam satu panggilan
 - **Sanitize** — Semua input di-escape untuk elak XSS
 - **Input validation** — Semua fungsi CRUD validate input sebelum simpan

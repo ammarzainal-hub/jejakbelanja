@@ -1,19 +1,21 @@
 # Jejak Belanja
 
-Aplikasi web untuk menguruskan perbelanjaan harian, menjejaki kos kenderaan elektrik (EV), dan mengurus bil bulanan. Dibina menggunakan Google Apps Script dengan Google Sheets sebagai pangkalan data.
+Aplikasi web untuk menguruskan perbelanjaan harian, menjejaki kos kenderaan elektrik (EV), mengurus bil bulanan, dan memantau prestasi solar. Dibina menggunakan Google Apps Script dengan Google Sheets sebagai pangkalan data.
 
 ## Ciri-ciri
 
-- **Ringkasan Bulanan** — Pandangan keseluruhan belanja, EV cas, dan minyak dengan perbandingan bulan lepas, pie chart, bar chart, dan jadual bulanan
+- **Ringkasan Bulanan** — Pandangan keseluruhan belanja, EV cas, dan minyak dengan perbandingan bulan lepas, pie chart, bar chart, dan jadual bulanan. Kad gradient ikut tema modul.
 - **Belanja Harian** — Rekod perbelanjaan dengan kategori, carta kategori interaktif (expand + trend 3 bulan), carta pembayaran (boleh tapis), trend tahunan, dan carian
 - **EV Cas Tracker** — Rekod cas EV (rumah/luar) dan isi minyak dengan pecahan CPO/stesen, 3 carta interaktif (tapis data guna klik carta), dan carian
 - **Bil Bulanan** — Senarai semak bil bulanan auto-jana dari template, susun ikut lokasi, collapse/expand, tandai semua, kad peringatan bil belum bayar, progress tracking
+- **Solar Tracker** — Rekod penjanaan solar bulanan (Jana TNB, Guna TNB, Jana Apps), auto-kira baki & luar grid, bar chart stacked + line chart kumulatif, ringkasan di Ringkasan
 - **Rekod Pukal** — Tambah multiple entries sekaligus di modul Belanja
 - **Carta Interaktif** — Klik carta untuk menapis data
-- **Eksport CSV** — Eksport data dari setiap modul (Belanja / EV+Minyak / Bil)
+- **Eksport CSV** — Eksport data dari setiap modul (Belanja / EV+Minyak / Bil / Solar)
 - **Carian** — Cari transaksi merentasi kategori, nota, amaun di Belanja & EV
 - **Pagination** — 25 rekod per halaman di Belanja & EV
-- **Dark Mode** — Toggle light/dark dengan localStorage
+- **Dark Mode** — Toggle light/dark dengan localStorage. Kad gradient, nav hover, dan semua elemen disesuaikan untuk kedua-dua mod.
+- **Nav Hover** — Butang nav bertukar warna ikut tema modul bila mouse hover
 - **Responsif** — Sesuai untuk desktop dan mobile
 
 ## Prasyarat
@@ -31,7 +33,7 @@ Aplikasi web untuk menguruskan perbelanjaan harian, menjejaki kos kenderaan elek
 
 ### Langkah 2: Buat Tab Sheets
 
-Buat 7 sheet tabs dengan nama berikut (case-sensitive):
+Buat 8 sheet tabs dengan nama berikut (case-sensitive):
 
 | Nama Tab | Kegunaan |
 |----------|----------|
@@ -42,6 +44,7 @@ Buat 7 sheet tabs dengan nama berikut (case-sensitive):
 | `MINYAK` | Rekod isi minyak |
 | `BIL_TEMPLATE` | Senarai bil tetap (template) |
 | `BIL_REKOD` | Rekod bayaran bil bulanan |
+| `SOLAR` | Rekod penjanaan solar bulanan |
 
 ### Langkah 3: Tambah Header & Data Awal
 
@@ -100,6 +103,12 @@ Astro | Hiburan | 109.16 | Ya | Muar | | 📺
 TAHUN | BULAN | LOKASI | NAMA | KATEGORI | AMAUN | STATUS | TARIKH_BAYAR
 ```
 
+**Tab SOLAR** — Header di baris pertama:
+```
+TAHUN | BULAN | JANA_TNB | GUNA_TNB | BAKI | JUMLAH_BAKI | JANA_APPS | GUNA_LUAR_GRID
+```
+> 7 kolum terakhir (BAKI, JUMLAH_BAKI, GUNA_LUAR_GRID) akan auto-dikira. Kamu cuma isi TAHUN, BULAN, JANA_TNB, GUNA_TNB, JANA_APPS.
+
 ### Langkah 4: Tambah Apps Script
 
 1. Dalam spreadsheet, pergi ke **Extensions → Apps Script**
@@ -129,11 +138,11 @@ Buka URL yang dicopy di browser. Aplikasi sedia diguna.
 
 ```
 jejak-belanja/
-├── code.gs        # Server-side logic (Google Apps Script)
-├── index.html     # Frontend UI + client-side JavaScript
-├── README.md      # Dokumentasi
+├── code.gs         # Server-side logic (Google Apps Script)
+├── index.html      # Frontend UI + client-side JavaScript
+├── README.md       # Dokumentasi
 ├── IMPROVEMENTS.md # Changelog penambahbaikan
-└── Old Version/   # Versi lama (arkib)
+└── Old Version/    # Versi lama (arkib)
 ```
 
 ## Teknologi
@@ -141,7 +150,7 @@ jejak-belanja/
 - **Frontend**: HTML, Tailwind CSS, Chart.js
 - **Backend**: Google Apps Script
 - **Database**: Google Sheets
-- **Caching**: Google Apps Script CacheService + localStorage
+- **Caching**: Google Apps Script CacheService untuk semua modul + localStorage
 
 ## Harga Default
 
@@ -183,4 +192,4 @@ MIT License — Bebas diguna dan diubahsuai.
 
 ## Penulis
 
-Dibuat untuk kegunaan peribadi tracking perbelanjaan, kos kenderaan EV, dan bil bulanan.
+Dibuat untuk kegunaan peribadi tracking perbelanjaan, kos kenderaan EV, bil bulanan, dan prestasi solar.
