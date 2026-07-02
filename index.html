@@ -21,6 +21,8 @@
     .btn-gradient-blue:hover { background: linear-gradient(135deg, #1d4ed8, #2563eb); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(59,130,246,0.3); }
     .btn-gradient-orange { background: linear-gradient(135deg, #ea580c, #f97316); }
     .btn-gradient-orange:hover { background: linear-gradient(135deg, #c2410c, #ea580c); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(249,115,22,0.3); }
+    .btn-gradient-amber { background: linear-gradient(135deg, #b45309, #d97706); }
+    .btn-gradient-amber:hover { background: linear-gradient(135deg, #92400e, #b45309); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(217,119,6,0.3); }
     .accent-border-top { position: relative; }
     .accent-border-top::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 3px 3px 0 0; }
     .accent-emerald::before { background: linear-gradient(90deg, #059669, #10b981, #6ee7b7); }
@@ -28,6 +30,7 @@
     .accent-orange::before { background: linear-gradient(90deg, #c2410c, #f97316, #fdba74); }
     .accent-indigo::before { background: linear-gradient(90deg, #4338ca, #6366f1, #a5b4fc); }
     .accent-purple::before { background: linear-gradient(90deg, #7e22ce, #9333ea, #c4b5fd); }
+    .accent-amber::before { background: linear-gradient(90deg, #b45309, #d97706, #fcd34d); }
 
     body.dark { background: #0b1120; color: #e2e8f0; }
     body.dark .card-glass { background: rgba(30,41,59,0.7); backdrop-filter: blur(12px); border-color: rgba(51,65,85,0.5); }
@@ -58,6 +61,14 @@
     body.dark .nav-active-exp { background: rgba(16,185,129,0.2) !important; color: #6ee7b7 !important; }
     body.dark .nav-active-ev  { background: rgba(59,130,246,0.2) !important; color: #93c5fd !important; }
     body.dark .nav-active-bil { background: rgba(147,51,234,0.2) !important; color: #c4b5fd !important; }
+    body.dark .nav-active-solar { background: rgba(217,119,6,0.2) !important; color: #fcd34d !important; }
+    body.dark .bg-amber-50   { background-color: rgba(217,119,6,0.15) !important; border-color: rgba(217,119,6,0.25) !important; }
+    body.dark .bg-amber-100  { background-color: rgba(217,119,6,0.2) !important; }
+    body.dark .border-amber-100 { border-color: rgba(217,119,6,0.25) !important; }
+    body.dark .border-amber-200 { border-color: rgba(217,119,6,0.35) !important; }
+    body.dark .border-amber-300 { border-color: rgba(217,119,6,0.35) !important; }
+    body.dark .text-amber-800 { color: #fbbf24 !important; }
+    body.dark .text-amber-600 { color: #f59e0b !important; }
     body.dark .bg-purple-50   { background-color: rgba(147,51,234,0.15) !important; border-color: rgba(147,51,234,0.25) !important; }
     body.dark .bg-purple-100  { background-color: rgba(147,51,234,0.2) !important; }
     body.dark .border-purple-100 { border-color: rgba(147,51,234,0.25) !important; }
@@ -67,6 +78,7 @@
     body.dark .border-amber-200 { border-color: rgba(251,191,36,0.25) !important; }
     body.dark .text-amber-800 { color: #fbbf24 !important; }
     body.dark .text-amber-600 { color: #f59e0b !important; }
+    body.dark .text-amber-700 { color: #fbbf24 !important; }
     body.dark .loading-overlay { background: rgba(11,17,32,0.95) !important; }
     body.dark .toast { color: #fff !important; }
     body.dark .bg-gradient-to-br.from-indigo-600.to-indigo-800 { background-image: linear-gradient(to bottom right, #312e81, #1e1b4b) !important; }
@@ -85,6 +97,11 @@
     body.dark .btn-gradient-orange:hover { box-shadow: 0 8px 24px rgba(249,115,22,0.35); }
     body.dark .bg-gradient-to-br.from-indigo-600.to-indigo-800 { box-shadow: 0 4px 30px rgba(79,70,229,0.3); }
     body.dark .category-row:hover .category-name-area { background: rgba(255,255,255,0.06) !important; }
+    body.dark #nav-summary:hover:not(.nav-active-sum) { background: rgba(99,102,241,0.12) !important; color: #a5b4fc !important; }
+    body.dark #nav-expense:hover:not(.nav-active-exp)   { background: rgba(16,185,129,0.12) !important; color: #6ee7b7 !important; }
+    body.dark #nav-ev:hover:not(.nav-active-ev)         { background: rgba(59,130,246,0.12) !important; color: #93c5fd !important; }
+    body.dark #nav-bil:hover:not(.nav-active-bil)       { background: rgba(147,51,234,0.12) !important; color: #c4b5fd !important; }
+    body.dark #nav-solar:hover:not(.nav-active-solar)   { background: rgba(217,119,6,0.12) !important; color: #fcd34d !important; }
 
     .chart-container    { position: relative; height: 180px; width: 100%; }
     .chart-container-lg { position: relative; height: 220px; width: 100%; }
@@ -97,7 +114,14 @@
     .nav-active-exp { color: #10b981; border-top: 3px solid #10b981; background: #f0fdf4; }
     .nav-active-ev  { color: #3b82f6; border-top: 3px solid #3b82f6; background: #eff6ff; }
     .nav-active-bil { color: #9333ea; border-top: 3px solid #9333ea; background: #faf5ff; }
+    .nav-active-solar { color: #d97706; border-top: 3px solid #d97706; background: #fffbeb; }
     .summary-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+    
+    #nav-summary:hover:not(.nav-active-sum) { background: #eef2ff; color: #6366f1; }
+    #nav-expense:hover:not(.nav-active-exp)   { background: #f0fdf4; color: #10b981; }
+    #nav-ev:hover:not(.nav-active-ev)         { background: #eff6ff; color: #3b82f6; }
+    #nav-bil:hover:not(.nav-active-bil)       { background: #faf5ff; color: #9333ea; }
+    #nav-solar:hover:not(.nav-active-solar)   { background: #fffbeb; color: #d97706; }
     
     .toast {
       position: fixed;
@@ -230,6 +254,10 @@
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       <span class="text-[10px] font-bold uppercase">Bil</span>
     </button>
+    <button onclick="switchTab('solar')" id="nav-solar" class="flex flex-col items-center gap-1 w-full h-full justify-center text-slate-400">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      <span class="text-[10px] font-bold uppercase">Solar</span>
+    </button>
   </nav>
 
   <!-- PAGE: RINGKASAN -->
@@ -269,24 +297,33 @@
           <div class="ml-auto text-right"><p class="text-[9px] opacity-60 font-bold uppercase tracking-widest">Bulan Lepas</p><p id="sumLastMonthTotal" class="font-black text-sm opacity-80">RM -</p></div>
         </div>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="summary-card shadow-card bg-white rounded-3xl p-5 border border-slate-100 transition-all accent-border-top accent-emerald">
-          <div class="flex items-center justify-between mb-3"><div class="bg-emerald-100 rounded-2xl p-2"><svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><span id="sumExpensePct" class="text-[9px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full">0%</span></div>
-          <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Belanja Harian</p>
-          <p class="text-2xl font-black text-slate-900 mt-1">RM <span id="sumExpenseTotal">0.00</span></p>
-          <div class="mt-3 bg-emerald-50 rounded-2xl h-1.5 overflow-hidden"><div id="sumExpenseBar" class="bg-emerald-500 h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="summary-card shadow-card bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-3xl p-5 transition-all accent-border-top accent-emerald">
+          <div class="flex items-center justify-between mb-3"><div class="bg-white/20 rounded-2xl p-2"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><span id="sumExpensePct" class="text-[9px] font-black bg-white/20 text-white px-2 py-0.5 rounded-full">0%</span></div>
+          <p class="text-[9px] font-black text-white/60 uppercase tracking-widest">Belanja Harian</p>
+          <p class="text-2xl font-black text-white mt-1">RM <span id="sumExpenseTotal">0.00</span></p>
+          <div class="mt-3 bg-white/20 rounded-2xl h-1.5 overflow-hidden"><div id="sumExpenseBar" class="bg-white h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
         </div>
-        <div class="summary-card shadow-card bg-white rounded-3xl p-5 border border-slate-100 transition-all accent-border-top accent-blue">
-          <div class="flex items-center justify-between mb-3"><div class="bg-blue-100 rounded-2xl p-2"><svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div><span id="sumEVPct" class="text-[9px] font-black bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">0%</span></div>
-          <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">EV Cas</p>
-          <p class="text-2xl font-black text-slate-900 mt-1">RM <span id="sumEVTotal">0.00</span></p>
-          <div class="mt-3 bg-blue-50 rounded-2xl h-1.5 overflow-hidden"><div id="sumEVBar" class="bg-blue-500 h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
+        <div class="summary-card shadow-card bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-5 transition-all accent-border-top accent-blue">
+          <div class="flex items-center justify-between mb-3"><div class="bg-white/20 rounded-2xl p-2"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div><span id="sumEVPct" class="text-[9px] font-black bg-white/20 text-white px-2 py-0.5 rounded-full">0%</span></div>
+          <p class="text-[9px] font-black text-white/60 uppercase tracking-widest">EV Cas</p>
+          <p class="text-2xl font-black text-white mt-1">RM <span id="sumEVTotal">0.00</span></p>
+          <div class="mt-3 bg-white/20 rounded-2xl h-1.5 overflow-hidden"><div id="sumEVBar" class="bg-white h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
         </div>
-        <div class="summary-card shadow-card bg-white rounded-3xl p-5 border border-slate-100 transition-all accent-border-top accent-orange">
-          <div class="flex items-center justify-between mb-3"><div class="bg-orange-100 rounded-2xl p-2"><svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h2l2 8h10l2-8h2M7 10V6a4 4 0 018 0v4"/></svg></div><span id="sumPetrolPct" class="text-[9px] font-black bg-orange-50 text-orange-500 px-2 py-0.5 rounded-full">0%</span></div>
-          <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Minyak</p>
-          <p class="text-2xl font-black text-slate-900 mt-1">RM <span id="sumPetrolTotal">0.00</span></p>
-          <div class="mt-3 bg-orange-50 rounded-2xl h-1.5 overflow-hidden"><div id="sumPetrolBar" class="bg-orange-400 h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
+        <div class="summary-card shadow-card bg-gradient-to-br from-orange-600 to-orange-800 rounded-3xl p-5 transition-all accent-border-top accent-orange">
+          <div class="flex items-center justify-between mb-3"><div class="bg-white/20 rounded-2xl p-2"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h2l2 8h10l2-8h2M7 10V6a4 4 0 018 0v4"/></svg></div><span id="sumPetrolPct" class="text-[9px] font-black bg-white/20 text-white px-2 py-0.5 rounded-full">0%</span></div>
+          <p class="text-[9px] font-black text-white/60 uppercase tracking-widest">Minyak</p>
+          <p class="text-2xl font-black text-white mt-1">RM <span id="sumPetrolTotal">0.00</span></p>
+          <div class="mt-3 bg-white/20 rounded-2xl h-1.5 overflow-hidden"><div id="sumPetrolBar" class="bg-white h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
+        </div>
+        <div id="sumSolarCard" class="hidden summary-card shadow-card bg-gradient-to-br from-amber-600 to-amber-800 rounded-3xl p-5 transition-all accent-border-top accent-amber">
+          <div class="flex items-center justify-between mb-3"><div class="bg-white/20 rounded-2xl p-2"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div><span class="text-[9px] font-black bg-white/20 text-white px-2 py-0.5 rounded-full">☀️</span></div>
+          <p class="text-[9px] font-black text-white/60 uppercase tracking-widest mb-3">Solar</p>
+          <div class="space-y-1.5">
+            <p class="text-[10px] font-bold text-white/80"><span class="text-white">⚡</span> Jana: <span id="sumSolJana" class="text-white font-black">-</span></p>
+            <p class="text-[10px] font-bold text-white/80"><span class="text-white/60">🏠</span> Guna: <span id="sumSolGuna" class="text-white/80 font-black">-</span></p>
+            <p class="text-[10px] font-bold text-white/80">📊 Baki: <span id="sumSolBaki" class="text-white font-black">-</span></p>
+          </div>
         </div>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -525,6 +562,81 @@
     </main>
   </div>
 
+  
+  <!-- PAGE: SOLAR -->
+  <div id="page-solar" class="hidden">
+    <header class="bg-white border-b sticky top-0 z-20 shadow-sm px-6 py-4">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div class="flex items-center gap-2">
+          <button onclick="exportCSV('solar')" title="Eksport CSV" class="text-slate-400 hover:text-amber-600 transition-all hover:scale-110 text-lg leading-none">📥</button>
+          <h1 class="text-xl font-black text-amber-600 tracking-tighter uppercase">☀️ Solar Tracker</h1>
+        </div>
+        <div class="flex flex-wrap justify-center gap-2">
+          <select id="solarFilterMonth" onchange="loadSolarData()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
+            <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mac</option>
+            <option value="4">Apr</option><option value="5">Mei</option><option value="6">Jun</option>
+            <option value="7">Jul</option><option value="8">Ogos</option><option value="9">Sep</option>
+            <option value="10">Okt</option><option value="11">Nov</option><option value="12">Dis</option>
+          </select>
+          <select id="solarFilterYear" onchange="loadSolarData()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
+            <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+            <option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option>
+          </select>
+        </div>
+      </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6 text-left">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div class="shadow-card bg-white p-5 rounded-3xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">⚡ Jana TNB</p><p id="solJanaTNB" class="text-xl font-black text-amber-700 mt-1">0 kWh</p></div>
+        <div class="shadow-card bg-white p-5 rounded-3xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">🏠 Guna TNB</p><p id="solGunaTNB" class="text-xl font-black text-slate-700 mt-1">0 kWh</p></div>
+        <div class="shadow-card bg-white p-5 rounded-3xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">📡 Jana Apps</p><p id="solJanaApps" class="text-xl font-black text-blue-700 mt-1">0 kWh</p></div>
+        <div class="shadow-card bg-white p-5 rounded-3xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">⚠️ Luar Grid</p><p id="solLuarGrid" class="text-xl font-black text-red-600 mt-1">0 kWh</p></div>
+        <div class="shadow-card bg-emerald-50 p-5 rounded-3xl border border-emerald-100"><p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">📊 Baki</p><p id="solBaki" class="text-xl font-black text-emerald-700 mt-1">0 kWh</p></div>
+        <div class="shadow-card bg-amber-50 p-5 rounded-3xl border border-amber-100"><p class="text-[9px] font-black text-amber-600 uppercase tracking-widest">💰 Jml Baki</p><p id="solJmlBaki" class="text-xl font-black text-amber-800 mt-1">0 kWh</p></div>
+        <button onclick="openSolarModal(null)" class="btn-gradient-amber text-white rounded-3xl font-black text-[10px] uppercase py-4 shadow-lg active:scale-95 transition-all tracking-widest lg:col-span-2">+ Rekod Baru</button>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="shadow-card bg-white p-6 rounded-3xl border border-slate-100 text-center"><h3 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Penjanaan vs Guna</h3><div class="chart-container-lg"><canvas id="solarBarChart"></canvas></div></div>
+        <div class="shadow-card bg-white p-6 rounded-3xl border border-slate-100 text-center"><h3 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Baki Kumulatif</h3><div class="chart-container-lg"><canvas id="solarLineChart"></canvas></div></div>
+      </div>
+      <div class="shadow-card bg-white rounded-3xl border border-slate-100 overflow-hidden overflow-x-auto">
+        <table class="w-full text-left text-sm min-w-[700px]">
+          <thead class="bg-slate-50 text-slate-400 font-black uppercase text-[9px] tracking-widest border-b">
+            <tr><th class="px-4 py-4 text-center">Aksi</th><th class="px-4 py-4">Bulan</th><th class="px-4 py-4 text-right">Jana TNB</th><th class="px-4 py-4 text-right">Guna TNB</th><th class="px-4 py-4 text-right">Jana Apps</th><th class="px-4 py-4 text-right">Luar Grid</th><th class="px-4 py-4 text-right">Baki</th><th class="px-4 py-4 text-right">Jml Baki</th></tr>
+          </thead>
+          <tbody id="solarTableBody" class="divide-y divide-slate-50"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- SOLAR MODAL -->
+  <div id="solarModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 text-left">
+    <div class="bg-white rounded-[2rem] w-full max-w-md p-8 shadow-2xl">
+      <h3 id="solarModalTitle" class="text-xl font-black mb-6 text-center text-amber-600 uppercase tracking-widest">Tambah Rekod Solar</h3>
+      <form id="solarForm" onsubmit="handleSolarSubmit(this); return false;" class="space-y-4">
+        <input type="hidden" id="solarEditRowId" name="rowId">
+        <div class="flex gap-4">
+          <select id="solarFormBulan" name="bulan" class="flex-1 rounded-xl border bg-slate-50 p-4 font-bold outline-none">
+            <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mac</option>
+            <option value="4">Apr</option><option value="5">Mei</option><option value="6">Jun</option>
+            <option value="7">Jul</option><option value="8">Ogos</option><option value="9">Sep</option>
+            <option value="10">Okt</option><option value="11">Nov</option><option value="12">Dis</option>
+          </select>
+          <input type="number" id="solarFormTahun" name="tahun" value="2026" class="flex-1 rounded-xl border bg-slate-50 p-4 font-bold outline-none">
+        </div>
+        <div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">⚡ Jana TNB (kWh)</label><input type="number" id="solarJanaTNB" name="janaTNB" step="0.01" required placeholder="0.00" oninput="calcSolarAuto()" class="w-full rounded-xl border bg-slate-50 p-4 font-black outline-none"></div>
+        <div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">🏠 Guna TNB (kWh)</label><input type="number" id="solarGunaTNB" name="gunaTNB" step="0.01" required placeholder="0.00" oninput="calcSolarAuto()" class="w-full rounded-xl border bg-slate-50 p-4 font-black outline-none"></div>
+        <div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">📡 Jana Apps (kWh)</label><input type="number" id="solarJanaApps" name="janaApps" step="0.01" required placeholder="0.00" oninput="calcSolarAuto()" class="w-full rounded-xl border bg-slate-50 p-4 font-black outline-none"></div>
+        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-2">
+          <div class="flex justify-between items-center"><span class="text-[9px] font-bold text-slate-400 uppercase">📊 Baki</span><span id="solarAutoBaki" class="font-black text-emerald-600 text-lg">0.00 kWh</span></div>
+          <div class="flex justify-between items-center"><span class="text-[9px] font-bold text-slate-400 uppercase">⚠️ Guna Luar Grid</span><span id="solarAutoLuarGrid" class="font-black text-red-500 text-lg">0.00 kWh</span></div>
+        </div>
+        <div class="flex gap-4 pt-4"><button type="button" onclick="toggleModal('solarModal', false)" class="flex-1 py-4 text-slate-400 font-bold uppercase text-[10px]">Batal</button><button type="submit" class="flex-1 py-4 btn-gradient-amber text-white rounded-2xl font-black shadow-lg uppercase text-[10px]">Simpan</button></div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODALS -->
   <div id="evModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 text-left">
     <div class="bg-white rounded-[2rem] w-full max-w-md p-8 shadow-2xl">
@@ -613,8 +725,16 @@
       <button onclick="closeDeleteModal()" class="flex-1 py-4 text-slate-400 font-bold uppercase text-[10px] bg-slate-100 rounded-2xl hover:bg-slate-200 transition-all">Batal</button>
       <button id="deleteConfirmBtn" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black shadow-lg uppercase text-[10px] hover:bg-red-600 transition-all active:scale-95">Padam</button>
     </div>
-  </div>
-</div>
+        </div>
+      </div>
+      <div id="sumSolarSection" class="space-y-3 pt-2 hidden">
+        <div class="flex items-center gap-2 px-1"><span class="text-sm">☀️</span><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Solar</p></div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div class="shadow-card bg-white rounded-2xl p-4 border border-slate-100"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">⚡ Jana TNB</p><p id="sumSolJana" class="text-sm font-black text-amber-700 mt-1">-</p></div>
+          <div class="shadow-card bg-white rounded-2xl p-4 border border-slate-100"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">🏠 Guna TNB</p><p id="sumSolGuna" class="text-sm font-black text-slate-700 mt-1">-</p></div>
+          <div class="shadow-card bg-white rounded-2xl p-4 border border-slate-100"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">📊 Baki</p><p id="sumSolBaki" class="text-sm font-black text-emerald-600 mt-1">-</p></div>
+        </div>
+      </div>
 
   <!-- Mobile Expand Modal -->
   <div id="mobileBackdrop" class="mobile-backdrop" onclick="closeMobileCategoryModal()"></div>
@@ -857,6 +977,7 @@ var CATEGORY_COLORS = {
       document.getElementById('page-expense').classList.toggle('hidden', tab !== 'expense');
       document.getElementById('page-ev').classList.toggle('hidden', tab !== 'ev');
       document.getElementById('page-bil').classList.toggle('hidden', tab !== 'bil');
+      document.getElementById('page-solar').classList.toggle('hidden', tab !== 'solar');
       document.getElementById('nav-summary').classList.toggle('nav-active-sum', tab === 'summary');
       document.getElementById('nav-summary').classList.toggle('text-slate-400', tab !== 'summary');
       document.getElementById('nav-expense').classList.toggle('nav-active-exp', tab === 'expense');
@@ -865,6 +986,8 @@ var CATEGORY_COLORS = {
       document.getElementById('nav-ev').classList.toggle('text-slate-400', tab !== 'ev');
       document.getElementById('nav-bil').classList.toggle('nav-active-bil', tab === 'bil');
       document.getElementById('nav-bil').classList.toggle('text-slate-400', tab !== 'bil');
+      document.getElementById('nav-solar').classList.toggle('nav-active-solar', tab === 'solar');
+      document.getElementById('nav-solar').classList.toggle('text-slate-400', tab !== 'solar');
       loadAllData();
     }
 
@@ -878,6 +1001,9 @@ var CATEGORY_COLORS = {
           .withSuccessHandler(function(b) {
             updateSummaryUI(b.expData, b.evData, b.petrolData, b.bilData, b.prevExpData, b.prevEvData, b.prevPetData, b.prevBilData, m, y);
             renderSumBarChart(b.expYearly, b.evYearly, y);
+            google.script.run.withSuccessHandler(function(s) {
+              if (s.records && s.records.length > 0) updateSolarSummary(s.records);
+            }).getSolarBatch(m || '', y);
             showLoader(false);
           })
           .withFailureHandler(function(e) {
@@ -943,6 +1069,8 @@ var CATEGORY_COLORS = {
       } else if (activeTab === 'bil') {
         loadBilData();
         showLoader(false);
+      } else if (activeTab === 'solar') {
+        loadSolarData();
       }
     }
 
@@ -2284,17 +2412,27 @@ function confirmPetrolDelete(id) {
       applyEVSearch();
     }
 
-    function exportCSV(modul) {
-      var rows = [];
-      var filename = '';
+    function doDownload(rows, filename) {
+      var csv = rows.map(function(row) {
+        return row.map(function(cell) { return '"' + (cell == null ? '' : cell) + '"'; }).join(',');
+      }).join('\n');
+      var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+      showToast('Dieksport: ' + filename, 'success');
+    }
 
+    function exportCSV(modul) {
+      var rows = []; var filename = '';
       if (modul === 'expense') {
         var data = allFilteredData.length > 0 ? allFilteredData : transactionsData;
         filename = 'jejak_belanja_transaksi.csv';
         rows.push(['Tarikh', 'Kategori', 'Amaun', 'Nota', 'Bayaran']);
-        data.forEach(function(r) {
-          rows.push([r.date, r.category, r.amount, (r.note || ''), (r.payment || '💵 Cash')]);
-        });
+        data.forEach(function(r) { rows.push([r.date, r.category, r.amount, (r.note || ''), (r.payment || '💵 Cash')]); });
+        doDownload(rows, filename);
       } else if (modul === 'ev') {
         var data = evAllData.length > 0 ? evAllData : evAllRows;
         filename = 'jejak_belanja_ev_minyak.csv';
@@ -2305,29 +2443,179 @@ function confirmPetrolDelete(id) {
           var qty = jenis === 'Elektrik' ? (r.kwh || r._qty || '') : (r.liter || r._qty || '');
           rows.push([r.date, jenis, loc, qty, r.total, (jenis === 'Elektrik' ? (r.location || r._nota || '') : (r.note || r._nota || ''))]);
         });
+        doDownload(rows, filename);
       } else if (modul === 'bil') {
         var data = kolomBil.length > 0 ? kolomBil : [];
         filename = 'jejak_belanja_bil.csv';
         rows.push(['Lokasi', 'Nama', 'Kategori', 'Amaun', 'Status', 'Tarikh Bayar']);
-        data.forEach(function(r) {
-          rows.push([r.lokasi, r.nama, (r.kategori || ''), r.amaun, r.status, (r.tarikhBayar || '')]);
-        });
+        data.forEach(function(r) { rows.push([r.lokasi, r.nama, (r.kategori || ''), r.amaun, r.status, (r.tarikhBayar || '')]); });
+        doDownload(rows, filename);
+      } else if (modul === 'solar') {
+        var m = document.getElementById('solarFilterMonth').value;
+        var y = document.getElementById('solarFilterYear').value;
+        filename = 'jejak_belanja_solar_' + y + '_' + (m.length === 1 ? '0' + m : m) + '.csv';
+        rows.push(['Tahun', 'Bulan', 'Jana TNB (kWh)', 'Guna TNB (kWh)', 'Jana Apps (kWh)', 'Luar Grid (kWh)', 'Baki (kWh)', 'Jumlah Baki (kWh)']);
+        google.script.run.withSuccessHandler(function(batch) {
+          batch.records.forEach(function(r) { rows.push([r.tahun, r.bulan, r.janaTNB, r.gunaTNB, r.janaApps, r.luarGrid, r.baki, r.jumlahBaki]); });
+          doDownload(rows, filename);
+        }).withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); }).getSolarBatch(m || '', y);
       }
+    }
 
-      var csv = rows.map(function(row) {
-        return row.map(function(cell) { return '"' + (cell || '') + '"'; }).join(',');
-      }).join('\n');
+    var solarBarChart, solarLineChart;
 
-      var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showToast('Dieksport: ' + filename, 'success');
+    function loadSolarData() {
+      showLoader(true);
+      var today = new Date();
+      var m = today.getMonth() + 1;
+      var y = today.getFullYear();
+      document.getElementById('solarFilterMonth').value = m;
+      document.getElementById('solarFilterYear').value = y;
+
+      google.script.run
+        .withSuccessHandler(function(data) {
+          var yearly = data.yearly;
+          renderSolarUI(data.records, yearly, y);
+          showLoader(false);
+        })
+        .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
+        .getSolarBatch(m, y);
+    }
+
+    function renderSolarUI(records, yearly, year) {
+      var latest = records.length > 0 ? records[records.length - 1] : { janaTNB: 0, gunaTNB: 0, janaApps: 0, luarGrid: 0, baki: 0, jumlahBaki: 0 };
+      document.getElementById('solJanaTNB').innerText = fRM(latest.janaTNB) + ' kWh';
+      document.getElementById('solGunaTNB').innerText = fRM(latest.gunaTNB) + ' kWh';
+      document.getElementById('solJanaApps').innerText = fRM(latest.janaApps) + ' kWh';
+      document.getElementById('solLuarGrid').innerText = fRM(latest.luarGrid) + ' kWh';
+      document.getElementById('solBaki').innerText = (latest.baki >= 0 ? '+' : '') + fRM(latest.baki) + ' kWh';
+      document.getElementById('solJmlBaki').innerText = fRM(latest.jumlahBaki) + ' kWh';
+
+      renderSolarTable(records);
+      renderSolarCharts(yearly);
+    }
+
+    function renderSolarTable(records) {
+      var html = '';
+      records.forEach(function(r) {
+        html += '<tr class="hover:bg-slate-50 transition-colors text-left">';
+        html += '<td class="px-4 py-3 text-center"><div class="flex justify-center gap-3">';
+        html += '<button onclick="openSolarModal(' + r.rowId + ')" class="action-btn text-slate-300 hover:text-amber-600 transition-all transform hover:scale-125"><svg xmlns="http://www.w3.org/2000/svg" class="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg></button>';
+        html += '<button onclick="confirmSolarDelete(' + r.rowId + ')" class="action-btn text-slate-300 hover:text-red-600 transition-all transform hover:scale-125"><svg xmlns="http://www.w3.org/2000/svg" class="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>';
+        html += '</div></td>';
+        html += '<td class="px-4 py-3 text-[10px] font-black text-slate-500 font-mono">' + MONTHS[r.bulan - 1] + ' ' + r.tahun + '</td>';
+        html += '<td class="px-4 py-3 text-right text-[10px] font-bold text-amber-700">' + fRM(r.janaTNB) + '</td>';
+        html += '<td class="px-4 py-3 text-right text-[10px] font-bold text-slate-600">' + fRM(r.gunaTNB) + '</td>';
+        html += '<td class="px-4 py-3 text-right text-[10px] font-bold text-blue-600">' + fRM(r.janaApps) + '</td>';
+        html += '<td class="px-4 py-3 text-right text-[10px] font-bold text-red-500">' + fRM(r.luarGrid) + '</td>';
+        html += '<td class="px-4 py-3 text-right text-[10px] font-bold ' + (r.baki >= 0 ? 'text-emerald-600' : 'text-red-500') + '">' + (r.baki >= 0 ? '+' : '') + fRM(r.baki) + '</td>';
+        html += '<td class="px-4 py-3 text-right font-black text-amber-700">' + fRM(r.jumlahBaki) + '</td>';
+        html += '</tr>';
+      });
+      document.getElementById('solarTableBody').innerHTML = html || '<tr><td colspan="8" class="px-4 py-8 text-center text-slate-400 text-xs font-bold">Tiada rekod solar</td></tr>';
+    }
+
+    function renderSolarCharts(yearly) {
+      if (solarBarChart) solarBarChart.destroy();
+      var barCtx = document.getElementById('solarBarChart').getContext('2d');
+      solarBarChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: ['J','F','M','A','M','J','J','A','S','O','N','D'],
+          datasets: [
+            { label: 'Jana TNB', data: yearly.jana, backgroundColor: '#d97706', borderRadius: 6, barThickness: 8, stack: 'a' },
+            { label: 'Guna TNB', data: yearly.guna, backgroundColor: '#94a3b8', borderRadius: 6, barThickness: 8, stack: 'b' },
+            { label: 'Luar Grid', data: yearly.luarGrid, backgroundColor: '#ef4444', borderRadius: 6, barThickness: 8, stack: 'c' }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false }, border: { display: false } }, y: { display: false } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 9, weight: 'bold' } } } } }
+      });
+
+      if (solarLineChart) solarLineChart.destroy();
+      var lineCtx = document.getElementById('solarLineChart').getContext('2d');
+      solarLineChart = new Chart(lineCtx, {
+        type: 'line',
+        data: { labels: ['J','F','M','A','M','J','J','A','S','O','N','D'], datasets: [{ label: 'Jml Baki', data: yearly.kumulatif, borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,0.1)', fill: true, tension: 0.3, pointRadius: 3, pointBackgroundColor: '#d97706' }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false }, border: { display: false } }, y: { display: false } }, plugins: { legend: { display: false } } }
+      });
+    }
+
+    function calcSolarAuto() {
+      var jana = parseFloat(document.getElementById('solarJanaTNB').value) || 0;
+      var guna = parseFloat(document.getElementById('solarGunaTNB').value) || 0;
+      var apps = parseFloat(document.getElementById('solarJanaApps').value) || 0;
+      var baki = jana - guna;
+      var luarGrid = apps - jana;
+      document.getElementById('solarAutoBaki').innerText = (baki >= 0 ? '+' : '') + baki.toFixed(2) + ' kWh';
+      document.getElementById('solarAutoLuarGrid').innerText = luarGrid.toFixed(2) + ' kWh';
+    }
+
+    function openSolarModal(rowId) {
+      if (rowId) {
+        google.script.run.withSuccessHandler(function(data) {
+          var r = data.records.filter(function(d) { return d.rowId == rowId; })[0];
+          if (!r) return;
+          document.getElementById('solarModalTitle').innerText = 'Kemaskini Rekod Solar';
+          document.getElementById('solarEditRowId').value = r.rowId;
+          document.getElementById('solarFormBulan').value = r.bulan;
+          document.getElementById('solarFormTahun').value = r.tahun;
+          document.getElementById('solarJanaTNB').value = r.janaTNB;
+          document.getElementById('solarGunaTNB').value = r.gunaTNB;
+          document.getElementById('solarJanaApps').value = r.janaApps;
+          calcSolarAuto();
+          toggleModal('solarModal', true);
+        }).getSolarBatch(null, null);
+      } else {
+        var today = new Date();
+        document.getElementById('solarModalTitle').innerText = 'Tambah Rekod Solar';
+        document.getElementById('solarEditRowId').value = '';
+        document.getElementById('solarFormBulan').value = today.getMonth() + 1;
+        document.getElementById('solarFormTahun').value = today.getFullYear();
+        document.getElementById('solarJanaTNB').value = '';
+        document.getElementById('solarGunaTNB').value = '';
+        document.getElementById('solarJanaApps').value = '';
+        document.getElementById('solarAutoBaki').innerText = '0.00 kWh';
+        document.getElementById('solarAutoLuarGrid').innerText = '0.00 kWh';
+        toggleModal('solarModal', true);
+      }
+    }
+
+    function handleSolarSubmit(f) {
+      var d = { rowId: f.rowId.value, bulan: f.bulan.value, tahun: f.tahun.value, janaTNB: f.janaTNB.value, gunaTNB: f.gunaTNB.value, janaApps: f.janaApps.value };
+      if (!d.janaTNB || parseFloat(d.janaTNB) < 0) { showToast('Jana TNB mesti >= 0', 'error'); return false; }
+      if (!d.gunaTNB || parseFloat(d.gunaTNB) < 0) { showToast('Guna TNB mesti >= 0', 'error'); return false; }
+
+      var submitBtn = f.querySelector('button[type="submit"]');
+      var originalText = submitBtn.innerText;
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'MENYIMPAN...';
+      showLoader(true);
+
+      var fn = d.rowId ? 'updateSolarRecord' : 'addSolarRecord';
+      google.script.run.withSuccessHandler(function(r) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = originalText;
+        toggleModal('solarModal', false);
+        if (r && r.message) showToast(r.message, 'success');
+        loadSolarData();
+      }).withFailureHandler(function(e) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = originalText;
+        showToast('Error: ' + e.message, 'error');
+        showLoader(false);
+      })[fn](d);
+    }
+
+    function confirmSolarDelete(id) { openDeleteModal('solar', id, '☀️', 'Padam rekod solar ini?'); }
+
+    function updateSolarSummary(records) {
+      var card = document.getElementById('sumSolarCard');
+      card.classList.remove('hidden');
+      var latest = records[records.length - 1];
+      document.getElementById('sumSolJana').innerText = fRM(latest.janaTNB) + ' kWh';
+      document.getElementById('sumSolGuna').innerText = fRM(latest.gunaTNB) + ' kWh';
+      var baki = latest.baki;
+      document.getElementById('sumSolBaki').innerText = (baki >= 0 ? '+' : '') + fRM(baki) + ' kWh';
     }
 
     var pendingDelete = null;
@@ -2368,6 +2656,7 @@ function executeDelete() {
   if (type === 'expense') funcName = 'deleteTransaction';
   else if (type === 'ev') funcName = 'deleteEVData';
   else if (type === 'petrol') funcName = 'deletePetrolRecord';
+  else if (type === 'solar') funcName = 'deleteSolarRecord';
   
   showLoader(true);
   closeDeleteModal();   // ← baru null-kan pendingDelete

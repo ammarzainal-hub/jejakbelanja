@@ -8,6 +8,7 @@ const CPO_SHEET      = 'JENIS_CPO';
 const PETROL_SHEET   = 'MINYAK';
 const BIL_TEMPLATE_SHEET = 'BIL_TEMPLATE';
 const BIL_REKOD_SHEET    = 'BIL_REKOD';
+const SOLAR_SHEET        = 'SOLAR';
 
 // ============================================================
 //   CACHE SERVICE HELPERS
@@ -644,6 +645,139 @@ function tandaiSemuaBilLokasi(month, year, lokasi) {
 
   invalidateBilCache();
   return { status: 'success', count: count };
+}
+
+
+// ============================================================
+//   MODUL 5: SOLAR
+// ============================================================
+
+function getSolarData(month, year) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOLAR_SHEET);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues()
+    .map(function(row, index) {
+      return {
+        rowId: index + 2,
+        tahun: parseInt(row[0]),
+        bulan: parseInt(row[1]),
+        janaTNB: parseFloat(row[2]) || 0,
+        gunaTNB: parseFloat(row[3]) || 0,
+        baki: parseFloat(row[4]) || 0,
+        jumlahBaki: parseFloat(row[5]) || 0,
+        janaApps: parseFloat(row[6]) || 0,
+        luarGrid: parseFloat(row[7]) || 0
+      };
+    })
+    .filter(function(item) {
+      return (month ? item.bulan == month : true) && (item.tahun == year);
+    });
+}
+
+function addSolarRecord(data) {
+  if (!data) throw new Error('Data tidak diberikan');
+  if (!data.bulan || !data.tahun) throw new Error('Bulan dan tahun diperlukan');
+  if (!data.janaTNB || parseFloat(data.janaTNB) < 0) throw new Error('Jana TNB mesti >= 0');
+  if (!data.gunaTNB || parseFloat(data.gunaTNB) < 0) throw new Error('Guna TNB mesti >= 0');
+
+  var janaTNB = parseFloat(data.janaTNB);
+  var gunaTNB = parseFloat(data.gunaTNB);
+  var janaApps = parseFloat(data.janaApps) || 0;
+  var bulan = parseInt(data.bulan);
+  var tahun = parseInt(data.tahun);
+
+  var baki = janaTNB - gunaTNB;
+  var luarGrid = janaApps - janaTNB;
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOLAR_SHEET);
+  var lastRow = sheet.getLastRow();
+  var jumlahBaki = 0;
+
+  if (lastRow >= 2) {
+    var allRows = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
+    allRows.forEach(function(r) {
+      var rBulan = parseInt(r[1]); var rTahun = parseInt(r[0]);
+      if (rTahun < tahun || (rTahun === tahun && rBulan <= bulan)) {
+        if (rTahun === tahun && rBulan === bulan) return;
+        jumlahBaki += parseFloat(r[4] || 0);
+      }
+    });
+  }
+  jumlahBaki += baki;
+
+  sheet.appendRow([tahun, bulan, janaTNB, gunaTNB, baki, jumlahBaki, janaApps, luarGrid]);
+  return { status: 'success', message: 'Rekod solar berjaya ditambah' };
+}
+
+function updateSolarRecord(data) {
+  if (!data || !data.rowId) throw new Error('ID rekod diperlukan');
+  if (!data.janaTNB || parseFloat(data.janaTNB) < 0) throw new Error('Jana TNB mesti >= 0');
+  if (!data.gunaTNB || parseFloat(data.gunaTNB) < 0) throw new Error('Guna TNB mesti >= 0');
+
+  var safeRowId = parseInt(data.rowId);
+  var janaTNB = parseFloat(data.janaTNB);
+  var gunaTNB = parseFloat(data.gunaTNB);
+  var janaApps = parseFloat(data.janaApps) || 0;
+  var baki = janaTNB - gunaTNB;
+  var luarGrid = janaApps - janaTNB;
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOLAR_SHEET);
+  var row = sheet.getRange(safeRowId, 1, 1, 8).getValues()[0];
+  var bulan = row[1];
+  var tahun = row[0];
+
+  var lastRow = sheet.getLastRow();
+  var jumlahBaki = 0;
+  if (lastRow >= 2) {
+    var allRows = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
+    allRows.forEach(function(r, idx) {
+      var rBulan = parseInt(r[1]); var rTahun = parseInt(r[0]);
+      if (idx + 2 === safeRowId) return;
+      if (rTahun < tahun || (rTahun === tahun && rBulan <= bulan)) {
+        jumlahBaki += parseFloat(r[4] || 0);
+      }
+    });
+  }
+  jumlahBaki += baki;
+
+  sheet.getRange(safeRowId, 1, 1, 8).setValues([[tahun, bulan, janaTNB, gunaTNB, baki, jumlahBaki, janaApps, luarGrid]]);
+  return { status: 'success', message: 'Rekod solar berjaya dikemaskini' };
+}
+
+function deleteSolarRecord(rowId) {
+  if (!rowId) throw new Error('ID rekod diperlukan');
+  SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOLAR_SHEET).deleteRow(parseInt(rowId));
+  return { status: 'success', message: 'Rekod solar berjaya dipadam' };
+}
+
+function getSolarYearlyData(year) {
+  var data = { jana: Array(12).fill(0), guna: Array(12).fill(0), baki: Array(12).fill(0), kumulatif: Array(12).fill(0), luarGrid: Array(12).fill(0) };
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOLAR_SHEET);
+  if (!sheet || sheet.getLastRow() < 2) return data;
+  var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues();
+  var running = 0;
+  for (var i = 0; i < 12; i++) {
+    var found = false;
+    rows.forEach(function(r) {
+      if (parseInt(r[0]) == year && parseInt(r[1]) === i + 1) {
+        data.jana[i] = parseFloat(r[2] || 0);
+        data.guna[i] = parseFloat(r[3] || 0);
+        data.baki[i] = parseFloat(r[4] || 0);
+        data.luarGrid[i] = parseFloat(r[7] || 0);
+        running += parseFloat(r[4] || 0);
+        found = true;
+      }
+    });
+    if (found) data.kumulatif[i] = running;
+  }
+  return data;
+}
+
+function getSolarBatch(month, year) {
+  return {
+    records: getSolarData(month, year),
+    yearly: getSolarYearlyData(year)
+  };
 }
 
 
