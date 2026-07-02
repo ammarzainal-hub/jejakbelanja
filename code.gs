@@ -653,9 +653,14 @@ function tandaiSemuaBilLokasi(month, year, lokasi) {
 // ============================================================
 
 function getSolarData(month, year) {
+  var ck = 'solar_data_' + (year || 'all') + '_' + (month || 'all');
+  if (month && year) {
+    var cached = cacheGet(ck);
+    if (cached) return JSON.parse(cached);
+  }
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOLAR_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues()
+  var result = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues()
     .map(function(row, index) {
       return {
         rowId: index + 2,
@@ -670,8 +675,10 @@ function getSolarData(month, year) {
       };
     })
     .filter(function(item) {
-      return (month ? item.bulan == month : true) && (item.tahun == year);
+      return (!month || item.bulan == month) && (!year || item.tahun == year);
     });
+  if (month && year) cacheSet(ck, JSON.stringify(result), TTL_SHORT);
+  return result;
 }
 
 function addSolarRecord(data) {
@@ -706,6 +713,7 @@ function addSolarRecord(data) {
   jumlahBaki += baki;
 
   sheet.appendRow([tahun, bulan, janaTNB, gunaTNB, baki, jumlahBaki, janaApps, luarGrid]);
+  invalidateSolarCache();
   return { status: 'success', message: 'Rekod solar berjaya ditambah' };
 }
 
@@ -741,16 +749,22 @@ function updateSolarRecord(data) {
   jumlahBaki += baki;
 
   sheet.getRange(safeRowId, 1, 1, 8).setValues([[tahun, bulan, janaTNB, gunaTNB, baki, jumlahBaki, janaApps, luarGrid]]);
+  invalidateSolarCache();
   return { status: 'success', message: 'Rekod solar berjaya dikemaskini' };
 }
 
 function deleteSolarRecord(rowId) {
   if (!rowId) throw new Error('ID rekod diperlukan');
   SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOLAR_SHEET).deleteRow(parseInt(rowId));
+  invalidateSolarCache();
   return { status: 'success', message: 'Rekod solar berjaya dipadam' };
 }
 
 function getSolarYearlyData(year) {
+  var ck = 'solar_yearly_' + year;
+  var cached = cacheGet(ck);
+  if (cached) return JSON.parse(cached);
+
   var data = { jana: Array(12).fill(0), guna: Array(12).fill(0), baki: Array(12).fill(0), kumulatif: Array(12).fill(0), luarGrid: Array(12).fill(0) };
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOLAR_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return data;
@@ -770,6 +784,7 @@ function getSolarYearlyData(year) {
     });
     if (found) data.kumulatif[i] = running;
   }
+  cacheSet(ck, JSON.stringify(data), TTL_SHORT);
   return data;
 }
 
@@ -778,6 +793,19 @@ function getSolarBatch(month, year) {
     records: getSolarData(month, year),
     yearly: getSolarYearlyData(year)
   };
+}
+
+function invalidateSolarCache() {
+  var cache = CacheService.getScriptCache();
+  // Remove all solar data cache keys
+  var years = [2025, 2026, 2027, 2028, 2029, 2030, 2031];
+  var months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  for (var i = 0; i < years.length; i++) {
+    for (var j = 0; j < months.length; j++) {
+      cache.remove('solar_data_' + years[i] + '_' + months[j]);
+    }
+    cache.remove('solar_yearly_' + years[i]);
+  }
 }
 
 

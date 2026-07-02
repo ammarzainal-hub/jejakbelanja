@@ -229,12 +229,13 @@
 </head>
 <body class="bg-slate-50 text-slate-700 pb-24">
 
-  <div id="loader" class="fixed inset-0 z-50 loading-overlay flex items-center justify-center">
-    <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-indigo-600"></div>
+  <div id="loader" class="fixed inset-0 z-50 loading-overlay flex flex-col items-center justify-center">
+    <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-indigo-600 mb-3"></div>
+    <p class="text-xs font-bold text-slate-500 tracking-widest uppercase">Memuat sistem</p>
   </div>
 
-  <button onclick="toggleDarkMode()" id="darkModeToggle" class="fixed top-4 right-4 z-50 bg-white dark:bg-slate-800 rounded-full p-2.5 shadow-lg border border-slate-200 hover:scale-110 transition-all" title="Tukar Tema">
-    <span id="darkModeIcon" class="text-lg">🌙</span>
+  <button onclick="toggleDarkMode()" id="darkModeToggle" class="fixed top-2 right-2 z-50 bg-white dark:bg-slate-800 rounded-full p-1.5 shadow-lg border border-slate-200 hover:scale-110 transition-all" title="Tukar Tema">
+    <span id="darkModeIcon" class="text-sm">🌙</span>
   </button>
 
   <nav class="fixed bottom-0 inset-x-0 bg-white border-t z-40 flex justify-around items-center h-16 shadow-lg">
@@ -298,31 +299,31 @@
         </div>
       </div>
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="summary-card shadow-card bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-3xl p-5 transition-all accent-border-top accent-emerald">
+        <div class="summary-card shadow-card bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-3xl p-5 transition-all">
           <div class="flex items-center justify-between mb-3"><div class="bg-white/20 rounded-2xl p-2"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><span id="sumExpensePct" class="text-[9px] font-black bg-white/20 text-white px-2 py-0.5 rounded-full">0%</span></div>
           <p class="text-[9px] font-black text-white/60 uppercase tracking-widest">Belanja Harian</p>
           <p class="text-2xl font-black text-white mt-1">RM <span id="sumExpenseTotal">0.00</span></p>
           <div class="mt-3 bg-white/20 rounded-2xl h-1.5 overflow-hidden"><div id="sumExpenseBar" class="bg-white h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
         </div>
-        <div class="summary-card shadow-card bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-5 transition-all accent-border-top accent-blue">
+        <div class="summary-card shadow-card bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-5 transition-all">
           <div class="flex items-center justify-between mb-3"><div class="bg-white/20 rounded-2xl p-2"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div><span id="sumEVPct" class="text-[9px] font-black bg-white/20 text-white px-2 py-0.5 rounded-full">0%</span></div>
           <p class="text-[9px] font-black text-white/60 uppercase tracking-widest">EV Cas</p>
           <p class="text-2xl font-black text-white mt-1">RM <span id="sumEVTotal">0.00</span></p>
           <div class="mt-3 bg-white/20 rounded-2xl h-1.5 overflow-hidden"><div id="sumEVBar" class="bg-white h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
         </div>
-        <div class="summary-card shadow-card bg-gradient-to-br from-orange-600 to-orange-800 rounded-3xl p-5 transition-all accent-border-top accent-orange">
+        <div class="summary-card shadow-card bg-gradient-to-br from-orange-600 to-orange-800 rounded-3xl p-5 transition-all">
           <div class="flex items-center justify-between mb-3"><div class="bg-white/20 rounded-2xl p-2"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h2l2 8h10l2-8h2M7 10V6a4 4 0 018 0v4"/></svg></div><span id="sumPetrolPct" class="text-[9px] font-black bg-white/20 text-white px-2 py-0.5 rounded-full">0%</span></div>
           <p class="text-[9px] font-black text-white/60 uppercase tracking-widest">Minyak</p>
           <p class="text-2xl font-black text-white mt-1">RM <span id="sumPetrolTotal">0.00</span></p>
           <div class="mt-3 bg-white/20 rounded-2xl h-1.5 overflow-hidden"><div id="sumPetrolBar" class="bg-white h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
         </div>
-        <div id="sumSolarCard" class="hidden summary-card shadow-card bg-gradient-to-br from-amber-600 to-amber-800 rounded-3xl p-5 transition-all accent-border-top accent-amber">
+        <div id="sumSolarCard" class="hidden summary-card shadow-card bg-gradient-to-br from-amber-600 to-amber-800 rounded-3xl p-5 transition-all">
           <div class="flex items-center justify-between mb-3"><div class="bg-white/20 rounded-2xl p-2"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div><span class="text-[9px] font-black bg-white/20 text-white px-2 py-0.5 rounded-full">☀️</span></div>
           <p class="text-[9px] font-black text-white/60 uppercase tracking-widest mb-3">Solar</p>
           <div class="space-y-1.5">
-            <p class="text-[10px] font-bold text-white/80"><span class="text-white">⚡</span> Jana: <span id="sumSolJana" class="text-white font-black">-</span></p>
-            <p class="text-[10px] font-bold text-white/80"><span class="text-white/60">🏠</span> Guna: <span id="sumSolGuna" class="text-white/80 font-black">-</span></p>
-            <p class="text-[10px] font-bold text-white/80">📊 Baki: <span id="sumSolBaki" class="text-white font-black">-</span></p>
+            <p class="text-xs font-bold text-white/90"><span class="text-white">⚡</span> Jana: <span id="sumSolJana" class="text-white font-black">-</span></p>
+            <p class="text-xs font-bold text-white/80"><span class="text-white/60">🏠</span> Guna: <span id="sumSolGuna" class="text-white/80 font-black">-</span></p>
+            <p class="text-xs font-bold text-white/90">📊 Baki: <span id="sumSolBaki" class="text-white font-black">-</span></p>
           </div>
         </div>
       </div>
@@ -341,11 +342,11 @@
       </div>
       <div id="sumBilSection" class="space-y-3 pt-2">
         <div class="flex items-center gap-2 px-1"><span class="text-sm">📋</span><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Bil Bulanan</p></div>
-        <div class="summary-card shadow-card bg-white rounded-3xl p-5 border border-slate-100 transition-all accent-border-top accent-purple">
-          <div class="flex items-center justify-between mb-3"><div class="bg-purple-100 rounded-2xl p-2"><svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><span id="sumBilStatus" class="text-[9px] font-black bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">0/0</span></div>
-          <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Bil Dibayar</p>
-          <p class="text-2xl font-black text-slate-900 mt-1">RM <span id="sumBilTotal">0.00</span></p>
-          <div class="mt-3 bg-purple-50 rounded-2xl h-1.5 overflow-hidden"><div id="sumBilBar" class="bg-purple-500 h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
+        <div class="summary-card shadow-card bg-gradient-to-br from-purple-600 to-purple-800 rounded-3xl p-5 transition-all">
+          <div class="flex items-center justify-between mb-3"><div class="bg-white/20 rounded-2xl p-2"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><span id="sumBilStatus" class="text-[9px] font-black bg-white/20 text-white px-2 py-0.5 rounded-full">0/0</span></div>
+          <p class="text-[9px] font-black text-white/60 uppercase tracking-widest">Bil Dibayar</p>
+          <p class="text-2xl font-black text-white mt-1">RM <span id="sumBilTotal">0.00</span></p>
+          <div class="mt-3 bg-white/20 rounded-2xl h-1.5 overflow-hidden"><div id="sumBilBar" class="bg-white h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
         </div>
       </div>
     </main>
@@ -580,8 +581,11 @@
           </select>
           <select id="solarFilterYear" onchange="loadSolarData()" class="rounded-xl border-slate-200 text-xs font-bold p-2 bg-slate-50 outline-none">
             <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
-            <option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option>
+            <option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option>            <option value="2031">2031</option>
           </select>
+          <button onclick="forceRefreshSolar()" title="Refresh Cache Solar" class="rounded-xl border border-amber-200 text-[10px] font-bold px-4 py-2 bg-white text-amber-600 hover:bg-amber-50 active:scale-95 transition-all uppercase tracking-widest">
+            🔄 Refresh
+          </button>
         </div>
       </div>
     </header>
@@ -1085,19 +1089,12 @@ var CATEGORY_COLORS = {
       transactionsData.forEach(function(t) {
         if (!cats[t.category]) cats[t.category] = true;
       });
-      
-      if (Object.keys(categoryFilter).length === 0) {
-        for (var k in cats) {
-          categoryFilter[k] = true;
-        }
-      } else {
-        for (var k in cats) {
-          if (categoryFilter[k] === undefined) categoryFilter[k] = true;
-        }
-        for (var k in categoryFilter) {
-          if (!cats[k]) delete categoryFilter[k];
-        }
+
+      var newFilter = {};
+      for (var k in cats) {
+        newFilter[k] = true;
       }
+      categoryFilter = newFilter;
     }
 
     function toggleCategoryFilter(catName) {
@@ -2451,6 +2448,7 @@ function confirmPetrolDelete(id) {
         data.forEach(function(r) { rows.push([r.lokasi, r.nama, (r.kategori || ''), r.amaun, r.status, (r.tarikhBayar || '')]); });
         doDownload(rows, filename);
       } else if (modul === 'solar') {
+        showLoader(true);
         var m = document.getElementById('solarFilterMonth').value;
         var y = document.getElementById('solarFilterYear').value;
         filename = 'jejak_belanja_solar_' + y + '_' + (m.length === 1 ? '0' + m : m) + '.csv';
@@ -2458,11 +2456,13 @@ function confirmPetrolDelete(id) {
         google.script.run.withSuccessHandler(function(batch) {
           batch.records.forEach(function(r) { rows.push([r.tahun, r.bulan, r.janaTNB, r.gunaTNB, r.janaApps, r.luarGrid, r.baki, r.jumlahBaki]); });
           doDownload(rows, filename);
-        }).withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); }).getSolarBatch(m || '', y);
+          showLoader(false);
+        }).withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); }).getSolarBatch(m || '', y);
       }
     }
 
     var solarBarChart, solarLineChart;
+    var solarRecords = [];
 
     function loadSolarData() {
       showLoader(true);
@@ -2472,6 +2472,21 @@ function confirmPetrolDelete(id) {
       document.getElementById('solarFilterMonth').value = m;
       document.getElementById('solarFilterYear').value = y;
 
+      fetchSolarBatch(m, y);
+    }
+
+    function forceRefreshSolar() {
+      showLoader(true);
+      var m = document.getElementById('solarFilterMonth').value;
+      var y = document.getElementById('solarFilterYear').value;
+      google.script.run.withSuccessHandler(function(r) {
+        showToast('Cache solar dibersihkan', 'info');
+        fetchSolarBatch(m, y);
+      }).withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
+      .invalidateSolarCache();
+    }
+
+    function fetchSolarBatch(m, y) {
       google.script.run
         .withSuccessHandler(function(data) {
           var yearly = data.yearly;
@@ -2483,6 +2498,7 @@ function confirmPetrolDelete(id) {
     }
 
     function renderSolarUI(records, yearly, year) {
+      solarRecords = records;
       var latest = records.length > 0 ? records[records.length - 1] : { janaTNB: 0, gunaTNB: 0, janaApps: 0, luarGrid: 0, baki: 0, jumlahBaki: 0 };
       document.getElementById('solJanaTNB').innerText = fRM(latest.janaTNB) + ' kWh';
       document.getElementById('solGunaTNB').innerText = fRM(latest.gunaTNB) + ' kWh';
@@ -2503,13 +2519,13 @@ function confirmPetrolDelete(id) {
         html += '<button onclick="openSolarModal(' + r.rowId + ')" class="action-btn text-slate-300 hover:text-amber-600 transition-all transform hover:scale-125"><svg xmlns="http://www.w3.org/2000/svg" class="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg></button>';
         html += '<button onclick="confirmSolarDelete(' + r.rowId + ')" class="action-btn text-slate-300 hover:text-red-600 transition-all transform hover:scale-125"><svg xmlns="http://www.w3.org/2000/svg" class="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>';
         html += '</div></td>';
-        html += '<td class="px-4 py-3 text-[10px] font-black text-slate-500 font-mono">' + MONTHS[r.bulan - 1] + ' ' + r.tahun + '</td>';
-        html += '<td class="px-4 py-3 text-right text-[10px] font-bold text-amber-700">' + fRM(r.janaTNB) + '</td>';
-        html += '<td class="px-4 py-3 text-right text-[10px] font-bold text-slate-600">' + fRM(r.gunaTNB) + '</td>';
-        html += '<td class="px-4 py-3 text-right text-[10px] font-bold text-blue-600">' + fRM(r.janaApps) + '</td>';
-        html += '<td class="px-4 py-3 text-right text-[10px] font-bold text-red-500">' + fRM(r.luarGrid) + '</td>';
-        html += '<td class="px-4 py-3 text-right text-[10px] font-bold ' + (r.baki >= 0 ? 'text-emerald-600' : 'text-red-500') + '">' + (r.baki >= 0 ? '+' : '') + fRM(r.baki) + '</td>';
-        html += '<td class="px-4 py-3 text-right font-black text-amber-700">' + fRM(r.jumlahBaki) + '</td>';
+        html += '<td class="px-4 py-3 text-xs font-bold text-slate-500 font-mono">' + MONTHS[r.bulan - 1] + ' ' + r.tahun + '</td>';
+        html += '<td class="px-4 py-3 text-right text-sm font-bold text-amber-700">' + fRM(r.janaTNB) + '</td>';
+        html += '<td class="px-4 py-3 text-right text-sm font-bold text-slate-600">' + fRM(r.gunaTNB) + '</td>';
+        html += '<td class="px-4 py-3 text-right text-sm font-bold text-blue-600">' + fRM(r.janaApps) + '</td>';
+        html += '<td class="px-4 py-3 text-right text-sm font-bold text-red-500">' + fRM(r.luarGrid) + '</td>';
+        html += '<td class="px-4 py-3 text-right text-sm font-bold ' + (r.baki >= 0 ? 'text-emerald-600' : 'text-red-500') + '">' + (r.baki >= 0 ? '+' : '') + fRM(r.baki) + '</td>';
+        html += '<td class="px-4 py-3 text-right font-black text-sm text-amber-700">' + fRM(r.jumlahBaki) + '</td>';
         html += '</tr>';
       });
       document.getElementById('solarTableBody').innerHTML = html || '<tr><td colspan="8" class="px-4 py-8 text-center text-slate-400 text-xs font-bold">Tiada rekod solar</td></tr>';
@@ -2552,19 +2568,18 @@ function confirmPetrolDelete(id) {
 
     function openSolarModal(rowId) {
       if (rowId) {
-        google.script.run.withSuccessHandler(function(data) {
-          var r = data.records.filter(function(d) { return d.rowId == rowId; })[0];
-          if (!r) return;
-          document.getElementById('solarModalTitle').innerText = 'Kemaskini Rekod Solar';
-          document.getElementById('solarEditRowId').value = r.rowId;
-          document.getElementById('solarFormBulan').value = r.bulan;
-          document.getElementById('solarFormTahun').value = r.tahun;
-          document.getElementById('solarJanaTNB').value = r.janaTNB;
-          document.getElementById('solarGunaTNB').value = r.gunaTNB;
-          document.getElementById('solarJanaApps').value = r.janaApps;
-          calcSolarAuto();
-          toggleModal('solarModal', true);
-        }).getSolarBatch(null, null);
+        var r = null;
+        solarRecords.forEach(function(d) { if (d.rowId == rowId) r = d; });
+        if (!r) return;
+        document.getElementById('solarModalTitle').innerText = 'Kemaskini Rekod Solar';
+        document.getElementById('solarEditRowId').value = r.rowId;
+        document.getElementById('solarFormBulan').value = r.bulan;
+        document.getElementById('solarFormTahun').value = r.tahun;
+        document.getElementById('solarJanaTNB').value = r.janaTNB;
+        document.getElementById('solarGunaTNB').value = r.gunaTNB;
+        document.getElementById('solarJanaApps').value = r.janaApps;
+        calcSolarAuto();
+        toggleModal('solarModal', true);
       } else {
         var today = new Date();
         document.getElementById('solarModalTitle').innerText = 'Tambah Rekod Solar';
