@@ -1006,7 +1006,13 @@ var CATEGORY_COLORS = {
             updateSummaryUI(b.expData, b.evData, b.petrolData, b.bilData, b.prevExpData, b.prevEvData, b.prevPetData, b.prevBilData, m, y);
             renderSumBarChart(b.expYearly, b.evYearly, y);
             google.script.run.withSuccessHandler(function(s) {
-              if (s.records && s.records.length > 0) updateSolarSummary(s.records);
+              if (s.records && s.records.length > 0) {
+                updateSolarSummary(s.records);
+              } else {
+                document.getElementById('sumSolarCard').classList.add('hidden');
+              }
+            }).withFailureHandler(function(e) {
+              document.getElementById('sumSolarCard').classList.add('hidden');
             }).getSolarBatch(m || '', y);
             showLoader(false);
           })
