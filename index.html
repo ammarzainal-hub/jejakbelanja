@@ -607,7 +607,7 @@
       <div class="shadow-card bg-white rounded-3xl border border-slate-100 overflow-hidden overflow-x-auto">
         <table class="w-full text-left text-sm min-w-[700px]">
           <thead class="bg-slate-50 text-slate-400 font-black uppercase text-[9px] tracking-widest border-b">
-            <tr><th class="px-4 py-4 text-center">Aksi</th><th class="px-4 py-4">Bulan</th><th class="px-4 py-4 text-right">Jana TNB</th><th class="px-4 py-4 text-right">Guna TNB</th><th class="px-4 py-4 text-right">Jana Apps</th><th class="px-4 py-4 text-right">Luar Grid</th><th class="px-4 py-4 text-right">Baki</th><th class="px-4 py-4 text-right">Jml Baki</th></tr>
+            <tr><th class="px-4 py-4 text-center">Aksi</th><th class="px-4 py-4 sortable" onclick="handleSolarSort('bulan')">Bulan <span id="solar-sort-bulan">▼</span></th><th class="px-4 py-4 text-right sortable" onclick="handleSolarSort('jana')">Jana TNB <span id="solar-sort-jana"></span></th><th class="px-4 py-4 text-right sortable" onclick="handleSolarSort('guna')">Guna TNB <span id="solar-sort-guna"></span></th><th class="px-4 py-4 text-right sortable" onclick="handleSolarSort('apps')">Jana Apps <span id="solar-sort-apps"></span></th><th class="px-4 py-4 text-right sortable" onclick="handleSolarSort('luar')">Luar Grid <span id="solar-sort-luar"></span></th><th class="px-4 py-4 text-right sortable" onclick="handleSolarSort('baki')">Baki <span id="solar-sort-baki"></span></th><th class="px-4 py-4 text-right sortable" onclick="handleSolarSort('jumlah')">Jml Baki <span id="solar-sort-jumlah"></span></th></tr>
           </thead>
           <tbody id="solarTableBody" class="divide-y divide-slate-50"></tbody>
         </table>
@@ -735,9 +735,9 @@
       <div id="sumSolarSection" class="space-y-3 pt-2 hidden">
         <div class="flex items-center gap-2 px-1"><span class="text-sm">☀️</span><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Solar</p></div>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <div class="shadow-card bg-white rounded-2xl p-4 border border-slate-100"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">⚡ Jana TNB</p><p id="sumSolJana" class="text-sm font-black text-amber-700 mt-1">-</p></div>
-          <div class="shadow-card bg-white rounded-2xl p-4 border border-slate-100"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">🏠 Guna TNB</p><p id="sumSolGuna" class="text-sm font-black text-slate-700 mt-1">-</p></div>
-          <div class="shadow-card bg-white rounded-2xl p-4 border border-slate-100"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">📊 Baki</p><p id="sumSolBaki" class="text-sm font-black text-emerald-600 mt-1">-</p></div>
+          <div class="shadow-card bg-white rounded-2xl p-4 border border-slate-100"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">⚡ Jana TNB</p><p id="sumSolJanaGrid" class="text-sm font-black text-amber-700 mt-1">-</p></div>
+          <div class="shadow-card bg-white rounded-2xl p-4 border border-slate-100"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">🏠 Guna TNB</p><p id="sumSolGunaGrid" class="text-sm font-black text-slate-700 mt-1">-</p></div>
+          <div class="shadow-card bg-white rounded-2xl p-4 border border-slate-100"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">📊 Baki</p><p id="sumSolBakiGrid" class="text-sm font-black text-emerald-600 mt-1">-</p></div>
         </div>
       </div>
 
@@ -2470,6 +2470,7 @@ function confirmPetrolDelete(id) {
 
     var solarBarChart, solarLineChart;
     var solarRecords = [];
+    var solarSortConfig = { key: 'bulan', direction: 'desc' };
 
     function loadSolarData() {
       showLoader(true);
@@ -2514,21 +2515,54 @@ function confirmPetrolDelete(id) {
 
     function renderSolarUI(records, yearly, year) {
       solarRecords = records;
-      var latest = records.length > 0 ? records[records.length - 1] : { janaTNB: 0, gunaTNB: 0, janaApps: 0, luarGrid: 0, baki: 0, jumlahBaki: 0 };
-      document.getElementById('solJanaTNB').innerText = fRM(latest.janaTNB) + ' kWh';
-      document.getElementById('solGunaTNB').innerText = fRM(latest.gunaTNB) + ' kWh';
-      document.getElementById('solJanaApps').innerText = fRM(latest.janaApps) + ' kWh';
-      document.getElementById('solLuarGrid').innerText = fRM(latest.luarGrid) + ' kWh';
-      document.getElementById('solBaki').innerText = (latest.baki >= 0 ? '+' : '') + fRM(latest.baki) + ' kWh';
-      document.getElementById('solJmlBaki').innerText = fRM(latest.jumlahBaki) + ' kWh';
+      var isAllMonths = records.length > 1;
+      var jana, guna, apps, luar, bakiVal, jmlBaki;
 
+      if (isAllMonths) {
+        jana = records.reduce(function(s, r) { return s + (r.janaTNB || 0); }, 0);
+        guna = records.reduce(function(s, r) { return s + (r.gunaTNB || 0); }, 0);
+        apps = records.reduce(function(s, r) { return s + (r.janaApps || 0); }, 0);
+        luar = records.reduce(function(s, r) { return s + (r.luarGrid || 0); }, 0);
+        bakiVal = jana - guna;
+        jmlBaki = records[records.length - 1].jumlahBaki;
+      } else {
+        var latest = records.length > 0 ? records[0] : { janaTNB: 0, gunaTNB: 0, janaApps: 0, luarGrid: 0, baki: 0, jumlahBaki: 0 };
+        jana = latest.janaTNB;
+        guna = latest.gunaTNB;
+        apps = latest.janaApps;
+        luar = latest.luarGrid;
+        bakiVal = latest.baki;
+        jmlBaki = latest.jumlahBaki;
+      }
+
+      document.getElementById('solJanaTNB').innerText = fRM(jana) + ' kWh';
+      document.getElementById('solGunaTNB').innerText = fRM(guna) + ' kWh';
+      document.getElementById('solJanaApps').innerText = fRM(apps) + ' kWh';
+      document.getElementById('solLuarGrid').innerText = fRM(luar) + ' kWh';
+      document.getElementById('solBaki').innerText = (bakiVal >= 0 ? '+' : '') + fRM(bakiVal) + ' kWh';
+      document.getElementById('solJmlBaki').innerText = fRM(jmlBaki) + ' kWh';
+
+      updateSolarSortIcons();
       renderSolarTable(records);
       renderSolarCharts(yearly);
     }
 
     function renderSolarTable(records) {
+      var sorted = records.slice().sort(function(a, b) {
+        var vA, vB;
+        if (solarSortConfig.key === 'bulan')   { vA = a.tahun * 100 + a.bulan;  vB = b.tahun * 100 + b.bulan; }
+        else if (solarSortConfig.key === 'jana')   { vA = a.janaTNB;    vB = b.janaTNB; }
+        else if (solarSortConfig.key === 'guna')   { vA = a.gunaTNB;    vB = b.gunaTNB; }
+        else if (solarSortConfig.key === 'apps')   { vA = a.janaApps;   vB = b.janaApps; }
+        else if (solarSortConfig.key === 'luar')   { vA = a.luarGrid;   vB = b.luarGrid; }
+        else if (solarSortConfig.key === 'baki')   { vA = a.baki;       vB = b.baki; }
+        else if (solarSortConfig.key === 'jumlah') { vA = a.jumlahBaki; vB = b.jumlahBaki; }
+        if (solarSortConfig.direction === 'asc') return vA > vB ? 1 : -1;
+        return vA < vB ? 1 : -1;
+      });
+
       var html = '';
-      records.forEach(function(r) {
+      sorted.forEach(function(r) {
         html += '<tr class="hover:bg-slate-50 transition-colors text-left">';
         html += '<td class="px-4 py-3 text-center"><div class="flex justify-center gap-3">';
         html += '<button onclick="openSolarModal(' + r.rowId + ')" class="action-btn text-slate-300 hover:text-amber-600 transition-all transform hover:scale-125"><svg xmlns="http://www.w3.org/2000/svg" class="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg></button>';
@@ -2544,6 +2578,25 @@ function confirmPetrolDelete(id) {
         html += '</tr>';
       });
       document.getElementById('solarTableBody').innerHTML = html || '<tr><td colspan="8" class="px-4 py-8 text-center text-slate-400 text-xs font-bold">Tiada rekod solar</td></tr>';
+    }
+
+    function handleSolarSort(key) {
+      if (solarSortConfig.key === key) {
+        solarSortConfig.direction = solarSortConfig.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        solarSortConfig.key = key;
+        solarSortConfig.direction = 'asc';
+      }
+      updateSolarSortIcons();
+      renderSolarTable(solarRecords);
+    }
+
+    function updateSolarSortIcons() {
+      var keys = ['bulan', 'jana', 'guna', 'apps', 'luar', 'baki', 'jumlah'];
+      keys.forEach(function(k) {
+        var el = document.getElementById('solar-sort-' + k);
+        if (el) el.innerText = solarSortConfig.key === k ? (solarSortConfig.direction === 'asc' ? '\u25b2' : '\u25bc') : '';
+      });
     }
 
     function renderSolarCharts(yearly) {
@@ -2641,11 +2694,27 @@ function confirmPetrolDelete(id) {
     function updateSolarSummary(records) {
       var card = document.getElementById('sumSolarCard');
       card.classList.remove('hidden');
-      var latest = records[records.length - 1];
-      document.getElementById('sumSolJana').innerText = fRM(latest.janaTNB) + ' kWh';
-      document.getElementById('sumSolGuna').innerText = fRM(latest.gunaTNB) + ' kWh';
-      var baki = latest.baki;
-      document.getElementById('sumSolBaki').innerText = (baki >= 0 ? '+' : '') + fRM(baki) + ' kWh';
+      var isAllMonths = records.length > 1;
+
+      var jana, guna, bakiVal;
+      if (isAllMonths) {
+        jana = records.reduce(function(s, r) { return s + (r.janaTNB || 0); }, 0);
+        guna = records.reduce(function(s, r) { return s + (r.gunaTNB || 0); }, 0);
+        bakiVal = jana - guna;
+      } else {
+        var latest = records[0];
+        jana = latest.janaTNB;
+        guna = latest.gunaTNB;
+        bakiVal = latest.baki;
+      }
+
+      document.getElementById('sumSolJana').innerText = fRM(jana) + ' kWh';
+      document.getElementById('sumSolGuna').innerText = fRM(guna) + ' kWh';
+      document.getElementById('sumSolBaki').innerText = (bakiVal >= 0 ? '+' : '') + fRM(bakiVal) + ' kWh';
+
+      document.getElementById('sumSolJanaGrid').innerText = fRM(jana) + ' kWh';
+      document.getElementById('sumSolGunaGrid').innerText = fRM(guna) + ' kWh';
+      document.getElementById('sumSolBakiGrid').innerText = (bakiVal >= 0 ? '+' : '') + fRM(bakiVal) + ' kWh';
     }
 
     var pendingDelete = null;

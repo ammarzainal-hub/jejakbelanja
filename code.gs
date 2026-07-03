@@ -676,6 +676,10 @@ function getSolarData(month, year) {
     })
     .filter(function(item) {
       return (!month || item.bulan == month) && (!year || item.tahun == year);
+    })
+    .sort(function(a, b) {
+      if (a.tahun !== b.tahun) return a.tahun - b.tahun;
+      return a.bulan - b.bulan;
     });
   if (month && year) cacheSet(ck, JSON.stringify(result), TTL_SHORT);
   return result;
