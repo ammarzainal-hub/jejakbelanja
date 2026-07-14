@@ -864,6 +864,13 @@ var CATEGORY_COLORS = {
       return parseFloat(v||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
     }
 
+    function escapeHtml(s) {
+      if (s === null || s === undefined) return '';
+      return String(s).replace(/[&<>"']/g, function(c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
     function initDarkMode() {
       var saved = localStorage.getItem('darkMode');
       if (saved === 'true') {
@@ -1183,7 +1190,7 @@ var CATEGORY_COLORS = {
       var trend = categoryTrendData[catName];
       if (!trend) return;
       
-      document.getElementById('mobileCategoryTitle').innerHTML = trend.icon + ' ' + catName;
+      document.getElementById('mobileCategoryTitle').innerHTML = trend.icon + ' ' + escapeHtml(catName);
       document.getElementById('mobileCategoryContent').innerHTML = renderExpandedContent(catName, trend);
       document.getElementById('mobileBackdrop').classList.add('show');
       document.getElementById('mobileCategoryModal').classList.add('show');
@@ -1330,7 +1337,7 @@ var CATEGORY_COLORS = {
         html += '<div class="flex-shrink-0 w-8 text-center text-lg">' + icon + '</div>';
         html += '<div class="flex-1 min-w-0">';
         html += '<div class="flex justify-between items-center">';
-        html += '<span class="font-black text-sm text-slate-800 truncate category-name-area px-2 py-1 rounded-lg">' + cat.name + '</span>';
+        html += '<span class="font-black text-sm text-slate-800 truncate category-name-area px-2 py-1 rounded-lg">' + escapeHtml(cat.name) + '</span>';
         html += '<span class="font-black text-right text-sm text-slate-900 ml-2 flex-shrink-0">RM ' + fRM(cat.total) + '</span>';
         html += '</div>';
         
@@ -1550,7 +1557,7 @@ var CATEGORY_COLORS = {
       google.script.run.withSuccessHandler(function(c) {
         globalCPOs = c;
         var html = '';
-        c.forEach(function(x) { html += '<option value="' + x + '">' + x + '</option>'; });
+        c.forEach(function(x) { html += '<option value="' + escapeHtml(x) + '">' + escapeHtml(x) + '</option>'; });
         document.getElementById('evCPODropdown').innerHTML = html;
       }).getCPOTypes();
     }
@@ -1735,8 +1742,8 @@ function confirmEVDelete(id) {
           + '<td class="px-4 py-4 text-center"><div class="flex justify-center gap-3">' + eBtn + dBtn + '</div></td>'
           + '<td class="px-4 py-4 text-[9px] font-mono">' + d[2] + '/' + d[1] + '/' + d[0].substr(-2) + '</td>'
           + '<td class="px-4 py-4 text-center">' + badge + '</td>'
-          + '<td class="px-4 py-4 text-[9px] font-bold uppercase">' + colJenis + '</td>'
-          + '<td class="px-4 py-4 text-[9px] text-slate-500">' + colLokasi + '</td>'
+          + '<td class="px-4 py-4 text-[9px] font-bold uppercase">' + escapeHtml(colJenis) + '</td>'
+          + '<td class="px-4 py-4 text-[9px] text-slate-500">' + escapeHtml(colLokasi) + '</td>'
           + '<td class="px-4 py-4 text-right text-[10px]">' + qty + '</td>'
           + '<td class="px-4 py-4 text-right font-black">RM' + fRM(item.total) + '</td>'
           + '</tr>';
@@ -1964,7 +1971,7 @@ function confirmPetrolDelete(id) {
       var div = document.createElement('div');
       div.className = 'bulk-row grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-2xl border mb-3 text-left';
       var opts = '';
-      globalCategories.forEach(function(c) { opts += '<option value="' + c.name + '">' + c.icon + ' ' + c.name + '</option>'; });
+      globalCategories.forEach(function(c) { opts += '<option value="' + escapeHtml(c.name) + '">' + escapeHtml(c.icon) + ' ' + escapeHtml(c.name) + '</option>'; });
      div.innerHTML = '<div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Kategori</label><select class="bulk-cat w-full rounded-xl border p-3 text-xs font-bold">' + opts + '</select></div><div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Bayar</label><select class="bulk-pay w-full rounded-xl border p-3 text-xs font-bold"><option>💳 CC</option><option>𖣯 QR</option><option>🏦 Transfer</option><option>👛 E-Wallet</option><option selected>💵 Cash</option></select></div><div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">RM</label><input type="number" step="0.01" placeholder="0.00" class="bulk-amt w-full rounded-xl border p-3 font-black text-sm"></div><div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Nota</label><div class="flex gap-2"><input type="text" placeholder="..." class="bulk-note w-full rounded-xl border p-3 text-xs"><button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-red-400 font-bold text-xl">x</button></div></div>';
       con.appendChild(div);
     }
@@ -2154,9 +2161,9 @@ function confirmPetrolDelete(id) {
         html += '<button onclick="confirmDelete(' + item.rowId + ')" class="action-btn text-slate-300 hover:text-red-600 transition-all transform hover:scale-125"><svg xmlns="http://www.w3.org/2000/svg" class="action-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>';
         html += '</div></td>';
         html += '<td class="px-6 py-4 text-[10px] font-black text-slate-400 font-mono tracking-tighter text-center">' + d[2] + '/' + d[1] + '/' + d[0].substr(-2) + '</td>';
-        html += '<td class="px-6 py-4 text-left"><span class="bg-emerald-50 text-emerald-700 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest">' + item.category + '</span></td>';
+        html += '<td class="px-6 py-4 text-left"><span class="bg-emerald-50 text-emerald-700 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest">' + escapeHtml(item.category) + '</span></td>';
         html += '<td class="px-6 py-4 text-center text-sm">' + (item.payment || '💵 Cash') + '</td>';
-        html += '<td class="px-6 py-4 text-slate-500 font-medium text-xs text-center">' + (item.note || '-') + '</td>';
+        html += '<td class="px-6 py-4 text-slate-500 font-medium text-xs text-center">' + escapeHtml(item.note || '-') + '</td>';
         html += '<td class="px-6 py-4 text-right font-black text-slate-900 text-sm">RM ' + fRM(item.amount) + '</td>';
         html += '</tr>';
       });
@@ -2247,9 +2254,9 @@ function confirmPetrolDelete(id) {
         var items = byLok[lk].map(function(r) {
           totalBelum += r.amaun;
           var katIkon = r._ikonKategori || '';
-          return (katIkon ? katIkon + ' ' : '') + r.nama + ' (RM' + fRM(r.amaun) + ')';
+          return (katIkon ? katIkon + ' ' : '') + escapeHtml(r.nama) + ' (RM' + fRM(r.amaun) + ')';
         }).join(', ');
-        html += '<p class="text-xs font-bold text-amber-800"><span class="text-sm">' + icon + '</span> <span class="uppercase tracking-wider">' + lk + '</span>: ' + items + '</p>';
+        html += '<p class="text-xs font-bold text-amber-800"><span class="text-sm">' + icon + '</span> <span class="uppercase tracking-wider">' + escapeHtml(lk) + '</span>: ' + items + '</p>';
       }
 
       html += '<p class="text-xs font-black text-amber-600 mt-2 pt-2 border-t border-amber-200 uppercase tracking-widest">Jumlah Belum: RM ' + fRM(totalBelum) + '</p>';
@@ -2289,7 +2296,7 @@ function confirmPetrolDelete(id) {
 
         html += '<div class="shadow-card bg-white rounded-3xl border border-slate-100 overflow-hidden bil-lokasi-card" data-lokasi="' + lok + '" data-collapsed="' + allDone + '">';
         html += '<div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 cursor-pointer bil-header" onclick="toogleBilLokasi(this)">';
-        html += '<div class="flex items-center gap-2.5"><span class="text-lg">' + icon + '</span><h4 class="font-black text-sm text-slate-700 uppercase tracking-wider">' + lok + '</h4></div>';
+        html += '<div class="flex items-center gap-2.5"><span class="text-lg">' + icon + '</span><h4 class="font-black text-sm text-slate-700 uppercase tracking-wider">' + escapeHtml(lok) + '</h4></div>';
         html += '<div class="flex items-center gap-3">';
         html += '<span class="text-xs font-bold ' + (allDone ? 'text-emerald-600' : 'text-amber-600') + '">' + l.done + '/' + l.count + (allDone ? ' ✅' : ' ⏳') + '</span>';
         html += '<span class="text-xs font-bold text-purple-600">RM ' + fRM(l.dibayar) + '</span>';
@@ -2306,7 +2313,7 @@ function confirmPetrolDelete(id) {
 
           html += '<div class="flex items-center gap-3 px-5 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors">';
           html += '<input type="checkbox" ' + (isDone ? 'checked' : '') + ' onclick="toggleBilItem(' + r.rowId + ', this)" class="w-4 h-4 rounded accent-purple-600 cursor-pointer flex-shrink-0">';
-          html += '<div class="flex-1 min-w-0"><p class="font-bold text-xs text-slate-800 truncate">' + (katIkon ? katIkon + ' ' : '') + r.nama + '</p></div>';
+          html += '<div class="flex-1 min-w-0"><p class="font-bold text-xs text-slate-800 truncate">' + (katIkon ? katIkon + ' ' : '') + escapeHtml(r.nama) + '</p></div>';
           html += '<div class="flex items-center gap-2 flex-shrink-0">';
           if (isTetap) {
             html += '<span class="font-black text-xs text-slate-600">RM ' + fRM(r.amaun) + '</span><span class="text-[10px] text-slate-300">🔒</span>';

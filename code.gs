@@ -27,14 +27,24 @@ function cacheDel(key) {
   try { CACHE.remove(key); } catch (e) { /* abaikan */ }
 }
 
+// Julat tahun untuk padam cache bersuffix tahun/bulan
+var CACHE_YEARS = [2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031];
+var CACHE_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
 function invalidateExpenseCache() {
-  // Kosongkan semua cache berkaitan perbelanjaan
-  var keys = ['yearly_data', 'trend', 'categories'];
-  keys.forEach(function(k) { cacheDel(k); });
+  // Kosongkan semua cache berkaitan perbelanjaan (kunci bersuffix tahun/bulan)
+  cacheDel('categories');
+  CACHE_YEARS.forEach(function(y) {
+    cacheDel('yearly_data_' + y);
+    cacheDel('trend_' + '_' + y);
+    CACHE_MONTHS.forEach(function(m) {
+      cacheDel('trend_' + m + '_' + y);
+    });
+  });
 }
 
 function invalidateEVCache() {
-  cacheDel('evyearly_data');
+  CACHE_YEARS.forEach(function(y) { cacheDel('evyearly_data_' + y); });
 }
 
 function clearDashboardCache() {

@@ -172,5 +172,5 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - **CacheService** — Cache untuk semua modul: kategori, CPO, data tahunan, template bil, solar data, solar yearly
 - **`invalidateCache()`** — Fungsi untuk invalidate cache bila data berubah (setiap modul ada fungsi sendiri)
 - **`getBatchSummaryData()`** — Dioptimumkan untuk baca semua data dalam satu panggilan
-- **Sanitize** — Semua input di-escape untuk elak XSS
+- **Sanitize** — Semua input di-trim & dihadkan panjang di server; dan di-escape (`escapeHtml`) di client sebelum dipapar ke DOM untuk elak XSS
 - **Input validation** — Semua fungsi CRUD validate input sebelum simpan
