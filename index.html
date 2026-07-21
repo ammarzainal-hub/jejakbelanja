@@ -344,9 +344,13 @@
         <div class="flex items-center gap-2 px-1"><span class="text-sm">📋</span><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Bil Bulanan</p></div>
         <div class="summary-card shadow-card bg-gradient-to-br from-purple-600 to-purple-800 rounded-3xl p-5 transition-all">
           <div class="flex items-center justify-between mb-3"><div class="bg-white/20 rounded-2xl p-2"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><span id="sumBilStatus" class="text-[9px] font-black bg-white/20 text-white px-2 py-0.5 rounded-full">0/0</span></div>
-          <p class="text-[9px] font-black text-white/60 uppercase tracking-widest">Bil Dibayar</p>
-          <p class="text-2xl font-black text-white mt-1">RM <span id="sumBilTotal">0.00</span></p>
+          <p class="text-[9px] font-black text-white/60 uppercase tracking-widest">Progress Bil</p>
           <div class="mt-3 bg-white/20 rounded-2xl h-1.5 overflow-hidden"><div id="sumBilBar" class="bg-white h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
+          <div class="mt-3 pt-3 border-t border-white/20 grid grid-cols-3 gap-1 text-center">
+            <div><p class="text-[8px] font-bold text-white/50 uppercase">Dibayar</p><p id="sumBilDibayar" class="text-sm font-black text-white">RM 0.00</p></div>
+            <div><p class="text-[8px] font-bold text-white/40 uppercase">🧾 Diterima</p><p id="sumBilDiterima" class="text-sm font-black text-white/80">RM 0.00</p></div>
+            <div><p class="text-[8px] font-bold text-white/40 uppercase">Belum</p><p id="sumBilBelum" class="text-sm font-black text-white/70">RM 0.00</p></div>
+          </div>
         </div>
       </div>
     </main>
@@ -543,9 +547,11 @@
       <div class="shadow-card bg-gradient-to-br from-purple-600 to-purple-800 rounded-3xl p-6 shadow-xl text-white">
         <p class="text-[10px] font-black uppercase tracking-[0.3em] opacity-70 mb-1">Progress Bil</p>
         <p class="text-3xl font-black tracking-tighter"><span id="bilDoneCount">0</span> / <span id="bilTotalCount">0</span> Dibayar</p>
+        <p id="bilDiterimaInfo" class="text-[10px] opacity-60 mt-1 font-bold">🧾 0 bil diterima</p>
         <div class="mt-4 bg-white/20 rounded-full h-2.5 overflow-hidden"><div id="bilProgressBar" class="bg-white h-full rounded-full transition-all duration-700" style="width:0%"></div></div>
-        <div class="mt-4 pt-4 border-t border-white/20 flex justify-between items-center">
+        <div class="mt-4 pt-4 border-t border-white/20 grid grid-cols-3 gap-2">
           <div><p class="text-[9px] opacity-60 font-bold uppercase tracking-widest">Dibayar</p><p id="bilDibayarAmount" class="font-black text-lg">RM 0.00</p></div>
+          <div class="text-center"><p class="text-[9px] opacity-60 font-bold uppercase tracking-widest">Diterima</p><p id="bilDiterimaAmount" class="font-black text-lg opacity-90">RM 0.00</p></div>
           <div class="text-right"><p class="text-[9px] opacity-60 font-bold uppercase tracking-widest">Belum</p><p id="bilBelumAmount" class="font-black text-lg opacity-80">RM 0.00</p></div>
         </div>
       </div>
@@ -1504,9 +1510,11 @@ var CATEGORY_COLORS = {
 
       if (bilSummary) {
         var rekod = bilSummary.rekod || [];
-        var done = 0; rekod.forEach(function(r) { if (r.status === 'Dibayar') done++; });
-        document.getElementById('sumBilTotal').innerText = fRM(bT);
-        document.getElementById('sumBilStatus').innerText = done + '/' + rekod.length;
+        var done = 0, diterima = 0; rekod.forEach(function(r) { if (r.status === 'Dibayar') done++; if (r.bilDiterima === 'Ya') diterima++; });
+        document.getElementById('sumBilDibayar').innerText = 'RM ' + fRM(bilSummary.jumlahDibayar || 0);
+        document.getElementById('sumBilDiterima').innerText = 'RM ' + fRM(bilSummary.jumlahDiterima || 0);
+        document.getElementById('sumBilBelum').innerText = 'RM ' + fRM(bilSummary.jumlahBelum || 0);
+        document.getElementById('sumBilStatus').innerText = done + '/' + rekod.length + (diterima > 0 ? ' | 🧾' + diterima : '');
         document.getElementById('sumBilBar').style.width = rekod.length > 0 ? ((done / rekod.length) * 100) + '%' : '0%';
       }
 
@@ -2184,6 +2192,25 @@ function confirmPetrolDelete(id) {
 
     var bilData = [];
     var bilTemplate = [];
+    var bilPendingChanges = {};
+    var kolomBil = [];
+
+    function mergePendingBil(rekod) {
+      return (rekod || []).map(function(r) {
+        var p = bilPendingChanges[r.rowId];
+        if (!p) return r;
+        var m = {};
+        for (var k in r) m[k] = r[k];
+        if (p.status !== undefined) { m.status = p.status; m.tarikhBayar = p.tarikhBayar || ''; }
+        if (p.bilDiterima !== undefined) { m.bilDiterima = p.bilDiterima; m.tarikhBil = p.tarikhBil || ''; }
+        m._pending = true;
+        return m;
+      });
+    }
+
+    function lokasiHasPending(lokasi, rekod) {
+      return rekod.some(function(r) { return r._pending && r.lokasi === lokasi; });
+    }
 
     function switchBilMonth() {
       var m = document.getElementById('bilFilterMonth').value;
@@ -2202,6 +2229,7 @@ function confirmPetrolDelete(id) {
 
     function initAndLoadBil(m, y) {
       showLoader(true);
+      bilPendingChanges = {};
       google.script.run
         .withSuccessHandler(function(r) {
           if (r.status === 'error') { showToast(r.message, 'error'); showLoader(false); return; }
@@ -2221,19 +2249,22 @@ function confirmPetrolDelete(id) {
     }
 
     function updateBilUI(summary) {
-      var rekod = summary.rekod || [];
-      var done = 0;
-      rekod.forEach(function(r) { if (r.status === 'Dibayar') done++; });
+      var serverRekod = summary.rekod || [];
+      var merged = mergePendingBil(serverRekod);
+      var done = 0, diterima = 0;
+      merged.forEach(function(r) { if (r.status === 'Dibayar') done++; if (r.bilDiterima === 'Ya') diterima++; });
 
       document.getElementById('bilDoneCount').innerText = done;
-      document.getElementById('bilTotalCount').innerText = rekod.length;
+      document.getElementById('bilTotalCount').innerText = merged.length;
+      document.getElementById('bilDiterimaInfo').innerText = '🧾 ' + diterima + ' bil diterima';
       document.getElementById('bilDibayarAmount').innerText = 'RM ' + fRM(summary.jumlahDibayar || 0);
+      document.getElementById('bilDiterimaAmount').innerText = 'RM ' + fRM(summary.jumlahDiterima || 0);
       document.getElementById('bilBelumAmount').innerText = 'RM ' + fRM(summary.jumlahBelum || 0);
-      var pct = rekod.length > 0 ? (done / rekod.length) * 100 : 0;
+      var pct = merged.length > 0 ? (done / merged.length) * 100 : 0;
       document.getElementById('bilProgressBar').style.width = pct + '%';
 
-      renderBilWarning(rekod, summary);
-      renderBilLokasiGrid(rekod, summary);
+      renderBilWarning(merged, summary);
+      renderBilLokasiGrid(merged, summary);
     }
 
     function renderBilWarning(rekod, summary) {
@@ -2243,6 +2274,9 @@ function confirmPetrolDelete(id) {
 
       if (belumList.length === 0) { warn.classList.add('hidden'); return; }
       warn.classList.remove('hidden');
+
+      var belumTerima = belumList.filter(function(r) { return r.bilDiterima !== 'Ya'; });
+      var diterimaBelumBayar = belumList.filter(function(r) { return r.bilDiterima === 'Ya'; });
 
       var byLok = {};
       belumList.forEach(function(r) {
@@ -2254,17 +2288,48 @@ function confirmPetrolDelete(id) {
       bilTemplate.forEach(function(t) { if (t.ikonLokasi && !lokIcons[t.lokasi]) lokIcons[t.lokasi] = t.ikonLokasi; });
 
       var html = '';
-      var totalBelum = 0;
-      for (var lk in byLok) {
-        var icon = lokIcons[lk] || '📍';
-        var items = byLok[lk].map(function(r) {
-          totalBelum += r.amaun;
-          var katIkon = r._ikonKategori || '';
-          return (katIkon ? escapeHtml(katIkon) + ' ' : '') + escapeHtml(r.nama) + ' (RM' + fRM(r.amaun) + ')';
-        }).join(', ');
-        html += '<p class="text-xs font-bold text-amber-800"><span class="text-sm">' + escapeHtml(icon) + '</span> <span class="uppercase tracking-wider">' + escapeHtml(lk) + '</span>: ' + items + '</p>';
+
+      if (diterimaBelumBayar.length > 0) {
+        html += '<div class="mb-3 bg-orange-100 rounded-xl p-3"><p class="text-[8px] font-black text-orange-600 uppercase tracking-widest mb-2">🧾 Bil Diterima, Belum Bayar</p>';
+        var diterimaByLok = {};
+        diterimaBelumBayar.forEach(function(r) {
+          if (!diterimaByLok[r.lokasi]) diterimaByLok[r.lokasi] = [];
+          diterimaByLok[r.lokasi].push(r);
+        });
+        var diterimaTotal = 0;
+        for (var dk in diterimaByLok) {
+          var di = lokIcons[dk] || '📍';
+          var ditems = diterimaByLok[dk].map(function(r) {
+            diterimaTotal += r.amaun;
+            var katIkon = r._ikonKategori || '';
+            return (katIkon ? escapeHtml(katIkon) + ' ' : '') + escapeHtml(r.nama) + ' (RM' + fRM(r.amaun) + ')';
+          }).join(', ');
+          html += '<p class="text-[10px] font-bold text-orange-800"><span class="text-sm">' + escapeHtml(di) + '</span> <span class="uppercase tracking-wider">' + escapeHtml(dk) + '</span>: ' + ditems + '</p>';
+        }
+        html += '<p class="text-[9px] font-black text-orange-600 mt-1">Jumlah diterima belum bayar: RM ' + fRM(diterimaTotal) + '</p>';
+        html += '</div>';
       }
 
+      if (belumTerima.length > 0) {
+        html += '<div class="mb-3 bg-amber-50 rounded-xl p-3"><p class="text-[8px] font-black text-amber-600 uppercase tracking-widest mb-2">⏳ Belum Terima Bil</p>';
+        var belumTerimaByLok = {};
+        belumTerima.forEach(function(r) {
+          if (!belumTerimaByLok[r.lokasi]) belumTerimaByLok[r.lokasi] = [];
+          belumTerimaByLok[r.lokasi].push(r);
+        });
+        for (var bk in belumTerimaByLok) {
+          var bi = lokIcons[bk] || '📍';
+          var bitems = belumTerimaByLok[bk].map(function(r) {
+            var katIkon = r._ikonKategori || '';
+            return (katIkon ? escapeHtml(katIkon) + ' ' : '') + escapeHtml(r.nama) + ' (RM' + fRM(r.amaun) + ')';
+          }).join(', ');
+          html += '<p class="text-[10px] font-bold text-amber-800"><span class="text-sm">' + escapeHtml(bi) + '</span> <span class="uppercase tracking-wider">' + escapeHtml(bk) + '</span>: ' + bitems + '</p>';
+        }
+        html += '</div>';
+      }
+
+      var totalBelum = 0;
+      belumList.forEach(function(r) { totalBelum += r.amaun; });
       html += '<p class="text-xs font-black text-amber-600 mt-2 pt-2 border-t border-amber-200 uppercase tracking-widest">Jumlah Belum: RM ' + fRM(totalBelum) + '</p>';
       content.innerHTML = html;
     }
@@ -2299,28 +2364,35 @@ function confirmPetrolDelete(id) {
         var allDone = l.done === l.count && l.count > 0;
         var icon = lokasiIcons[lok] || '📍';
         var items = rekod.filter(function(r) { return r.lokasi === lok; });
+        var hasPending = lokasiHasPending(lok, rekod);
 
-        html += '<div class="shadow-card bg-white rounded-3xl border border-slate-100 overflow-hidden bil-lokasi-card" data-lokasi="' + escapeHtml(lok) + '" data-collapsed="' + allDone + '">';
+        html += '<div class="shadow-card bg-white rounded-3xl border overflow-hidden bil-lokasi-card ' + (hasPending ? 'border-amber-400 ring-2 ring-amber-200' : 'border-slate-100') + '" data-lokasi="' + escapeHtml(lok) + '" data-collapsed="' + allDone + '">';
         html += '<div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 cursor-pointer bil-header" onclick="toogleBilLokasi(this)">';
         html += '<div class="flex items-center gap-2.5"><span class="text-lg">' + escapeHtml(icon) + '</span><h4 class="font-black text-sm text-slate-700 uppercase tracking-wider">' + escapeHtml(lok) + '</h4></div>';
         html += '<div class="flex items-center gap-3">';
         html += '<span class="text-xs font-bold ' + (allDone ? 'text-emerald-600' : 'text-amber-600') + '">' + l.done + '/' + l.count + (allDone ? ' ✅' : ' ⏳') + '</span>';
         html += '<span class="text-xs font-bold text-purple-600">RM ' + fRM(l.dibayar) + '</span>';
-        if (!allDone) html += '<button onclick="tandaiSemuaLokasi(\'' + escapeJsString(lok) + '\')" class="text-[9px] font-bold uppercase bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded-lg transition-all whitespace-nowrap">✅ Semua</button>';
+        if (hasPending) html += '<button onclick="event.stopPropagation(); simpanBilLokasi(\'' + escapeJsString(lok) + '\')" class="text-[9px] font-black uppercase bg-amber-400 hover:bg-amber-500 text-white px-3 py-1 rounded-lg transition-all whitespace-nowrap animate-pulse">💾 Simpan</button>';
+        if (!allDone && !hasPending) html += '<button onclick="tandaiSemuaLokasi(\'' + escapeJsString(lok) + '\')" class="text-[9px] font-bold uppercase bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded-lg transition-all whitespace-nowrap">✅ Semua</button>';
         html += '<svg class="bil-arrow w-4 h-4 text-slate-400 transform transition-transform ' + (allDone ? 'rotate-0' : 'rotate-180') + '" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
         html += '</div></div>';
 
         html += '<div class="bil-items ' + (allDone ? 'hidden' : '') + '">';
         items.forEach(function(r) {
           var isDone = r.status === 'Dibayar';
+          var isDiterima = r.bilDiterima === 'Ya';
           var tpl = templateMap[r.nama] || {};
           var isTetap = tpl.tetap || false;
           var katIkon = r._ikonKategori || '';
+          var pendingClass = r._pending ? ' bg-amber-50 border-l-4 border-amber-400' : '';
 
-          html += '<div class="flex items-center gap-3 px-5 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors">';
+          html += '<div class="flex items-center gap-3 px-5 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors' + pendingClass + '">';
           html += '<input type="checkbox" ' + (isDone ? 'checked' : '') + ' onclick="toggleBilItem(' + r.rowId + ', this)" class="w-4 h-4 rounded accent-purple-600 cursor-pointer flex-shrink-0">';
-          html += '<div class="flex-1 min-w-0"><p class="font-bold text-xs text-slate-800 truncate">' + (katIkon ? escapeHtml(katIkon) + ' ' : '') + escapeHtml(r.nama) + '</p></div>';
+          html += '<div class="flex-1 min-w-0"><p class="font-bold text-xs text-slate-800 truncate">' + (katIkon ? escapeHtml(katIkon) + ' ' : '') + escapeHtml(r.nama) + (r._pending ? ' <span class="text-[8px] text-amber-500 font-black">●</span>' : '') + '</p></div>';
           html += '<div class="flex items-center gap-2 flex-shrink-0">';
+          if (!isDone) {
+            html += '<button onclick="toggleBilDiterima(' + r.rowId + ', this)" class="text-[9px] font-bold rounded-lg px-2 py-0.5 transition-all whitespace-nowrap ' + (isDiterima ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-400') + '">' + (isDiterima ? '🧾 Bil Ada' : '🧾 Bil Ada') + '</button>';
+          }
           if (isTetap) {
             html += '<span class="font-black text-xs text-slate-600">RM ' + fRM(r.amaun) + '</span><span class="text-[10px] text-slate-300">🔒</span>';
           } else {
@@ -2328,6 +2400,8 @@ function confirmPetrolDelete(id) {
           }
           if (isDone) {
             html += '<span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full whitespace-nowrap">✅ ' + (r.tarikhBayar ? r.tarikhBayar.substr(-5) : '') + '</span>';
+          } else if (isDiterima) {
+            html += '<span class="text-[9px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full whitespace-nowrap">🧾 ' + (r.tarikhBil ? r.tarikhBil.substr(-5) : '') + '</span>';
           } else {
             html += '<span class="text-[9px] text-slate-400">⏳</span>';
           }
@@ -2338,8 +2412,6 @@ function confirmPetrolDelete(id) {
 
       document.getElementById('bilLokasiContainer').innerHTML = html;
     }
-
-    var kolomBil = [];
 
     function toogleBilLokasi(headerEl) {
       var card = headerEl.parentElement;
@@ -2353,29 +2425,64 @@ function confirmPetrolDelete(id) {
     function tandaiSemuaLokasi(lokasi) {
       var m = document.getElementById('bilFilterMonth').value;
       var y = document.getElementById('bilFilterYear').value;
+      var serverRekod = bilData.rekod || [];
+      serverRekod.forEach(function(r) {
+        if (r.lokasi === lokasi && r.status !== 'Dibayar') {
+          bilPendingChanges[r.rowId] = { status: 'Dibayar', bilDiterima: 'Ya', tarikhBayar: new Date().toISOString().split('T')[0], tarikhBil: new Date().toISOString().split('T')[0] };
+        }
+      });
+      var merged = mergePendingBil(serverRekod);
+      updateBilUI(bilData);
+    }
+
+    function simpanBilLokasi(lokasi) {
+      var lokasiItems = [];
+      for (var rid in bilPendingChanges) {
+        var r = bilPendingChanges[rid];
+        var found = (bilData.rekod || []).find(function(x) { return x.rowId == rid; });
+        if (found && found.lokasi === lokasi) {
+          lokasiItems.push({ rowId: parseInt(rid), status: r.status, bilDiterima: r.bilDiterima });
+        }
+      }
+      if (lokasiItems.length === 0) { showToast('Tiada perubahan untuk disimpan', 'info'); return; }
+
       showLoader(true);
       google.script.run
         .withSuccessHandler(function(r) {
-          if (r.count > 0) showToast(r.count + ' bil ditanda dibayar untuk ' + lokasi, 'success');
+          lokasiItems.forEach(function(item) { delete bilPendingChanges[item.rowId]; });
+          showToast('💾 ' + r.count + ' bil disimpan untuk ' + lokasi, 'success');
           loadBilData();
         })
         .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
-        .tandaiSemuaBilLokasi(m, y, lokasi);
+        .batchUpdateBil(lokasiItems);
     }
 
     function toggleBilItem(rowId, checkbox) {
-      checkbox.disabled = true;
-      google.script.run
-        .withSuccessHandler(function(r) {
-          showToast(r.bilStatus === 'Dibayar' ? '✅ Bil ditanda dibayar' : 'Bil dikembalikan ke belum', r.bilStatus === 'Dibayar' ? 'success' : 'info');
-          loadBilData();
-        })
-        .withFailureHandler(function(e) {
-          checkbox.checked = !checkbox.checked;
-          checkbox.disabled = false;
-          showToast('Error: ' + e.message, 'error');
-        })
-        .toggolBilStatus(rowId);
+      var serverRekod = bilData.rekod || [];
+      var r = serverRekod.find(function(x) { return x.rowId == rowId; });
+      if (!r) return;
+      var currentStatus = (bilPendingChanges[rowId] && bilPendingChanges[rowId].status !== undefined) ? bilPendingChanges[rowId].status : r.status;
+      var newStatus = currentStatus === 'Dibayar' ? 'Belum' : 'Dibayar';
+      if (newStatus === 'Dibayar') {
+        bilPendingChanges[rowId] = { status: newStatus, bilDiterima: 'Ya', tarikhBayar: new Date().toISOString().split('T')[0], tarikhBil: new Date().toISOString().split('T')[0] };
+      } else {
+        bilPendingChanges[rowId] = { status: newStatus, tarikhBayar: '' };
+      }
+      var merged = mergePendingBil(serverRekod);
+      updateBilUI(bilData);
+    }
+
+    function toggleBilDiterima(rowId, btn) {
+      var serverRekod = bilData.rekod || [];
+      var r = serverRekod.find(function(x) { return x.rowId == rowId; });
+      if (!r) return;
+      var currentDiterima = (bilPendingChanges[rowId] && bilPendingChanges[rowId].bilDiterima !== undefined) ? bilPendingChanges[rowId].bilDiterima : r.bilDiterima;
+      var newVal = currentDiterima === 'Ya' ? 'Tidak' : 'Ya';
+      bilPendingChanges[rowId] = bilPendingChanges[rowId] || {};
+      bilPendingChanges[rowId].bilDiterima = newVal;
+      bilPendingChanges[rowId].tarikhBil = newVal === 'Ya' ? new Date().toISOString().split('T')[0] : '';
+      var merged = mergePendingBil(serverRekod);
+      updateBilUI(bilData);
     }
 
     function editBilAmount(rowId, input) {
@@ -2464,8 +2571,8 @@ function confirmPetrolDelete(id) {
       } else if (modul === 'bil') {
         var data = kolomBil.length > 0 ? kolomBil : [];
         filename = 'jejak_belanja_bil.csv';
-        rows.push(['Lokasi', 'Nama', 'Kategori', 'Amaun', 'Status', 'Tarikh Bayar']);
-        data.forEach(function(r) { rows.push([r.lokasi, r.nama, (r.kategori || ''), r.amaun, r.status, (r.tarikhBayar || '')]); });
+        rows.push(['Lokasi', 'Nama', 'Kategori', 'Amaun', 'Status', 'Bil Diterima', 'Tarikh Bayar', 'Tarikh Bil']);
+        data.forEach(function(r) { rows.push([r.lokasi, r.nama, (r.kategori || ''), r.amaun, r.status, (r.bilDiterima || 'Tidak'), (r.tarikhBayar || ''), (r.tarikhBil || '')]); });
         doDownload(rows, filename);
       } else if (modul === 'solar') {
         showLoader(true);

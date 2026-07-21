@@ -525,7 +525,7 @@ function initBilMonth(month, year) {
   var lastRow = sheet.getLastRow();
   var existing = {};
   if (lastRow >= 2) {
-    var all = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+    var all = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
     all.forEach(function(row) {
       if (parseInt(row[0]) === y && parseInt(row[1]) === m) {
         existing[row[3]] = true;
@@ -538,15 +538,15 @@ function initBilMonth(month, year) {
 
   template.forEach(function(t) {
     if (!existing[t.nama]) {
-      newRows.push([y, m, t.lokasi, t.nama, t.kategori, t.anggaran, 'Belum', '']);
+      newRows.push([y, m, t.lokasi, t.nama, t.kategori, t.anggaran, 'Belum', '', 'Tidak', '', '']);
     }
   });
 
   if (newRows.length > 0) {
     if (lastRow < 2) {
-      sheet.getRange(2, 1, newRows.length, 8).setValues(newRows);
+      sheet.getRange(2, 1, newRows.length, 11).setValues(newRows);
     } else {
-      sheet.getRange(lastRow + 1, 1, newRows.length, 8).setValues(newRows);
+      sheet.getRange(lastRow + 1, 1, newRows.length, 11).setValues(newRows);
     }
   }
 
@@ -557,7 +557,7 @@ function initBilMonth(month, year) {
 function getBilRekod(month, year) {
   var sheet = getOptionalSheet(BIL_REKOD_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues()
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 11).getValues()
     .map(function(row, index) {
       return {
         rowId: index + 2,
@@ -568,7 +568,10 @@ function getBilRekod(month, year) {
         kategori: row[4] || '',
         amaun: parseFloat(row[5]) || 0,
         status: row[6] || 'Belum',
-        tarikhBayar: row[7] instanceof Date ? Utilities.formatDate(row[7], 'GMT+8', 'yyyy-MM-dd') : (row[7] || '')
+        tarikhBayar: row[7] instanceof Date ? Utilities.formatDate(row[7], 'GMT+8', 'yyyy-MM-dd') : (row[7] || ''),
+        bilDiterima: row[8] || 'Tidak',
+        tarikhBil: row[9] instanceof Date ? Utilities.formatDate(row[9], 'GMT+8', 'yyyy-MM-dd') : (row[9] || ''),
+        catatan: row[10] || ''
       };
     })
     .filter(function(item) {
@@ -580,14 +583,29 @@ function toggolBilStatus(rowId) {
   if (!rowId) throw new Error('ID rekod diperlukan');
   var safeRowId = parseInt(rowId);
   var sheet = getRequiredSheet(BIL_REKOD_SHEET);
-  var row = sheet.getRange(safeRowId, 1, 1, 8).getValues()[0];
+  var row = sheet.getRange(safeRowId, 1, 1, 11).getValues()[0];
   var currentStatus = row[6] || 'Belum';
   var newStatus = currentStatus === 'Dibayar' ? 'Belum' : 'Dibayar';
   var bayarDate = newStatus === 'Dibayar' ? new Date() : '';
+  var bilDiterima = newStatus === 'Dibayar' ? 'Ya' : (row[8] || 'Tidak');
 
-  sheet.getRange(safeRowId, 7, 1, 2).setValues([[newStatus, bayarDate]]);
+  sheet.getRange(safeRowId, 7, 1, 3).setValues([[newStatus, bayarDate, bilDiterima]]);
   invalidateBilCache();
-  return { status: 'success', bilStatus: newStatus, tarikhBayar: bayarDate instanceof Date ? Utilities.formatDate(bayarDate, 'GMT+8', 'yyyy-MM-dd') : '' };
+  return { status: 'success', bilStatus: newStatus, tarikhBayar: bayarDate instanceof Date ? Utilities.formatDate(bayarDate, 'GMT+8', 'yyyy-MM-dd') : '', bilDiterima: bilDiterima };
+}
+
+function toggolBilDiterima(rowId) {
+  if (!rowId) throw new Error('ID rekod diperlukan');
+  var safeRowId = parseInt(rowId);
+  var sheet = getRequiredSheet(BIL_REKOD_SHEET);
+  var row = sheet.getRange(safeRowId, 1, 1, 11).getValues()[0];
+  var current = row[8] || 'Tidak';
+  var newVal = current === 'Ya' ? 'Tidak' : 'Ya';
+  var bilDate = newVal === 'Ya' ? new Date() : '';
+
+  sheet.getRange(safeRowId, 9, 1, 2).setValues([[newVal, bilDate]]);
+  invalidateBilCache();
+  return { status: 'success', bilDiterima: newVal, tarikhBil: bilDate instanceof Date ? Utilities.formatDate(bilDate, 'GMT+8', 'yyyy-MM-dd') : '' };
 }
 
 function kemaskiniBilAmount(rowId, amaunBaru) {
@@ -603,23 +621,27 @@ function kemaskiniBilAmount(rowId, amaunBaru) {
 
 function getBilSummary(month, year) {
   var rekod = getBilRekod(month, year);
-  var dibayar = 0, belum = 0;
+  var dibayar = 0, belum = 0, diterimaBlmByr = 0;
   var byLokasi = {};
 
   rekod.forEach(function(r) {
     if (r.status === 'Dibayar') dibayar += r.amaun;
     else belum += r.amaun;
 
-    if (!byLokasi[r.lokasi]) byLokasi[r.lokasi] = { total: 0, dibayar: 0, count: 0, done: 0 };
+    if (r.bilDiterima === 'Ya' && r.status !== 'Dibayar') diterimaBlmByr += r.amaun;
+
+    if (!byLokasi[r.lokasi]) byLokasi[r.lokasi] = { total: 0, dibayar: 0, count: 0, done: 0, diterima: 0 };
     byLokasi[r.lokasi].total += r.amaun;
     byLokasi[r.lokasi].count++;
     if (r.status === 'Dibayar') { byLokasi[r.lokasi].dibayar += r.amaun; byLokasi[r.lokasi].done++; }
+    if (r.bilDiterima === 'Ya') byLokasi[r.lokasi].diterima++;
   });
 
   return {
     rekod: rekod,
     jumlahDibayar: dibayar,
     jumlahBelum: belum,
+    jumlahDiterima: diterimaBlmByr,
     jumlahKeseluruhan: dibayar + belum,
     byLokasi: byLokasi
   };
@@ -629,7 +651,7 @@ function getBilYearlyData(year) {
   var data = Array(12).fill(0);
   var sheet = getOptionalSheet(BIL_REKOD_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return data;
-  sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues().forEach(function(row) {
+  sheet.getRange(2, 1, sheet.getLastRow() - 1, 11).getValues().forEach(function(row) {
     if (parseInt(row[0]) == year && row[6] === 'Dibayar') {
       data[parseInt(row[1]) - 1] += parseFloat(row[5] || 0);
     }
@@ -641,6 +663,32 @@ function invalidateBilCache() {
   cacheDel('bil_template');
 }
 
+function batchUpdateBil(updates) {
+  if (!updates || !Array.isArray(updates) || updates.length === 0) {
+    throw new Error('Tiada data untuk dikemaskini');
+  }
+  var sheet = getRequiredSheet(BIL_REKOD_SHEET);
+  var today = new Date();
+  var count = 0;
+
+  updates.forEach(function(u) {
+    var rowId = parseInt(u.rowId);
+    if (!rowId) return;
+    var row = sheet.getRange(rowId, 1, 1, 11).getValues()[0];
+    var status = u.status !== undefined ? u.status : (row[6] || 'Belum');
+    var tarikhBayar = u.status === 'Dibayar' ? today : (u.status === 'Belum' ? '' : (row[7] || ''));
+    var bilDiterima = u.bilDiterima !== undefined ? u.bilDiterima : (row[8] || 'Tidak');
+    if (u.status === 'Dibayar') bilDiterima = 'Ya';
+    var tarikhBil = u.bilDiterima === 'Ya' ? today : (u.bilDiterima === 'Tidak' ? '' : (row[9] || ''));
+
+    sheet.getRange(rowId, 7, 1, 4).setValues([[status, tarikhBayar, bilDiterima, tarikhBil]]);
+    count++;
+  });
+
+  invalidateBilCache();
+  return { status: 'success', count: count };
+}
+
 function tandaiSemuaBilLokasi(month, year, lokasi) {
   var m = parseInt(month);
   var y = parseInt(year);
@@ -648,7 +696,7 @@ function tandaiSemuaBilLokasi(month, year, lokasi) {
   if (!sheet || sheet.getLastRow() < 2) return { status: 'success', count: 0 };
 
   var lastRow = sheet.getLastRow();
-  var allData = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+  var allData = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
   var today = new Date();
   var count = 0;
   var updates = [];
@@ -656,7 +704,7 @@ function tandaiSemuaBilLokasi(month, year, lokasi) {
   for (var i = 0; i < allData.length; i++) {
     var row = allData[i];
     if (parseInt(row[0]) === y && parseInt(row[1]) === m && row[2] === lokasi && (row[6] !== 'Dibayar')) {
-      updates.push({ range: sheet.getRange(i + 2, 7, 1, 2), values: [['Dibayar', today]] });
+      updates.push({ range: sheet.getRange(i + 2, 7, 1, 3), values: [['Dibayar', today, 'Ya']] });
       count++;
     }
   }
