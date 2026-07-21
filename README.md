@@ -159,6 +159,13 @@ jejak-belanja/
 
 Harga ini boleh diubah dalam kod mengikut kadar semasa.
 
+## Business Rules
+
+- Jumlah besar Ringkasan hanya merangkumi Belanja Harian, EV Cas, dan Minyak.
+- Bil Bulanan dipaparkan sebagai modul/kad berasingan dan tidak dimasukkan dalam jumlah besar.
+- Data/cache aplikasi disasarkan untuk tahun 2026 hingga 2031.
+- Nilai solar `Jana TNB`, `Guna TNB`, dan `Jana Apps` boleh bernilai `0` jika bacaan bulan tersebut memang sifar.
+
 ## Customization
 
 ### Tukar Kategori Belanja

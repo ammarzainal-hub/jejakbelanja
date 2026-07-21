@@ -871,6 +871,12 @@ var CATEGORY_COLORS = {
       });
     }
 
+    function escapeJsString(s) {
+      return String(s || '').replace(/[\\'"\n\r\u2028\u2029]/g, function(c) {
+        return { '\\': '\\\\', "'": "\\'", '"': '\\"', '\n': '\\n', '\r': '\\r', '\u2028': '\\u2028', '\u2029': '\\u2029' }[c];
+      });
+    }
+
     function initDarkMode() {
       var saved = localStorage.getItem('darkMode');
       if (saved === 'true') {
@@ -1190,7 +1196,7 @@ var CATEGORY_COLORS = {
       var trend = categoryTrendData[catName];
       if (!trend) return;
       
-      document.getElementById('mobileCategoryTitle').innerHTML = trend.icon + ' ' + escapeHtml(catName);
+      document.getElementById('mobileCategoryTitle').innerHTML = escapeHtml(trend.icon) + ' ' + escapeHtml(catName);
       document.getElementById('mobileCategoryContent').innerHTML = renderExpandedContent(catName, trend);
       document.getElementById('mobileBackdrop').classList.add('show');
       document.getElementById('mobileCategoryModal').classList.add('show');
@@ -1321,20 +1327,20 @@ var CATEGORY_COLORS = {
         var barW = (cat.total / maxTotal) * 100;
         
         var isMobile = window.innerWidth < 768;
-        var clickAction = isMobile ? "toggleCategoryExpand('" + cat.name.replace(/'/g, "\\'") + "')" : "event.target.closest('.toggle-expand') ? toggleCategoryExpand('" + cat.name.replace(/'/g, "\\'") + "') : null";
+        var clickAction = isMobile ? "toggleCategoryExpand('" + escapeJsString(cat.name) + "')" : "event.target.closest('.toggle-expand') ? toggleCategoryExpand('" + escapeJsString(cat.name) + "') : null";
         
         html += '<div class="border border-slate-100 rounded-2xl overflow-hidden category-row">';
         
         // Main row
-        html += '<div class="flex items-center gap-3 p-4 toggle-expand" onclick="toggleCategoryExpand(\'' + cat.name.replace(/'/g, "\\'") + '\')">';
+        html += '<div class="flex items-center gap-3 p-4 toggle-expand" onclick="toggleCategoryExpand(\'' + escapeJsString(cat.name) + '\')">';
         
         // Checkbox
         html += '<div class="flex-shrink-0">';
-        html += '<input type="checkbox" ' + (isChecked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleCategoryFilter(\'' + cat.name.replace(/'/g, "\\'") + '\')" class="w-4 h-4 rounded accent-emerald-600 cursor-pointer">';
+        html += '<input type="checkbox" ' + (isChecked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleCategoryFilter(\'' + escapeJsString(cat.name) + '\')" class="w-4 h-4 rounded accent-emerald-600 cursor-pointer">';
         html += '</div>';
         
         // Icon + Name
-        html += '<div class="flex-shrink-0 w-8 text-center text-lg">' + icon + '</div>';
+        html += '<div class="flex-shrink-0 w-8 text-center text-lg">' + escapeHtml(icon) + '</div>';
         html += '<div class="flex-1 min-w-0">';
         html += '<div class="flex justify-between items-center">';
         html += '<span class="font-black text-sm text-slate-800 truncate category-name-area px-2 py-1 rounded-lg">' + escapeHtml(cat.name) + '</span>';
@@ -1453,7 +1459,7 @@ var CATEGORY_COLORS = {
       var eT = expArr.reduce(function(s,i) { return s + parseFloat(i.amount); }, 0);
       var vT = evArr.reduce(function(s,i) { return s + parseFloat(i.total); }, 0);
       var pT = petArr.reduce(function(s,i) { return s + parseFloat(i.total); }, 0);
-      var bT = bilSummary ? (bilSummary.jumlahKeseluruhan || 0) : 0;
+      var bT = bilSummary ? (bilSummary.jumlahDibayar || 0) : 0;
       var gT = eT + vT + pT;
       var prevT = prevExpArr.reduce(function(s,i) { return s + parseFloat(i.amount); }, 0)
                 + prevEVArr.reduce(function(s,i) { return s + parseFloat(i.total); }, 0)
@@ -1714,7 +1720,7 @@ function confirmEVDelete(id) {
       var html = '';
       if (evActiveFilter) {
         html = '<tr><td colspan="7" class="px-4 py-2 bg-indigo-50 text-center">'
-          + '<span class="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Menapis: ' + evActiveFilter.val + '</span>'
+          + '<span class="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Menapis: ' + escapeHtml(evActiveFilter.val) + '</span>'
           + ' <button onclick="clearEVFilter()" class="ml-3 text-[9px] text-slate-400 underline">Padam tapis</button>'
           + '</td></tr>';
       }
@@ -1950,7 +1956,7 @@ function confirmPetrolDelete(id) {
         try {
           globalCategories = JSON.parse(cached);
           var html = '';
-          globalCategories.forEach(function(x) { html += '<option value="' + x.name + '">' + x.icon + ' ' + x.name + '</option>'; });
+          globalCategories.forEach(function(x) { html += '<option value="' + escapeHtml(x.name) + '">' + escapeHtml(x.icon) + ' ' + escapeHtml(x.name) + '</option>'; });
           document.getElementById('catDropdown').innerHTML = html;
         } catch(e) {}
       }
@@ -1959,7 +1965,7 @@ function confirmPetrolDelete(id) {
         globalCategories = c;
         localStorage.setItem('categories_cache', JSON.stringify(c));
         var html = '';
-        c.forEach(function(x) { html += '<option value="' + x.name + '">' + x.icon + ' ' + x.name + '</option>'; });
+        c.forEach(function(x) { html += '<option value="' + escapeHtml(x.name) + '">' + escapeHtml(x.icon) + ' ' + escapeHtml(x.name) + '</option>'; });
         document.getElementById('catDropdown').innerHTML = html;
         document.getElementById('bulkRowsContainer').innerHTML = '';
         for (var i = 0; i < 3; i++) addBulkRow();
@@ -2149,7 +2155,7 @@ function confirmPetrolDelete(id) {
       var html = '';
       if (activePaymentFilter) {
         html += '<tr><td colspan="6" class="px-6 py-2 bg-indigo-50 text-center">'
-          + '<span class="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Bayaran: ' + activePaymentFilter + '</span>'
+          + '<span class="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Bayaran: ' + escapeHtml(activePaymentFilter) + '</span>'
           + ' <button onclick="clearPaymentFilter()" class="ml-3 text-[9px] text-slate-400 underline">Padam tapis</button>'
           + '</td></tr>';
       }
@@ -2162,7 +2168,7 @@ function confirmPetrolDelete(id) {
         html += '</div></td>';
         html += '<td class="px-6 py-4 text-[10px] font-black text-slate-400 font-mono tracking-tighter text-center">' + d[2] + '/' + d[1] + '/' + d[0].substr(-2) + '</td>';
         html += '<td class="px-6 py-4 text-left"><span class="bg-emerald-50 text-emerald-700 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest">' + escapeHtml(item.category) + '</span></td>';
-        html += '<td class="px-6 py-4 text-center text-sm">' + (item.payment || '💵 Cash') + '</td>';
+        html += '<td class="px-6 py-4 text-center text-sm">' + escapeHtml(item.payment || '💵 Cash') + '</td>';
         html += '<td class="px-6 py-4 text-slate-500 font-medium text-xs text-center">' + escapeHtml(item.note || '-') + '</td>';
         html += '<td class="px-6 py-4 text-right font-black text-slate-900 text-sm">RM ' + fRM(item.amount) + '</td>';
         html += '</tr>';
@@ -2254,9 +2260,9 @@ function confirmPetrolDelete(id) {
         var items = byLok[lk].map(function(r) {
           totalBelum += r.amaun;
           var katIkon = r._ikonKategori || '';
-          return (katIkon ? katIkon + ' ' : '') + escapeHtml(r.nama) + ' (RM' + fRM(r.amaun) + ')';
+          return (katIkon ? escapeHtml(katIkon) + ' ' : '') + escapeHtml(r.nama) + ' (RM' + fRM(r.amaun) + ')';
         }).join(', ');
-        html += '<p class="text-xs font-bold text-amber-800"><span class="text-sm">' + icon + '</span> <span class="uppercase tracking-wider">' + escapeHtml(lk) + '</span>: ' + items + '</p>';
+        html += '<p class="text-xs font-bold text-amber-800"><span class="text-sm">' + escapeHtml(icon) + '</span> <span class="uppercase tracking-wider">' + escapeHtml(lk) + '</span>: ' + items + '</p>';
       }
 
       html += '<p class="text-xs font-black text-amber-600 mt-2 pt-2 border-t border-amber-200 uppercase tracking-widest">Jumlah Belum: RM ' + fRM(totalBelum) + '</p>';
@@ -2294,13 +2300,13 @@ function confirmPetrolDelete(id) {
         var icon = lokasiIcons[lok] || '📍';
         var items = rekod.filter(function(r) { return r.lokasi === lok; });
 
-        html += '<div class="shadow-card bg-white rounded-3xl border border-slate-100 overflow-hidden bil-lokasi-card" data-lokasi="' + lok + '" data-collapsed="' + allDone + '">';
+        html += '<div class="shadow-card bg-white rounded-3xl border border-slate-100 overflow-hidden bil-lokasi-card" data-lokasi="' + escapeHtml(lok) + '" data-collapsed="' + allDone + '">';
         html += '<div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 cursor-pointer bil-header" onclick="toogleBilLokasi(this)">';
-        html += '<div class="flex items-center gap-2.5"><span class="text-lg">' + icon + '</span><h4 class="font-black text-sm text-slate-700 uppercase tracking-wider">' + escapeHtml(lok) + '</h4></div>';
+        html += '<div class="flex items-center gap-2.5"><span class="text-lg">' + escapeHtml(icon) + '</span><h4 class="font-black text-sm text-slate-700 uppercase tracking-wider">' + escapeHtml(lok) + '</h4></div>';
         html += '<div class="flex items-center gap-3">';
         html += '<span class="text-xs font-bold ' + (allDone ? 'text-emerald-600' : 'text-amber-600') + '">' + l.done + '/' + l.count + (allDone ? ' ✅' : ' ⏳') + '</span>';
         html += '<span class="text-xs font-bold text-purple-600">RM ' + fRM(l.dibayar) + '</span>';
-        if (!allDone) html += '<button onclick="tandaiSemuaLokasi(\'' + lok + '\')" class="text-[9px] font-bold uppercase bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded-lg transition-all whitespace-nowrap">✅ Semua</button>';
+        if (!allDone) html += '<button onclick="tandaiSemuaLokasi(\'' + escapeJsString(lok) + '\')" class="text-[9px] font-bold uppercase bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded-lg transition-all whitespace-nowrap">✅ Semua</button>';
         html += '<svg class="bil-arrow w-4 h-4 text-slate-400 transform transition-transform ' + (allDone ? 'rotate-0' : 'rotate-180') + '" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
         html += '</div></div>';
 
@@ -2313,7 +2319,7 @@ function confirmPetrolDelete(id) {
 
           html += '<div class="flex items-center gap-3 px-5 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors">';
           html += '<input type="checkbox" ' + (isDone ? 'checked' : '') + ' onclick="toggleBilItem(' + r.rowId + ', this)" class="w-4 h-4 rounded accent-purple-600 cursor-pointer flex-shrink-0">';
-          html += '<div class="flex-1 min-w-0"><p class="font-bold text-xs text-slate-800 truncate">' + (katIkon ? katIkon + ' ' : '') + escapeHtml(r.nama) + '</p></div>';
+          html += '<div class="flex-1 min-w-0"><p class="font-bold text-xs text-slate-800 truncate">' + (katIkon ? escapeHtml(katIkon) + ' ' : '') + escapeHtml(r.nama) + '</p></div>';
           html += '<div class="flex items-center gap-2 flex-shrink-0">';
           if (isTetap) {
             html += '<span class="font-black text-xs text-slate-600">RM ' + fRM(r.amaun) + '</span><span class="text-[10px] text-slate-300">🔒</span>';

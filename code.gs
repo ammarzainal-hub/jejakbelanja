@@ -16,6 +16,8 @@ const SOLAR_SHEET        = 'SOLAR';
 const CACHE = CacheService.getScriptCache();
 const TTL_SHORT = 7200;   // 2 jam — untuk yearly & trend
 const TTL_LONG  = 21600;  // 6 jam — untuk kategori & CPO
+var CACHE_YEARS = [2026, 2027, 2028, 2029, 2030, 2031];
+var CACHE_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 function cacheGet(key) {
   try { return CACHE.get(key); } catch (e) { return null; }
@@ -27,9 +29,15 @@ function cacheDel(key) {
   try { CACHE.remove(key); } catch (e) { /* abaikan */ }
 }
 
-// Julat tahun untuk padam cache bersuffix tahun/bulan
-var CACHE_YEARS = [2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031];
-var CACHE_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+function getOptionalSheet(name) {
+  return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+}
+
+function getRequiredSheet(name) {
+  var sheet = getOptionalSheet(name);
+  if (!sheet) throw new Error('Sheet "' + name + '" tidak wujud');
+  return sheet;
+}
 
 function invalidateExpenseCache() {
   // Kosongkan semua cache berkaitan perbelanjaan (kunci bersuffix tahun/bulan)
@@ -83,6 +91,13 @@ function isValidDate(dateStr) {
   return d instanceof Date && !isNaN(d);
 }
 
+function parseNonNegativeNumber(value, label) {
+  if (value === '' || value === null || value === undefined) throw new Error(label + ' diperlukan');
+  var parsed = parseFloat(value);
+  if (isNaN(parsed) || parsed < 0) throw new Error(label + ' mesti >= 0');
+  return parsed;
+}
+
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('index')
       .setTitle('🔒 Main Finance Hub 🔒')
@@ -99,7 +114,7 @@ function getCategories() {
   var cached = cacheGet('categories');
   if (cached) return JSON.parse(cached);
 
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CATEGORY_SHEET);
+  var sheet = getOptionalSheet(CATEGORY_SHEET);
   if (!sheet) return [{ name: 'Umum', icon: '🕵🏼' }];
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return [{ name: 'Umum', icon: '🕵🏼' }];
@@ -117,7 +132,7 @@ function getCategories() {
 }
 
 function getTransactions(month, year) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET);
+  var sheet = getOptionalSheet(DATA_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
   return sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues()
 .map(function(row, index) { return { rowId: index + 2, date: row[0], amount: row[1], category: row[2], note: row[3], payment: row[4] }; })
@@ -130,7 +145,7 @@ function getYearlyData(year) {
   var cached = cacheGet(ck);
   if (cached) return JSON.parse(cached);
 
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET);
+  var sheet = getOptionalSheet(DATA_SHEET);
   var data  = Array(12).fill(0);
   if (!sheet || sheet.getLastRow() < 2) {
     cacheSet(ck, JSON.stringify(data));
@@ -151,7 +166,7 @@ function getCategoryTrend(month, year) {
     var ck = 'trend_' + month + '_' + year;
   var cached = cacheGet(ck);
   if (cached) return JSON.parse(cached);
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET);
+  var sheet = getOptionalSheet(DATA_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return {};
     var today = new Date();
   var m = month ? parseInt(month) : (today.getMonth() + 1);
@@ -219,7 +234,7 @@ function addTransaction(data) {
   var safeNote = sanitize(data.note, 500);
   var safePayment = sanitize(data.payment, 50) || '💵 Cash';
   
-  SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET)
+  getRequiredSheet(DATA_SHEET)
 .appendRow([new Date(data.date), safeAmount, safeCategory, safeNote, safePayment]);
 invalidateExpenseCache();
   return { status: 'success', message: 'Transaksi berjaya ditambah' };
@@ -238,7 +253,7 @@ function updateTransaction(data) {
   var safeNote = sanitize(data.note, 500);
   var safePayment = sanitize(data.payment, 50) || '💵 Cash';
   
-  SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET)
+  getRequiredSheet(DATA_SHEET)
     .getRange(safeRowId, 1, 1, 5)
 .setValues([[new Date(data.date), safeAmount, safeCategory, safeNote, safePayment]]);
 invalidateExpenseCache();
@@ -248,7 +263,7 @@ invalidateExpenseCache();
 function deleteTransaction(rowId) {
   if (!rowId) throw new Error('ID transaksi diperlukan');
   var safeRowId = parseInt(rowId);
-  SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET).deleteRow(safeRowId);
+  getRequiredSheet(DATA_SHEET).deleteRow(safeRowId);
   invalidateExpenseCache();
   return { status: 'success', message: 'Transaksi berjaya dipadam' };
 }
@@ -258,7 +273,7 @@ function addBulkTransactions(rows) {
     throw new Error('Tiada data untuk ditambah');
   }
   
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DATA_SHEET);
+  var sheet = getRequiredSheet(DATA_SHEET);
   var dataToAppend = [];
   
   for (var i = 0; i < rows.length; i++) {
@@ -305,7 +320,7 @@ function getCPOTypes() {
   var cached = cacheGet('cpo_types');
   if (cached) return JSON.parse(cached);
 
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CPO_SHEET);
+  var sheet = getOptionalSheet(CPO_SHEET);
   if (!sheet) return ['Lain-lain'];
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return ['Lain-lain'];
@@ -330,7 +345,7 @@ function addEVCharging(data) {
   var cpo = safeType === 'Rumah' ? 'Rumah' : sanitize(data.cpo, 100);
   var location = safeType === 'Rumah' ? 'Kediaman' : sanitize(data.location, 200);
   
-  SpreadsheetApp.getActiveSpreadsheet().getSheetByName(EV_SHEET)
+  getRequiredSheet(EV_SHEET)
     .appendRow([new Date(data.date), safeType, cpo, safeKwh, safePrice, location, total]);
     invalidateEVCache();
   return { status: 'success', message: 'Rekod cas berjaya ditambah' };
@@ -353,7 +368,7 @@ function updateEVCharging(data) {
   var cpo = safeType === 'Rumah' ? 'Rumah' : sanitize(data.cpo, 100);
   var location = safeType === 'Rumah' ? 'Kediaman' : sanitize(data.location, 200);
   
-  SpreadsheetApp.getActiveSpreadsheet().getSheetByName(EV_SHEET)
+  getRequiredSheet(EV_SHEET)
     .getRange(safeRowId, 1, 1, 7)
     .setValues([[new Date(data.date), safeType, cpo, safeKwh, safePrice, location, total]]);
     invalidateEVCache();
@@ -361,7 +376,7 @@ function updateEVCharging(data) {
 }
 
 function getEVData(month, year) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(EV_SHEET);
+  var sheet = getOptionalSheet(EV_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
   return sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues()
     .map(function(row, index) { return { rowId: index+2, date: row[0], type: row[1], cpo: row[2], kwh: row[3], pricePerKwh: row[4], location: row[5], total: row[6] }; })
@@ -373,7 +388,7 @@ function getEVData(month, year) {
 function deleteEVData(rowId) {
   if (!rowId) throw new Error('ID rekod diperlukan');
   var safeRowId = parseInt(rowId);
-  SpreadsheetApp.getActiveSpreadsheet().getSheetByName(EV_SHEET).deleteRow(safeRowId);
+  getRequiredSheet(EV_SHEET).deleteRow(safeRowId);
   invalidateEVCache();
   return { status: 'success', message: 'Rekod cas berjaya dipadam' };
 }
@@ -384,14 +399,14 @@ function getEVYearlyData(year) {
   if (cached) return JSON.parse(cached);
 
   var data = Array(12).fill(0);
-  var evSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(EV_SHEET);
+  var evSheet = getOptionalSheet(EV_SHEET);
   if (evSheet && evSheet.getLastRow() >= 2) {
     evSheet.getRange(2, 1, evSheet.getLastRow()-1, 7).getValues().forEach(function(row) {
       var d = new Date(row[0]);
       if (d.getFullYear() == year) data[d.getMonth()] += parseFloat(row[6] || 0);
     });
   }
-  var petrolSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PETROL_SHEET);
+  var petrolSheet = getOptionalSheet(PETROL_SHEET);
   if (petrolSheet && petrolSheet.getLastRow() >= 2) {
     petrolSheet.getRange(2, 1, petrolSheet.getLastRow()-1, 5).getValues().forEach(function(row) {
       var d = new Date(row[0]);
@@ -427,7 +442,7 @@ function addPetrolRecord(data) {
   var total = liter * price;
   var safeNote = sanitize(data.note, 500);
   
-  SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PETROL_SHEET)
+  getRequiredSheet(PETROL_SHEET)
     .appendRow([new Date(data.date), safeStation, liter, price, total, safeNote]);
     invalidateEVCache();
   return { status: 'success', message: 'Rekod minyak berjaya ditambah' };
@@ -447,7 +462,7 @@ function updatePetrolRecord(data) {
   var total = liter * price;
   var safeNote = sanitize(data.note, 500);
   
-  SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PETROL_SHEET)
+  getRequiredSheet(PETROL_SHEET)
     .getRange(safeRowId, 1, 1, 6)
     .setValues([[new Date(data.date), safeStation, liter, price, total, safeNote]]);
     invalidateEVCache();
@@ -455,7 +470,7 @@ function updatePetrolRecord(data) {
 }
 
 function getPetrolData(month, year) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PETROL_SHEET);
+  var sheet = getOptionalSheet(PETROL_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
   return sheet.getRange(2, 1, sheet.getLastRow()-1, 6).getValues()
     .map(function(row, index) { return { rowId: index+2, date: row[0], station: row[1], liter: row[2], pricePerLiter: row[3], total: row[4], note: row[5] }; })
@@ -467,7 +482,7 @@ function getPetrolData(month, year) {
 function deletePetrolRecord(rowId) {
   if (!rowId) throw new Error('ID rekod diperlukan');
   var safeRowId = parseInt(rowId);
-  SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PETROL_SHEET).deleteRow(safeRowId);
+  getRequiredSheet(PETROL_SHEET).deleteRow(safeRowId);
   invalidateEVCache();
   return { status: 'success', message: 'Rekod minyak berjaya dipadam' };
 }
@@ -482,7 +497,7 @@ function getBilTemplate() {
   var cached = cacheGet(ck);
   if (cached) return JSON.parse(cached);
 
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_TEMPLATE_SHEET);
+  var sheet = getOptionalSheet(BIL_TEMPLATE_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
   var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues();
   var result = data.map(function(row, idx) {
@@ -505,8 +520,7 @@ function getBilTemplate() {
 function initBilMonth(month, year) {
   var m = parseInt(month);
   var y = parseInt(year);
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_REKOD_SHEET);
-  if (!sheet) return { status: 'error', message: 'Sheet BIL_REKOD tidak wujud' };
+  var sheet = getRequiredSheet(BIL_REKOD_SHEET);
 
   var lastRow = sheet.getLastRow();
   var existing = {};
@@ -541,7 +555,7 @@ function initBilMonth(month, year) {
 }
 
 function getBilRekod(month, year) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_REKOD_SHEET);
+  var sheet = getOptionalSheet(BIL_REKOD_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
   return sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues()
     .map(function(row, index) {
@@ -565,7 +579,7 @@ function getBilRekod(month, year) {
 function toggolBilStatus(rowId) {
   if (!rowId) throw new Error('ID rekod diperlukan');
   var safeRowId = parseInt(rowId);
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_REKOD_SHEET);
+  var sheet = getRequiredSheet(BIL_REKOD_SHEET);
   var row = sheet.getRange(safeRowId, 1, 1, 8).getValues()[0];
   var currentStatus = row[6] || 'Belum';
   var newStatus = currentStatus === 'Dibayar' ? 'Belum' : 'Dibayar';
@@ -581,7 +595,7 @@ function kemaskiniBilAmount(rowId, amaunBaru) {
   var amt = parseFloat(amaunBaru);
   if (isNaN(amt) || amt <= 0) throw new Error('Amaun mesti lebih dari 0');
 
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_REKOD_SHEET);
+  var sheet = getRequiredSheet(BIL_REKOD_SHEET);
   sheet.getRange(parseInt(rowId), 6).setValue(amt);
   invalidateBilCache();
   return { status: 'success', amaun: amt };
@@ -606,14 +620,14 @@ function getBilSummary(month, year) {
     rekod: rekod,
     jumlahDibayar: dibayar,
     jumlahBelum: belum,
-    jumlahKeseluruhan: dibayar,
+    jumlahKeseluruhan: dibayar + belum,
     byLokasi: byLokasi
   };
 }
 
 function getBilYearlyData(year) {
   var data = Array(12).fill(0);
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_REKOD_SHEET);
+  var sheet = getOptionalSheet(BIL_REKOD_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return data;
   sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues().forEach(function(row) {
     if (parseInt(row[0]) == year && row[6] === 'Dibayar') {
@@ -630,7 +644,7 @@ function invalidateBilCache() {
 function tandaiSemuaBilLokasi(month, year, lokasi) {
   var m = parseInt(month);
   var y = parseInt(year);
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BIL_REKOD_SHEET);
+  var sheet = getOptionalSheet(BIL_REKOD_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return { status: 'success', count: 0 };
 
   var lastRow = sheet.getLastRow();
@@ -668,7 +682,7 @@ function getSolarData(month, year) {
     var cached = cacheGet(ck);
     if (cached) return JSON.parse(cached);
   }
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOLAR_SHEET);
+  var sheet = getOptionalSheet(SOLAR_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
   var result = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues()
     .map(function(row, index) {
@@ -698,80 +712,81 @@ function getSolarData(month, year) {
 function addSolarRecord(data) {
   if (!data) throw new Error('Data tidak diberikan');
   if (!data.bulan || !data.tahun) throw new Error('Bulan dan tahun diperlukan');
-  if (!data.janaTNB || parseFloat(data.janaTNB) < 0) throw new Error('Jana TNB mesti >= 0');
-  if (!data.gunaTNB || parseFloat(data.gunaTNB) < 0) throw new Error('Guna TNB mesti >= 0');
 
-  var janaTNB = parseFloat(data.janaTNB);
-  var gunaTNB = parseFloat(data.gunaTNB);
-  var janaApps = parseFloat(data.janaApps) || 0;
+  var janaTNB = parseNonNegativeNumber(data.janaTNB, 'Jana TNB');
+  var gunaTNB = parseNonNegativeNumber(data.gunaTNB, 'Guna TNB');
+  var janaApps = data.janaApps === '' || data.janaApps === null || data.janaApps === undefined ? 0 : parseNonNegativeNumber(data.janaApps, 'Jana Apps');
   var bulan = parseInt(data.bulan);
   var tahun = parseInt(data.tahun);
 
   var baki = janaTNB - gunaTNB;
   var luarGrid = janaApps - janaTNB;
 
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOLAR_SHEET);
-  var lastRow = sheet.getLastRow();
-  var jumlahBaki = 0;
-
-  if (lastRow >= 2) {
-    var allRows = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
-    allRows.forEach(function(r) {
-      var rBulan = parseInt(r[1]); var rTahun = parseInt(r[0]);
-      if (rTahun < tahun || (rTahun === tahun && rBulan <= bulan)) {
-        if (rTahun === tahun && rBulan === bulan) return;
-        jumlahBaki += parseFloat(r[4] || 0);
-      }
-    });
-  }
-  jumlahBaki += baki;
-
-  sheet.appendRow([tahun, bulan, janaTNB, gunaTNB, baki, jumlahBaki, janaApps, luarGrid]);
+  var sheet = getRequiredSheet(SOLAR_SHEET);
+  sheet.appendRow([tahun, bulan, janaTNB, gunaTNB, baki, 0, janaApps, luarGrid]);
+  recalculateSolarRunningBalance();
   invalidateSolarCache();
   return { status: 'success', message: 'Rekod solar berjaya ditambah' };
 }
 
 function updateSolarRecord(data) {
   if (!data || !data.rowId) throw new Error('ID rekod diperlukan');
-  if (!data.janaTNB || parseFloat(data.janaTNB) < 0) throw new Error('Jana TNB mesti >= 0');
-  if (!data.gunaTNB || parseFloat(data.gunaTNB) < 0) throw new Error('Guna TNB mesti >= 0');
 
   var safeRowId = parseInt(data.rowId);
-  var janaTNB = parseFloat(data.janaTNB);
-  var gunaTNB = parseFloat(data.gunaTNB);
-  var janaApps = parseFloat(data.janaApps) || 0;
+  var janaTNB = parseNonNegativeNumber(data.janaTNB, 'Jana TNB');
+  var gunaTNB = parseNonNegativeNumber(data.gunaTNB, 'Guna TNB');
+  var janaApps = data.janaApps === '' || data.janaApps === null || data.janaApps === undefined ? 0 : parseNonNegativeNumber(data.janaApps, 'Jana Apps');
   var baki = janaTNB - gunaTNB;
   var luarGrid = janaApps - janaTNB;
 
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOLAR_SHEET);
+  var sheet = getRequiredSheet(SOLAR_SHEET);
   var row = sheet.getRange(safeRowId, 1, 1, 8).getValues()[0];
   var bulan = row[1];
   var tahun = row[0];
 
-  var lastRow = sheet.getLastRow();
-  var jumlahBaki = 0;
-  if (lastRow >= 2) {
-    var allRows = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
-    allRows.forEach(function(r, idx) {
-      var rBulan = parseInt(r[1]); var rTahun = parseInt(r[0]);
-      if (idx + 2 === safeRowId) return;
-      if (rTahun < tahun || (rTahun === tahun && rBulan <= bulan)) {
-        jumlahBaki += parseFloat(r[4] || 0);
-      }
-    });
-  }
-  jumlahBaki += baki;
-
-  sheet.getRange(safeRowId, 1, 1, 8).setValues([[tahun, bulan, janaTNB, gunaTNB, baki, jumlahBaki, janaApps, luarGrid]]);
+  sheet.getRange(safeRowId, 1, 1, 8).setValues([[tahun, bulan, janaTNB, gunaTNB, baki, 0, janaApps, luarGrid]]);
+  recalculateSolarRunningBalance();
   invalidateSolarCache();
   return { status: 'success', message: 'Rekod solar berjaya dikemaskini' };
 }
 
 function deleteSolarRecord(rowId) {
   if (!rowId) throw new Error('ID rekod diperlukan');
-  SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOLAR_SHEET).deleteRow(parseInt(rowId));
+  getRequiredSheet(SOLAR_SHEET).deleteRow(parseInt(rowId));
+  recalculateSolarRunningBalance();
   invalidateSolarCache();
   return { status: 'success', message: 'Rekod solar berjaya dipadam' };
+}
+
+function recalculateSolarRunningBalance() {
+  var sheet = getRequiredSheet(SOLAR_SHEET);
+  if (sheet.getLastRow() < 2) return;
+
+  var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues().map(function(row, index) {
+    return { rowId: index + 2, values: row };
+  });
+
+  rows.sort(function(a, b) {
+    var aYear = parseInt(a.values[0]);
+    var bYear = parseInt(b.values[0]);
+    if (aYear !== bYear) return aYear - bYear;
+    var aMonth = parseInt(a.values[1]);
+    var bMonth = parseInt(b.values[1]);
+    if (aMonth !== bMonth) return aMonth - bMonth;
+    return a.rowId - b.rowId;
+  });
+
+  var running = 0;
+  rows.forEach(function(item) {
+    var row = item.values;
+    var janaTNB = parseFloat(row[2]) || 0;
+    var gunaTNB = parseFloat(row[3]) || 0;
+    var janaApps = parseFloat(row[6]) || 0;
+    var baki = janaTNB - gunaTNB;
+    var luarGrid = janaApps - janaTNB;
+    running += baki;
+    sheet.getRange(item.rowId, 5, 1, 4).setValues([[baki, running, janaApps, luarGrid]]);
+  });
 }
 
 function getSolarYearlyData(year) {
@@ -780,7 +795,7 @@ function getSolarYearlyData(year) {
   if (cached) return JSON.parse(cached);
 
   var data = { jana: Array(12).fill(0), guna: Array(12).fill(0), baki: Array(12).fill(0), kumulatif: Array(12).fill(0), luarGrid: Array(12).fill(0) };
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOLAR_SHEET);
+  var sheet = getOptionalSheet(SOLAR_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return data;
   var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues();
   var running = 0;
@@ -811,14 +826,11 @@ function getSolarBatch(month, year) {
 
 function invalidateSolarCache() {
   var cache = CacheService.getScriptCache();
-  // Remove all solar data cache keys
-  var years = [2025, 2026, 2027, 2028, 2029, 2030, 2031];
-  var months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-  for (var i = 0; i < years.length; i++) {
-    for (var j = 0; j < months.length; j++) {
-      cache.remove('solar_data_' + years[i] + '_' + months[j]);
+  for (var i = 0; i < CACHE_YEARS.length; i++) {
+    for (var j = 0; j < CACHE_MONTHS.length; j++) {
+      cache.remove('solar_data_' + CACHE_YEARS[i] + '_' + CACHE_MONTHS[j]);
     }
-    cache.remove('solar_yearly_' + years[i]);
+    cache.remove('solar_yearly_' + CACHE_YEARS[i]);
   }
 }
 
@@ -841,7 +853,7 @@ function getBatchSummaryData(month, year) {
     prevExpData  : prevExpData,
     prevEvData   : prevMonth ? getEVData(prevMonth, prevYear) : [],
     prevPetData  : prevMonth ? getPetrolData(prevMonth, prevYear) : [],
-    prevBilData  : prevMonth ? getBilSummary(prevMonth, prevYear) : { jumlahKeseluruhan: 0 },
+    prevBilData  : prevMonth ? getBilSummary(prevMonth, prevYear) : { jumlahDibayar: 0, jumlahBelum: 0, jumlahKeseluruhan: 0 },
     expYearly    : getYearlyData(year),
     evYearly     : getEVYearlyData(year),
     bilYearly    : getBilYearlyData(year)
