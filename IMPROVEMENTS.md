@@ -8,25 +8,32 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 
 ### Backend (`code.gs`)
 - **`BIL_TEMPLATE`** — Sheet template untuk senarai bil tetap (NAMA, KATEGORI, ANGGARAN, TETAP, LOKASI, IKON_LOKASI, IKON_KATEGORI)
-- **`BIL_REKOD`** — Sheet rekod bayaran bulanan (auto-dijana dari template)
+- **`BIL_REKOD`** — Sheet rekod bil 11 kolum: status bayaran, bil diterima, tarikh bayar, tarikh bil, dan catatan
 - **`getBilTemplate()`** — Baca template dengan caching 6 jam
 - **`initBilMonth()`** — Auto-jana rekod bil untuk bulan baharu
 - **`getBilRekod()`** — Baca rekod bil ikut bulan/tahun
-- **`toggolBilStatus()`** — Tandai bil dibayar/belum
+- **`toggolBilStatus()`** — Tandai bil dibayar/belum; bil dibayar turut dianggap telah diterima
+- **`toggolBilDiterima()`** — Tandai bil sudah diterima atau belum diterima
+- **`batchUpdateBil()`** — Simpan perubahan status secara pukal mengikut lokasi
 - **`kemaskiniBilAmount()`** — Ubah amaun bil (untuk bil tak tetap)
 - **`tandaiSemuaBilLokasi()`** — Tandai semua bil dalam satu lokasi
-- **`getBilSummary()`** — Summary dengan pecahan lokasi, jumlah dibayar/belum
+- **`getBilSummary()`** — Summary dengan pecahan lokasi, jumlah dibayar, diterima belum bayar, dan belum dibayar
 - **`getBilYearlyData()`** — Data tahunan bil (untuk chart)
 
 ### Frontend (`index.html`)
 - Tab ke-4 di nav bar — ikon checklist, warna purple
-- **Progress Card** — Hero card dengan progress bar, jumlah dibayar vs belum
-- **Kad Peringatan** — Amber warning card, senarai bil belum bayar ikut lokasi
+- **Progress Card** — Hero card dengan progress bar serta amaun Dibayar, Diterima, dan Belum
+- **Kad Peringatan** — Bezakan Bil Diterima Belum Bayar dan Belum Terima Bil
 - **Grid 2 Kolum** — Lokasi disusun dalam 2 kolum (mobile: 1)
 - **Collapse/Expand** — Klik header lokasi untuk buka/tutup
 - **Auto-collapse** — Kalau semua bil di lokasi dah dibayar
 - **Auto-expand** — Kalau ada bil belum dibayar
-- **Tandai Semua** — Butang di header lokasi untuk tick semua sekali
+- **Bil Ada** — Toggle berasingan untuk tanda bil sudah diterima tanpa menandakan bayaran
+- **Pending Changes** — Toggle Bil Ada, bayaran, dan Tandai Semua tidak terus menulis ke Sheet
+- **Simpan per Lokasi** — Butang Simpan menghantar semua pending changes lokasi dalam satu batch
+- **Batal per Lokasi** — Batalkan pending changes sebelum disimpan
+- **Tandai Semua** — Queue semua bil lokasi sebagai dibayar, kemudian simpan secara batch
+- **Visual Pending** — Border/baris amber menunjukkan perubahan belum disimpan
 - **Ikon Lokasi** — Dari kolum IKON_LOKASI di template
 - **Ikon Kategori** — Dari kolum IKON_KATEGORI di template
 - **Default ke bulan semasa** — Bila buka tab Bil, auto ke bulan/tahun semasa
@@ -61,7 +68,7 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 
 - Bil **tidak** termasuk dalam Jumlah Keseluruhan, Pie Chart, Bar Chart
 - Bil dipapar sebagai **section berasingan** di bawah jadual bulanan
-- Kad Bil tunjuk status "4/7 Dibayar" dengan progress bar
+- Kad Bil Ringkasan diseragamkan dengan modul Bil: progress bar dan amaun Dibayar, Diterima, Belum
 - Solar dipapar sebagai kad ke-4 dalam grid Ringkasan (berasingan dari 3 kad utama)
 
 ---
@@ -123,7 +130,7 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - Butang 📥 di kiri tajuk setiap header (5 modul)
 - **Belanja** — Eksport tarikh, kategori, amaun, nota, bayaran
 - **EV Cas** — Eksport tarikh, jenis, CPO/stesen, kWh/liter, RM, lokasi
-- **Bil** — Eksport lokasi, nama, kategori, amaun, status, tarikh bayar
+- **Bil** — Eksport lokasi, nama, kategori, amaun, status, bil diterima, tarikh bayar, dan tarikh bil
 - **Solar** — Eksport tahun, bulan, jana TNB, guna TNB, jana apps, luar grid, baki, jumlah baki
 - BOM UTF-8 — terus buka di Excel tanpa masalah aksara Melayu
 - Ikut filter + carian semasa. Solar guna async fetch.
@@ -144,7 +151,7 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - **Belanja**: amaun > 0, kategori dipilih, tarikh tak boleh masa depan
 - **EV Cas**: kWh > 0, harga/kWh > 0, CPO dipilih (untuk Luar)
 - **Minyak**: liter > 0, stesen dipilih
-- **Solar**: Jana TNB ≥ 0, Guna TNB ≥ 0
+- **Solar**: Jana TNB ≥ 0, Guna TNB ≥ 0, Jana Apps ≥ 0; nilai sifar dibenarkan
 - Instant feedback tanpa tunggu API call
 
 ---
@@ -164,13 +171,19 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - Fix `initCategoryFilter` — sentiasa aktifkan semua kategori, elak jadual kosong
 - Fix exportCSV Solar — tambah loader + error handler
 - Fix kad Solar di Ringkasan — tambah error handler
+- Fix `jumlahKeseluruhan` bil — kini benar-benar jumlah dibayar + belum
+- Fix validasi Solar — nilai `0` tidak lagi dianggap input kosong
+- Fix `JUMLAH_BAKI` Solar — dikira semula untuk semua rekod selepas tambah, edit, atau padam
+- Fix output dinamik — kategori, ikon, payment, filter EV, dan lokasi bil di-escape sebelum masuk `innerHTML`
 
 ---
 
 ## `code.gs` — Penambahbaikan Lain
 
 - **CacheService** — Cache untuk semua modul: kategori, CPO, data tahunan, template bil, solar data, solar yearly
-- **`invalidateCache()`** — Fungsi untuk invalidate cache bila data berubah (setiap modul ada fungsi sendiri)
+- **Cache 2026-2031** — Invalidation cache tahunan diselaraskan kepada julat data aplikasi
+- **Invalidation cache** — Setiap modul mempunyai fungsi invalidation sendiri
 - **`getBatchSummaryData()`** — Dioptimumkan untuk baca semua data dalam satu panggilan
 - **Sanitize** — Semua input di-trim & dihadkan panjang di server; dan di-escape (`escapeHtml`) di client sebelum dipapar ke DOM untuk elak XSS
 - **Input validation** — Semua fungsi CRUD validate input sebelum simpan
+- **Sheet helpers** — `getRequiredSheet()` memberi mesej jelas jika sheet wajib tidak wujud; `getOptionalSheet()` digunakan untuk bacaan yang boleh pulangkan data kosong

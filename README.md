@@ -7,7 +7,7 @@ Aplikasi web untuk menguruskan perbelanjaan harian, menjejaki kos kenderaan elek
 - **Ringkasan Bulanan** — Pandangan keseluruhan belanja, EV cas, dan minyak dengan perbandingan bulan lepas, pie chart, bar chart, dan jadual bulanan. Kad gradient ikut tema modul.
 - **Belanja Harian** — Rekod perbelanjaan dengan kategori, carta kategori interaktif (expand + trend 3 bulan), carta pembayaran (boleh tapis), trend tahunan, dan carian
 - **EV Cas Tracker** — Rekod cas EV (rumah/luar) dan isi minyak dengan pecahan CPO/stesen, 3 carta interaktif (tapis data guna klik carta), dan carian
-- **Bil Bulanan** — Senarai semak bil bulanan auto-jana dari template, susun ikut lokasi, collapse/expand, tandai semua, kad peringatan bil belum bayar, progress tracking
+- **Bil Bulanan** — Senarai bil auto-jana dengan status Belum Terima, Bil Diterima, dan Dibayar; perubahan status disimpan secara pukal mengikut lokasi
 - **Solar Tracker** — Rekod penjanaan solar bulanan (Jana TNB, Guna TNB, Jana Apps), auto-kira baki & luar grid, bar chart stacked + line chart kumulatif, ringkasan di Ringkasan
 - **Rekod Pukal** — Tambah multiple entries sekaligus di modul Belanja
 - **Carta Interaktif** — Klik carta untuk menapis data
@@ -43,7 +43,7 @@ Buat 8 sheet tabs dengan nama berikut (case-sensitive):
 | `JENIS_CPO` | Senarai CPO/stesen cas |
 | `MINYAK` | Rekod isi minyak |
 | `BIL_TEMPLATE` | Senarai bil tetap (template) |
-| `BIL_REKOD` | Rekod bayaran bil bulanan |
+| `BIL_REKOD` | Rekod bil diterima, status bayaran, tarikh, amaun, dan catatan |
 | `SOLAR` | Rekod penjanaan solar bulanan |
 
 ### Langkah 3: Tambah Header & Data Awal
@@ -100,14 +100,16 @@ Astro | Hiburan | 109.16 | Ya | Muar | | 📺
 
 **Tab BIL_REKOD** — Header di baris pertama (baris kosong, akan auto-dijana):
 ```
-TAHUN | BULAN | LOKASI | NAMA | KATEGORI | AMAUN | STATUS | TARIKH_BAYAR
+TAHUN | BULAN | LOKASI | NAMA | KATEGORI | AMAUN | STATUS | TARIKH_BAYAR | BIL_DITERIMA | TARIKH_BIL | CATATAN
 ```
+
+> `STATUS` menyimpan `Belum` atau `Dibayar`. `BIL_DITERIMA` menyimpan `Tidak` atau `Ya`. Apabila bil ditanda dibayar, sistem turut menandakan bil sebagai diterima. `TARIKH_BAYAR` dan `TARIKH_BIL` diisi secara automatik.
 
 **Tab SOLAR** — Header di baris pertama:
 ```
 TAHUN | BULAN | JANA_TNB | GUNA_TNB | BAKI | JUMLAH_BAKI | JANA_APPS | GUNA_LUAR_GRID
 ```
-> 7 kolum terakhir (BAKI, JUMLAH_BAKI, GUNA_LUAR_GRID) akan auto-dikira. Kamu cuma isi TAHUN, BULAN, JANA_TNB, GUNA_TNB, JANA_APPS.
+> `BAKI`, `JUMLAH_BAKI`, dan `GUNA_LUAR_GRID` dikira secara automatik. Kamu cuma isi `TAHUN`, `BULAN`, `JANA_TNB`, `GUNA_TNB`, dan `JANA_APPS`.
 
 ### Langkah 4: Tambah Apps Script
 
@@ -140,8 +142,10 @@ Buka URL yang dicopy di browser. Aplikasi sedia diguna.
 jejak-belanja/
 ├── code.gs         # Server-side logic (Google Apps Script)
 ├── index.html      # Frontend UI + client-side JavaScript
+├── AGENTS.md       # Business rules dan arahan pelaksanaan
 ├── README.md       # Dokumentasi
 ├── IMPROVEMENTS.md # Changelog penambahbaikan
+├── PELAKSANAAN_CACHE.md # Rujukan pelaksanaan cache
 └── Old Version/    # Versi lama (arkib)
 ```
 
@@ -165,6 +169,20 @@ Harga ini boleh diubah dalam kod mengikut kadar semasa.
 - Bil Bulanan dipaparkan sebagai modul/kad berasingan dan tidak dimasukkan dalam jumlah besar.
 - Data/cache aplikasi disasarkan untuk tahun 2026 hingga 2031.
 - Nilai solar `Jana TNB`, `Guna TNB`, dan `Jana Apps` boleh bernilai `0` jika bacaan bulan tersebut memang sifar.
+- Status bil diterima adalah berasingan daripada status bayaran. Bil boleh diterima tetapi masih belum dibayar.
+- Menandakan bil sebagai dibayar turut menandakan `BIL_DITERIMA` sebagai `Ya`.
+
+## Aliran Bil Bulanan
+
+1. Tekan `Bil Ada` apabila bil sudah diterima tetapi belum dibayar.
+2. Tick checkbox bayaran apabila bil sudah dibayar. Bil tersebut turut dianggap sudah diterima.
+3. Perubahan `Bil Ada`, checkbox bayaran, dan `Semua` hanya menjadi pending pada browser.
+4. Kad lokasi yang mempunyai pending changes ditanda amber dan memaparkan butang `Simpan` serta `Batal`.
+5. Tekan `Simpan` untuk menyimpan semua pending changes bagi lokasi tersebut sekali gus.
+6. Tekan `Batal` sebelum simpan untuk membuang semua pending changes bagi lokasi tersebut.
+7. Jika kesilapan hanya disedari selepas simpan, ubah semula status yang salah dan tekan `Simpan` sekali lagi.
+
+Perubahan amaun bil tidak menggunakan pending batch. Amaun disimpan terus apabila nilai input diubah; jika tersalah, masukkan amaun yang betul semula.
 
 ## Customization
 
@@ -189,6 +207,7 @@ Dalam `index.html`, cari dan ubah nilai:
 ## Limitasi
 
 - Memerlukan sambungan internet
+- Tailwind CSS, Chart.js, dan Google Fonts masih dimuatkan melalui CDN; paparan atau carta boleh terjejas jika CDN disekat oleh rangkaian/telco
 - Data disimpan dalam Google Sheet akaun sendiri
 - Tidak boleh deploy sebagai GitHub Pages (kerana bergantung kepada Google Apps Script)
 - Maksimum 50MB data (limitasi Google Apps Script)

@@ -1,6 +1,9 @@
 # Panduan Pelaksanaan CacheService — Jejak Belanja
 
-Tarikh: Jun 2025
+Tarikh asal: Jun 2025
+Status dikemas kini: Julai 2026
+
+> Pelaksanaan cache dalam dokumen ini sudah diterapkan. Contoh kod di bahagian pelaksanaan dikekalkan sebagai rujukan sejarah; `code.gs` ialah sumber muktamad jika terdapat perbezaan kecil. Julat cache aktif aplikasi ialah 2026 hingga 2031.
 
 ---
 
@@ -26,6 +29,9 @@ Sistem cache 2 lapisan menggunakan `CacheService` (bina dalam Google Apps Script
 | `trend_MM_YYYY` | Category trend 3 bulan (Object) | 2 jam | Tambah/ubah/padam transaksi |
 | `categories` | Senarai kategori + icon (Array) | 6 jam | Tekan butang Refresh |
 | `cpo_types` | Senarai CPO (Array) | 6 jam | Tekan butang Refresh EV |
+| `bil_template` | Template bil bulanan (Array) | 6 jam | Perubahan berkaitan bil / refresh template |
+| `solar_data_YYYY_MM` | Rekod Solar ikut bulan (Array) | 2 jam | Tambah/ubah/padam Solar atau Refresh Solar |
+| `solar_yearly_YYYY` | Data Solar tahunan untuk carta (Object) | 2 jam | Tambah/ubah/padam Solar atau Refresh Solar |
 
 **CacheService** — storan dalam RAM server Google.
 - BUKAN Google Drive
@@ -68,17 +74,18 @@ Selepas TTL tamat, cache luput sendiri → bacaan seterusnya akan baca sheet sem
 
 ### 3.4 Butang Refresh Manual
 
-Tiga butang refresh di setiap tab — untuk kosongkan cache secara manual:
+Empat laluan refresh digunakan untuk kosongkan cache secara manual:
 
 | Tab | Butang | Fungsi Backend | Cache Dikosongkan |
 |---|---|---|---|
-| Ringkasan | ⟳ Refresh Semua | `clearDashboardCache()` | Semua |
+| Ringkasan | ⟳ Refresh | `clearDashboardCache()` | Belanja, EV/Minyak, kategori, dan CPO |
 | Belanja | ⟳ Refresh | `refreshExpenseOnly()` | yearly + trend + categories |
 | EV Cas | ⟳ Refresh | `refreshEVOnly()` | evyearly + cpo_types |
+| Solar | ⟳ Refresh | `invalidateSolarCache()` | solar_data + solar_yearly untuk 2026-2031 |
 
 ---
 
-## 4. Perubahan Diperlukan
+## 4. Rujukan Pelaksanaan
 
 ### 4.1 FAIL: `code.gs`
 
@@ -426,7 +433,7 @@ function getBatchSummaryData(month, year) {
 
 ---
 
-#### M. Tambah 3 fungsi JavaScript
+#### M. Tambah fungsi refresh JavaScript
 
 **Lokasi:** Selepas fungsi `debouncedLoadAllData()` (cari `function debouncedLoadAllData()`, tambah selepas penutup `}` fungsi tersebut).
 
@@ -482,30 +489,25 @@ function getBatchSummaryData(month, year) {
 
 ### Bahagian A: `code.gs`
 
-- [ ] **Tambah** CacheService helpers (selepas `PETROL_SHEET`) — ~40 baris
-- [ ] **Ubah** `getCategories()` — tambah 3 baris
-- [ ] **Ubah** `getYearlyData()` — tambah 4 baris
-- [ ] **Ubah** `getCategoryTrend()` — tambah 4 baris
-- [ ] **Ubah** `getCPOTypes()` — tambah 3 baris
-- [ ] **Ubah** `getEVYearlyData()` — tambah 4 baris
-- [ ] **Ubah** `addTransaction()` — tambah 1 baris
-- [ ] **Ubah** `updateTransaction()` — tambah 1 baris
-- [ ] **Ubah** `deleteTransaction()` — tambah 1 baris
-- [ ] **Ubah** `addBulkTransactions()` — tambah 1 baris
-- [ ] **Ubah** `addEVCharging()` — tambah 1 baris
-- [ ] **Ubah** `updateEVCharging()` — tambah 1 baris
-- [ ] **Ubah** `deleteEVData()` — tambah 1 baris
-- [ ] **Ubah** `addPetrolRecord()` — tambah 1 baris
-- [ ] **Ubah** `updatePetrolRecord()` — tambah 1 baris
-- [ ] **Ubah** `deletePetrolRecord()` — tambah 1 baris
-- [ ] **Ganti** `getBatchSummaryData()` — ~5 baris berubah
+- [x] **Tambah** CacheService helpers
+- [x] **Ubah** `getCategories()` — cache kategori
+- [x] **Ubah** `getYearlyData()` — cache data tahunan Belanja
+- [x] **Ubah** `getCategoryTrend()` — cache trend kategori
+- [x] **Ubah** `getCPOTypes()` — cache CPO
+- [x] **Ubah** `getEVYearlyData()` — cache tahunan EV/Minyak
+- [x] **Tambah invalidation** pada CRUD Belanja
+- [x] **Tambah invalidation** pada CRUD EV/Minyak
+- [x] **Tambah cache dan invalidation** pada modul Solar
+- [x] **Selaraskan tahun cache** kepada 2026-2031
+- [x] **Optimumkan** `getBatchSummaryData()`
 
 ### Bahagian B: `index.html`
 
-- [ ] **Tambah** butang Refresh di tab Ringkasan — 3 baris HTML
-- [ ] **Tambah** butang Refresh di tab Belanja — 3 baris HTML
-- [ ] **Tambah** butang Refresh di tab EV Cas — 3 baris HTML
-- [ ] **Tambah** 3 fungsi `forceRefresh*()` — ~40 baris JavaScript
+- [x] **Tambah** butang Refresh di tab Ringkasan
+- [x] **Tambah** butang Refresh di tab Belanja
+- [x] **Tambah** butang Refresh di tab EV Cas
+- [x] **Tambah** butang Refresh di tab Solar
+- [x] **Tambah** fungsi `forceRefresh*()` berkaitan
 
 ---
 
@@ -518,7 +520,7 @@ Selepas semua perubahan dibuat dan di-deploy semula:
 | **First load** | Buka dashboard pertama kali | Lambat sikit (baca sheet + bina cache). Selepas tu laju. |
 | **Tukar tab** | Switch antara Ringkasan → Belanja → EV | Lebih laju dari sebelum (agregat dari cache) |
 | **Tambah transaksi** | Tambah belanja baru, dashboard auto-refresh | Data tunjuk jumlah BARU (cache invalidated + rebuilt) |
-| **Butang Refresh** | Tekan ⟳ Refresh di mana-mana tab | Toast "Cache dikosongkan" + data reload segar |
+| **Butang Refresh** | Tekan ⟳ Refresh pada tab berkaitan | Toast cache dikosongkan + data reload segar |
 | **Edit sheet direct** | Buka Google Sheets, ubah data direct | Dashboard tunjuk data lama SEHINGGA TTL tamat (~2 jam) ATAU tekan butang Refresh |
 
 ---
@@ -528,5 +530,6 @@ Selepas semua perubahan dibuat dan di-deploy semula:
 1. **CacheService** adalah storan sementara dalam RAM. Data hilang bila TTL tamat atau server Google reclaim memori. Ini adalah normal.
 2. **TTL 2 jam** untuk data agregat — cukup untuk safety net tanpa data basi terlalu lama.
 3. **Invalidate on write** adalah mekanisme utama. TTL hanya backup.
-4. Tiada perubahan pada struktur sheet atau fungsi sedia ada — semua fungsi CRUD masih berfungsi seperti biasa.
+4. Struktur sheet boleh berubah mengikut modul aplikasi; cache tidak mengubah format data yang disimpan.
 5. **Tidak perlu trigger automatik** — cache dibina secara "lazy" (bila diperlukan sahaja).
+6. Semua cache bersuffix tahun disasarkan kepada 2026-2031.
