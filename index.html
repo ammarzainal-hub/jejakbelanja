@@ -2372,7 +2372,7 @@ function confirmPetrolDelete(id) {
         html += '<div class="flex items-center gap-3">';
         html += '<span class="text-xs font-bold ' + (allDone ? 'text-emerald-600' : 'text-amber-600') + '">' + l.done + '/' + l.count + (allDone ? ' ✅' : ' ⏳') + '</span>';
         html += '<span class="text-xs font-bold text-purple-600">RM ' + fRM(l.dibayar) + '</span>';
-        if (hasPending) html += '<button onclick="event.stopPropagation(); simpanBilLokasi(\'' + escapeJsString(lok) + '\')" class="text-[9px] font-black uppercase bg-amber-400 hover:bg-amber-500 text-white px-3 py-1 rounded-lg transition-all whitespace-nowrap animate-pulse">💾 Simpan</button>';
+        if (hasPending) html += '<button onclick="event.stopPropagation(); simpanBilLokasi(\'' + escapeJsString(lok) + '\')" class="text-[9px] font-black uppercase bg-amber-400 hover:bg-amber-500 text-white px-3 py-1 rounded-lg transition-all whitespace-nowrap animate-pulse">💾 Simpan</button> <button onclick="event.stopPropagation(); batalBilLokasi(\'' + escapeJsString(lok) + '\')" class="text-[9px] font-bold uppercase bg-slate-200 hover:bg-slate-300 text-slate-500 px-2 py-1 rounded-lg transition-all whitespace-nowrap">↩ Batal</button>';
         if (!allDone && !hasPending) html += '<button onclick="tandaiSemuaLokasi(\'' + escapeJsString(lok) + '\')" class="text-[9px] font-bold uppercase bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded-lg transition-all whitespace-nowrap">✅ Semua</button>';
         html += '<svg class="bil-arrow w-4 h-4 text-slate-400 transform transition-transform ' + (allDone ? 'rotate-0' : 'rotate-180') + '" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
         html += '</div></div>';
@@ -2433,6 +2433,22 @@ function confirmPetrolDelete(id) {
       });
       var merged = mergePendingBil(serverRekod);
       updateBilUI(bilData);
+    }
+
+    function batalBilLokasi(lokasi) {
+      var count = 0;
+      for (var rid in bilPendingChanges) {
+        var found = (bilData.rekod || []).find(function(x) { return x.rowId == rid; });
+        if (found && found.lokasi === lokasi) {
+          delete bilPendingChanges[rid];
+          count++;
+        }
+      }
+      if (count > 0) {
+        showToast('↩ ' + count + ' perubahan dibatalkan untuk ' + lokasi, 'info');
+        var merged = mergePendingBil(bilData.rekod || []);
+        updateBilUI(bilData);
+      }
     }
 
     function simpanBilLokasi(lokasi) {
