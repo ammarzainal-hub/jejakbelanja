@@ -7,9 +7,9 @@ Aplikasi web untuk menguruskan perbelanjaan harian, menjejaki kos kenderaan elek
 - **Ringkasan Bulanan** — Pandangan keseluruhan belanja, EV cas, dan minyak dengan perbandingan bulan lepas, pie chart, bar chart, dan jadual bulanan. Kad gradient ikut tema modul.
 - **Belanja Harian** — Rekod perbelanjaan dengan kategori, carta kategori interaktif (expand + trend 3 bulan), carta pembayaran (boleh tapis), trend tahunan, dan carian
 - **EV Cas Tracker** — Rekod cas EV (rumah/luar) dan isi minyak dengan pecahan CPO/stesen, 3 carta interaktif (tapis data guna klik carta), dan carian
-- **Bil Bulanan** — Senarai bil auto-jana dengan status Belum Terima, Bil Diterima, dan Dibayar; perubahan status disimpan secara pukal mengikut lokasi
+- **Bil Bulanan** — Senarai bil auto-jana dengan status Belum Terima, Bil Diterima, dan Dibayar; perubahan status disimpan secara pukal mengikut lokasi; template sokong `CYCLE_HARI`, `FREKUENSI`, dan `BULAN_AKTIF`
 - **Solar Tracker** — Rekod penjanaan solar bulanan (Jana TNB, Guna TNB, Jana Apps), auto-kira baki & luar grid, bar chart stacked + line chart kumulatif, ringkasan di Ringkasan
-- **Rekod Pukal** — Tambah multiple entries sekaligus di modul Belanja
+- **Rekod Pukal** — Tambah multiple entries sekaligus di modul Belanja dan EV/Minyak
 - **Carta Interaktif** — Klik carta untuk menapis data
 - **Eksport CSV** — Eksport data dari setiap modul (Belanja / EV+Minyak / Bil / Solar)
 - **Carian** — Cari transaksi merentasi kategori, nota, amaun di Belanja & EV
@@ -89,14 +89,15 @@ Tarikh | Stesen | Liter | Harga/Liter | Jumlah | Nota
 
 **Tab BIL_TEMPLATE** — Header di baris pertama, kemudian isi senarai bil:
 ```
-NAMA | KATEGORI | ANGGARAN | TETAP | LOKASI | IKON_LOKASI | IKON_KATEGORI
------|----------|----------|-------|--------|-------------|--------------
-Bil TNB | Kos Elektrik | 150.00 | Tidak | Muar | 🏠 | ⚡
-Bil Air | Kos Rumah | 25.00 | Tidak | Muar | | 💧
-Bil Internet | Komunikasi & Topup | 118.90 | Ya | TTI | 🏢 | 🌐
-Astro | Hiburan | 109.16 | Ya | Muar | | 📺
+NAMA | KATEGORI | ANGGARAN | TETAP | LOKASI | IKON_LOKASI | IKON_KATEGORI | CYCLE_HARI | FREKUENSI | BULAN_AKTIF
+-----|----------|----------|-------|--------|-------------|--------------|------------|-----------|------------
+Bil TNB | Kos Elektrik | 150.00 | Tidak | Muar | 🏠 | ⚡ | 0 | Bulanan |
+Bil Air | Kos Rumah | 25.00 | Tidak | Muar | | 💧 | 0 | Bulanan |
+Bil Internet | Komunikasi & Topup | 118.90 | Ya | TTI | 🏢 | 🌐 | 0 | Tahunan | 7
+Astro | Hiburan | 109.16 | Ya | Muar | | 📺 | 0 | Tahunan | 1
 ```
 > `TETAP` = "Ya" jika amaun sentiasa sama setiap bulan. `IKON_LOKASI` cukup isi pada baris pertama setiap lokasi.
+> `FREKUENSI` boleh guna `Bulanan` atau `Tahunan`. `BULAN_AKTIF` hanya diisi untuk bil tahunan.
 
 **Tab BIL_REKOD** — Header di baris pertama (baris kosong, akan auto-dijana):
 ```

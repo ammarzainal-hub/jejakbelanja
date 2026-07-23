@@ -487,6 +487,54 @@ function deletePetrolRecord(rowId) {
   return { status: 'success', message: 'Rekod minyak berjaya dipadam' };
 }
 
+function addBulkEVRecords(rows) {
+  if (!rows || !Array.isArray(rows) || rows.length === 0) {
+    throw new Error('Tiada data untuk ditambah');
+  }
+
+  var evRows = [];
+  var petrolRows = [];
+
+  rows.forEach(function(row, index) {
+    var label = 'Baris ' + (index + 1) + ': ';
+    if (!row || !row.kind) throw new Error(label + 'Jenis rekod diperlukan');
+    if (!isValidDate(row.date)) throw new Error(label + 'Tarikh tidak sah');
+
+    if (row.kind === 'home' || row.kind === 'public') {
+      var kwh = parseFloat(row.kwh);
+      var price = row.kind === 'home' ? 0.4443 : parseFloat(row.pricePerKwh);
+      if (isNaN(kwh) || kwh <= 0) throw new Error(label + 'kWh mesti lebih dari 0');
+      if (isNaN(price) || price <= 0) throw new Error(label + 'Harga/kWh mesti lebih dari 0');
+      var type = row.kind === 'home' ? 'Rumah' : 'Luar';
+      var cpo = type === 'Rumah' ? 'Rumah' : sanitize(row.cpo, 100);
+      if (type === 'Luar' && !cpo) throw new Error(label + 'CPO diperlukan untuk cas luar');
+      var location = type === 'Rumah' ? 'Kediaman' : sanitize(row.location, 200);
+      evRows.push([new Date(row.date), type, cpo, kwh, price, location, kwh * price]);
+    } else if (row.kind === 'petrol') {
+      var station = sanitize(row.station, 100);
+      var liter = parseFloat(row.liter);
+      var petrolPrice = parseFloat(row.pricePerLiter) || 1.99;
+      if (!station) throw new Error(label + 'Stesen diperlukan');
+      if (isNaN(liter) || liter <= 0) throw new Error(label + 'Liter mesti lebih dari 0');
+      petrolRows.push([new Date(row.date), station, liter, petrolPrice, liter * petrolPrice, sanitize(row.note, 500)]);
+    } else {
+      throw new Error(label + 'Jenis rekod tidak sah');
+    }
+  });
+
+  if (evRows.length > 0) {
+    var evSheet = getRequiredSheet(EV_SHEET);
+    evSheet.getRange(evSheet.getLastRow() + 1, 1, evRows.length, 7).setValues(evRows);
+  }
+  if (petrolRows.length > 0) {
+    var petrolSheet = getRequiredSheet(PETROL_SHEET);
+    petrolSheet.getRange(petrolSheet.getLastRow() + 1, 1, petrolRows.length, 6).setValues(petrolRows);
+  }
+
+  invalidateEVCache();
+  return { status: 'success', message: (evRows.length + petrolRows.length) + ' rekod EV/Minyak berjaya ditambah', evCount: evRows.length, petrolCount: petrolRows.length };
+}
+
 
 // ============================================================
 //   MODUL 4: BIL BULANAN
@@ -499,8 +547,9 @@ function getBilTemplate() {
 
   var sheet = getOptionalSheet(BIL_TEMPLATE_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
-  var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues();
+  var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues();
   var result = data.map(function(row, idx) {
+    var frekuensi = sanitize(row[8], 30) || 'Bulanan';
     return {
       rowId: idx + 2,
       nama: row[0] || '',
@@ -509,7 +558,10 @@ function getBilTemplate() {
       tetap: (row[3] || '').toString().toLowerCase() === 'ya',
       lokasi: row[4] || 'Lain-lain',
       ikonLokasi: row[5] || '',
-      ikonKategori: row[6] || ''
+      ikonKategori: row[6] || '',
+      cycleHari: row[7] ? parseInt(row[7]) : '',
+      frekuensi: frekuensi,
+      bulanAktif: row[9] ? parseInt(row[9]) : ''
     };
   }).filter(function(b) { return b.nama; });
 
@@ -537,7 +589,9 @@ function initBilMonth(month, year) {
   var newRows = [];
 
   template.forEach(function(t) {
-    if (!existing[t.nama]) {
+    var freq = (t.frekuensi || 'Bulanan').toString().toLowerCase();
+    var shouldCreate = freq !== 'tahunan' || parseInt(t.bulanAktif) === m;
+    if (shouldCreate && !existing[t.nama]) {
       newRows.push([y, m, t.lokasi, t.nama, t.kategori, t.anggaran, 'Belum', '', 'Tidak', '', '']);
     }
   });
@@ -679,7 +733,12 @@ function batchUpdateBil(updates) {
     var tarikhBayar = u.status === 'Dibayar' ? today : (u.status === 'Belum' ? '' : (row[7] || ''));
     var bilDiterima = u.bilDiterima !== undefined ? u.bilDiterima : (row[8] || 'Tidak');
     if (u.status === 'Dibayar') bilDiterima = 'Ya';
-    var tarikhBil = u.bilDiterima === 'Ya' ? today : (u.bilDiterima === 'Tidak' ? '' : (row[9] || ''));
+    var tarikhBil = row[9] || '';
+    if (u.bilDiterima === 'Tidak') {
+      tarikhBil = '';
+    } else if ((u.bilDiterima === 'Ya' || u.status === 'Dibayar') && !tarikhBil) {
+      tarikhBil = today;
+    }
 
     sheet.getRange(rowId, 7, 1, 4).setValues([[status, tarikhBayar, bilDiterima, tarikhBil]]);
     count++;

@@ -11,10 +11,13 @@
 - Perubahan status bil (`Bil Ada`, dibayar, dan tandai semua) dipending di client dan disimpan secara batch mengikut lokasi.
 - `Batal` membuang pending changes lokasi sebelum simpan. Selepas simpan, pembetulan dibuat dengan ubah semula status dan simpan sekali lagi.
 - Perubahan amaun bil disimpan terus apabila input berubah; ia bukan sebahagian daripada batch status.
+- Bil tahunan dalam `BIL_TEMPLATE` hanya dijana pada `BULAN_AKTIF`.
 
 ## Implementation Notes
 
 - Escape semua nilai daripada Google Sheet sebelum dimasukkan ke `innerHTML`.
 - Selepas tambah, edit, atau padam rekod solar, kira semula `JUMLAH_BAKI` supaya baki kumulatif kekal tepat.
 - Struktur `BIL_REKOD` ialah 11 kolum: `TAHUN`, `BULAN`, `LOKASI`, `NAMA`, `KATEGORI`, `AMAUN`, `STATUS`, `TARIKH_BAYAR`, `BIL_DITERIMA`, `TARIKH_BIL`, `CATATAN`.
+- Struktur `BIL_TEMPLATE` ialah 10 kolum: `NAMA`, `KATEGORI`, `ANGGARAN`, `TETAP`, `LOKASI`, `IKON_LOKASI`, `IKON_KATEGORI`, `CYCLE_HARI`, `FREKUENSI`, `BULAN_AKTIF`.
+- Rekod pukal EV/Minyak mesti menyokong campuran `Cas Rumah`, `Cas Luar`, dan `Minyak` dengan tarikh berasingan setiap baris.
 - Operasi tulis mesti menggunakan helper sheet wajib supaya sheet yang hilang menghasilkan mesej ralat yang jelas.

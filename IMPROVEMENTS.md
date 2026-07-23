@@ -7,7 +7,7 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 ## Modul Baharu: Bil Bulanan (Tab 4)
 
 ### Backend (`code.gs`)
-- **`BIL_TEMPLATE`** — Sheet template untuk senarai bil tetap (NAMA, KATEGORI, ANGGARAN, TETAP, LOKASI, IKON_LOKASI, IKON_KATEGORI)
+- **`BIL_TEMPLATE`** — Sheet template untuk senarai bil tetap (NAMA, KATEGORI, ANGGARAN, TETAP, LOKASI, IKON_LOKASI, IKON_KATEGORI, CYCLE_HARI, FREKUENSI, BULAN_AKTIF)
 - **`BIL_REKOD`** — Sheet rekod bil 11 kolum: status bayaran, bil diterima, tarikh bayar, tarikh bil, dan catatan
 - **`getBilTemplate()`** — Baca template dengan caching 6 jam
 - **`initBilMonth()`** — Auto-jana rekod bil untuk bulan baharu
@@ -19,6 +19,11 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - **`tandaiSemuaBilLokasi()`** — Tandai semua bil dalam satu lokasi
 - **`getBilSummary()`** — Summary dengan pecahan lokasi, jumlah dibayar, diterima belum bayar, dan belum dibayar
 - **`getBilYearlyData()`** — Data tahunan bil (untuk chart)
+
+### Backend/Frontend Energy Pukal
+- **`addBulkEVRecords()`** — Tambah rekod campuran Cas Rumah, Cas Luar, dan Minyak dalam satu batch
+- **Modal EV Pukal** — Tarikh setiap baris berasingan dengan validasi ikut jenis rekod
+- **EV/Minyak** kini boleh direkod secara campur dalam satu operasi simpan
 
 ### Frontend (`index.html`)
 - Tab ke-4 di nav bar — ikon checklist, warna purple
