@@ -4,7 +4,7 @@ Aplikasi web untuk menguruskan perbelanjaan harian, menjejaki kos kenderaan elek
 
 ## Ciri-ciri
 
-- **Ringkasan Bulanan** — Pandangan keseluruhan belanja, EV cas, dan minyak dengan perbandingan bulan lepas, pie chart, bar chart, dan jadual bulanan. Kad gradient ikut tema modul.
+- **Ringkasan Bulanan** — Pandangan sistem kewangan yang memaparkan modul Belanja, EV Cas, Minyak, Bil, dan Solar. Jumlah besar hanya mengira Belanja Harian, EV Cas, dan Minyak; Bil Bulanan dan Solar dipaparkan sebagai maklumat berasingan.
 - **Belanja Harian** — Rekod perbelanjaan dengan kategori, carta kategori interaktif (expand + trend 3 bulan), carta pembayaran (boleh tapis), trend tahunan, dan carian
 - **EV Cas Tracker** — Rekod cas EV (rumah/luar) dan isi minyak dengan pecahan CPO/stesen, 3 carta interaktif (tapis data guna klik carta), dan carian
 - **Bil Bulanan** — Senarai bil auto-jana dengan status Belum Terima, Bil Diterima, dan Dibayar; perubahan status disimpan secara pukal mengikut lokasi; template sokong `CYCLE_HARI`, `FREKUENSI`, dan `BULAN_AKTIF`
@@ -166,12 +166,21 @@ Harga ini boleh diubah dalam kod mengikut kadar semasa.
 
 ## Business Rules
 
-- Jumlah besar Ringkasan hanya merangkumi Belanja Harian, EV Cas, dan Minyak.
-- Bil Bulanan dipaparkan sebagai modul/kad berasingan dan tidak dimasukkan dalam jumlah besar.
+- Header Ringkasan boleh menyebut semua modul sistem, tetapi jumlah besar Ringkasan hanya merangkumi Belanja Harian, EV Cas, dan Minyak.
+- Bil Bulanan dan Solar dipaparkan sebagai modul/kad berasingan dan tidak dimasukkan dalam jumlah besar.
 - Data/cache aplikasi disasarkan untuk tahun 2026 hingga 2031.
 - Nilai solar `Jana TNB`, `Guna TNB`, dan `Jana Apps` boleh bernilai `0` jika bacaan bulan tersebut memang sifar.
 - Status bil diterima adalah berasingan daripada status bayaran. Bil boleh diterima tetapi masih belum dibayar.
 - Menandakan bil sebagai dibayar turut menandakan `BIL_DITERIMA` sebagai `Ya`.
+
+## Penambahbaikan Terkini
+
+- `parseRowId()` melindungi semua operasi edit/padam supaya header sheet tidak boleh tersasar.
+- Validasi tarikh kini ketat pada format `yyyy-mm-dd` dan menolak tarikh tidak wujud.
+- Bil auto-jana menggunakan key `LOKASI + NAMA` supaya bil nama sama tetapi lokasi berbeza tidak hilang.
+- Rekod pukal EV/Minyak semak semua sheet wajib terlebih dahulu sebelum menulis apa-apa.
+- Solar menolak duplicate untuk gabungan `TAHUN + BULAN`.
+- CSV export kini escape tanda petik `"` dengan betul.
 
 ## Aliran Bil Bulanan
 

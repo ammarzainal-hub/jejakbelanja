@@ -15,6 +15,25 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - **Warna perbandingan** — Lebih tinggi = rose-200 (buruk untuk belanja), lebih rendah = emerald-200 (baik), sama = neutral ➖. `index.html:1518-1519`
 - **Nota scope jumlah** — Kad Jumlah Keseluruhan kini memaparkan `Tidak termasuk Bil Bulanan & Solar`. `index.html:295`
 - **Badge Bil** — Kad Bil di Ringkasan kini ada badge `⚠️ Asing dari Jumlah Keseluruhan`. `index.html:345`
+- **Header Ringkasan** — Label header boleh menyebut semua modul sistem (`Belanja + EV Cas + Minyak + Bil + Solar`), tetapi formula jumlah besar kekal hanya `Belanja + EV Cas + Minyak`.
+
+---
+
+## Kemaskini Julai 2026 (25 Jul) — Hardening & Data Safety
+
+### Backend Hardening
+- **`parseRowId()`** — Semua operasi edit/padam kini tolak `rowId < 2`, jadi header sheet tidak boleh terpadam walaupun input client tersasar.
+- **Validasi tarikh ketat** — `isValidDate()` kini hanya terima format `yyyy-mm-dd` yang sah; tarikh tidak wujud seperti `2026-02-31` ditolak.
+- **Bil auto-jana ikut lokasi + nama** — `initBilMonth()` guna key `LOKASI + NAMA` untuk elak bil nama sama di lokasi berbeza daripada dianggap duplicate.
+- **Batch EV/Minyak preflight** — `addBulkEVRecords()` semak semua sheet wajib terlebih dahulu sebelum tulis, jadi batch tidak akan masuk separuh jika satu sheet hilang.
+- **Solar duplicate guard** — `addSolarRecord()` dan `updateSolarRecord()` menolak duplicate bagi gabungan `TAHUN + BULAN`.
+- **RowId guard solar/bil** — `updateSolarRecord()`, `deleteSolarRecord()`, `toggolBilStatus()`, `toggolBilDiterima()`, `kemaskiniBilAmount()`, `batchUpdateBil()`, `deleteTransaction()`, `deleteEVData()`, dan `deletePetrolRecord()` kini guna guard rowId yang sama.
+
+### Frontend/Data Export
+- **CSV escaping** — `doDownload()` kini escape semua tanda petik berganda dalam data supaya eksport CSV kekal sah walaupun nota/nama mengandungi `"`.
+
+### Arkib
+- **`Old Version/` dibuang** — Semua fail arkib lama telah dipadam supaya tidak mengelirukan semasa rujukan atau deployment.
 
 ---
 

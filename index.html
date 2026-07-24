@@ -2782,7 +2782,7 @@ function confirmPetrolDelete(id) {
 
     function doDownload(rows, filename) {
       var csv = rows.map(function(row) {
-        return row.map(function(cell) { return '"' + (cell == null ? '' : cell) + '"'; }).join(',');
+        return row.map(function(cell) { return '"' + String(cell == null ? '' : cell).replace(/"/g, '""') + '"'; }).join(',');
       }).join('\n');
       var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
       var url = URL.createObjectURL(blob);
