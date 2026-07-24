@@ -4,6 +4,20 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 
 ---
 
+## Kemaskini Julai 2026 (24 Jul) — Ringkasan Comparison & UI
+
+### Bug Fixes
+- **Fix perbandingan Januari** — `prevExpData` kini guna `getTransactions(prevMonth, prevYear)` berbanding tapis dari `allExp` tahun semasa. Contoh: Januari 2027 kini dibandingkan dengan Disember 2026 (sebelum: silap rujuk Disember 2027). `code.gs:956`
+- **Fix `clearDashboardCache()`** — Refresh Semua di Ringkasan kini kosongkan cache Bil dan Solar juga (sebelum: hanya Belanja + EV/Minyak). `code.gs:62-63`
+
+### UI Penambahbaikan (Ringkasan)
+- **Label bulan sebenar** — Paparan mengapaikini dinamik: `vs April 2026` / `April 2026`, bukan `vs Bulan Lepas` / `Bulan Lepas` generik. Label dikemaskini melalui `MONTHS_FULL` array + `prevMonth`/`prevYear` daripada backend. `index.html:1510,1532-1533`
+- **Warna perbandingan** — Lebih tinggi = rose-200 (buruk untuk belanja), lebih rendah = emerald-200 (baik), sama = neutral ➖. `index.html:1518-1519`
+- **Nota scope jumlah** — Kad Jumlah Keseluruhan kini memaparkan `Tidak termasuk Bil Bulanan & Solar`. `index.html:295`
+- **Badge Bil** — Kad Bil di Ringkasan kini ada badge `⚠️ Asing dari Jumlah Keseluruhan`. `index.html:345`
+
+---
+
 ## Modul Baharu: Bil Bulanan (Tab 4)
 
 ### Backend (`code.gs`)

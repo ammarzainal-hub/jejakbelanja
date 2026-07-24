@@ -292,10 +292,11 @@
         <p class="text-[10px] font-black uppercase tracking-[0.3em] opacity-70 mb-1">Jumlah Keseluruhan</p>
         <p class="text-4xl font-black tracking-tighter">RM <span id="sumGrandTotal">0.00</span></p>
         <p id="sumPeriodLabel" class="text-[10px] opacity-60 mt-2 font-bold uppercase tracking-widest">--- semua rekod ---</p>
+        <p class="text-[8px] opacity-40 mt-1 font-bold uppercase tracking-widest">Tidak termasuk Bil Bulanan &amp; Solar</p>
         <div class="mt-4 pt-4 border-t border-white/20 flex items-center gap-3">
           <div id="sumCompareIcon" class="text-2xl">-</div>
-          <div><p class="text-[9px] opacity-60 font-bold uppercase tracking-widest">vs Bulan Lepas</p><p id="sumCompareText" class="font-black text-sm">Pilih bulan untuk bandingkan</p></div>
-          <div class="ml-auto text-right"><p class="text-[9px] opacity-60 font-bold uppercase tracking-widest">Bulan Lepas</p><p id="sumLastMonthTotal" class="font-black text-sm opacity-80">RM -</p></div>
+          <div><p id="sumCompareLabel" class="text-[9px] opacity-60 font-bold uppercase tracking-widest">vs Bulan Lepas</p><p id="sumCompareText" class="font-black text-sm">Pilih bulan untuk bandingkan</p></div>
+          <div class="ml-auto text-right"><p id="sumLastMonthLabel" class="text-[9px] opacity-60 font-bold uppercase tracking-widest">Bulan Lepas</p><p id="sumLastMonthTotal" class="font-black text-sm opacity-80">RM -</p></div>
         </div>
       </div>
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -341,7 +342,7 @@
         </table>
       </div>
       <div id="sumBilSection" class="space-y-3 pt-2">
-        <div class="flex items-center gap-2 px-1"><span class="text-sm">📋</span><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Bil Bulanan</p></div>
+        <div class="flex items-center gap-2 px-1"><span class="text-sm">📋</span><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Bil Bulanan</p><span class="text-[8px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-widest">Asing dari Jumlah Keseluruhan</span></div>
         <div class="summary-card shadow-card bg-gradient-to-br from-purple-600 to-purple-800 rounded-3xl p-5 transition-all">
           <div class="flex items-center justify-between mb-3"><div class="bg-white/20 rounded-2xl p-2"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><span id="sumBilStatus" class="text-[9px] font-black bg-white/20 text-white px-2 py-0.5 rounded-full">0/0</span></div>
           <p class="text-[9px] font-black text-white/60 uppercase tracking-widest">Progress Bil</p>
@@ -1052,7 +1053,7 @@ var CATEGORY_COLORS = {
         var y = document.getElementById('sumFilterYear').value;
         google.script.run
           .withSuccessHandler(function(b) {
-            updateSummaryUI(b.expData, b.evData, b.petrolData, b.bilData, b.prevExpData, b.prevEvData, b.prevPetData, b.prevBilData, m, y);
+            updateSummaryUI(b.expData, b.evData, b.petrolData, b.bilData, b.prevExpData, b.prevEvData, b.prevPetData, b.prevBilData, b.prevMonth, b.prevYear, m, y);
             renderSumBarChart(b.expYearly, b.evYearly, y);
             google.script.run.withSuccessHandler(function(s) {
               if (s.records && s.records.length > 0) {
@@ -1490,7 +1491,9 @@ var CATEGORY_COLORS = {
     //   SUMMARY PAGE FUNCTIONS
     // ============================================================
 
-    function updateSummaryUI(expArr, evArr, petArr, bilSummary, prevExpArr, prevEVArr, prevPetArr, prevBilSummary, month, year) {
+    var MONTHS_FULL = ['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember'];
+
+    function updateSummaryUI(expArr, evArr, petArr, bilSummary, prevExpArr, prevEVArr, prevPetArr, prevBilSummary, prevMonth, prevYear, month, year) {
       var eT = expArr.reduce(function(s,i) { return s + parseFloat(i.amount); }, 0);
       var vT = evArr.reduce(function(s,i) { return s + parseFloat(i.total); }, 0);
       var pT = petArr.reduce(function(s,i) { return s + parseFloat(i.total); }, 0);
@@ -1504,20 +1507,40 @@ var CATEGORY_COLORS = {
       document.getElementById('sumTrendYear').innerText = year;
       document.getElementById('sumPeriodLabel').innerText = month ? (MONTHS[parseInt(month)-1] + ' ' + year) : ('Semua bulan ' + year);
 
+      var prevLabelName = prevMonth ? MONTHS_FULL[parseInt(prevMonth)-1] + ' ' + prevYear : 'Bulan Lepas';
+
       if (month && prevT > 0) {
         var diff = gT - prevT;
         var isUp = diff > 0;
-        var pct = ((Math.abs(diff) / prevT) * 100).toFixed(1);
-        document.getElementById('sumCompareIcon').innerText = isUp ? '📈' : '📉';
-        document.getElementById('sumCompareText').innerText = (isUp ? '+' : '-') + 'RM ' + fRM(Math.abs(diff)) + ' (' + pct + '%) ' + (isUp ? 'lebih tinggi' : 'lebih rendah');
+        var isEq = diff === 0;
+        var pct = isEq ? '0.0' : ((Math.abs(diff) / prevT) * 100).toFixed(1);
+
+        var colorClass = isEq ? '' : (isUp ? 'text-rose-200' : 'text-emerald-200');
+        var icon = isEq ? '➖' : (isUp ? '📈' : '📉');
+        var label;
+
+        if (isEq) {
+          label = 'Tiada perubahan';
+        } else {
+          label = (isUp ? '+' : '-') + 'RM ' + fRM(Math.abs(diff)) + ' (' + pct + '%) ' + (isUp ? 'lebih tinggi' : 'lebih rendah');
+        }
+
+        document.getElementById('sumCompareIcon').innerText = icon;
+        document.getElementById('sumCompareText').innerHTML = '<span class="' + colorClass + '">' + escapeHtml(label) + '</span>';
+        document.getElementById('sumCompareLabel').innerText = 'vs ' + prevLabelName;
+        document.getElementById('sumLastMonthLabel').innerText = prevLabelName;
         document.getElementById('sumLastMonthTotal').innerText = 'RM ' + fRM(prevT);
       } else if (month) {
         document.getElementById('sumCompareIcon').innerText = 'Baru';
         document.getElementById('sumCompareText').innerText = 'Tiada data bulan lepas';
+        document.getElementById('sumCompareLabel').innerText = 'vs Bulan Lepas';
+        document.getElementById('sumLastMonthLabel').innerText = 'Bulan Lepas';
         document.getElementById('sumLastMonthTotal').innerText = 'RM 0.00';
       } else {
         document.getElementById('sumCompareIcon').innerText = '-';
         document.getElementById('sumCompareText').innerText = 'Pilih bulan untuk bandingkan';
+        document.getElementById('sumCompareLabel').innerText = 'vs Bulan Lepas';
+        document.getElementById('sumLastMonthLabel').innerText = 'Bulan Lepas';
         document.getElementById('sumLastMonthTotal').innerText = 'RM -';
       }
 
