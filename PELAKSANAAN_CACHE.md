@@ -126,6 +126,8 @@ function clearDashboardCache() {
   invalidateExpenseCache();
   invalidateEVCache();
   cacheDel('cpo_types');
+  invalidateBilCache();
+  invalidateSolarCache();
   return { status: 'success', message: '✅ Cache dikosongkan. Data segar akan dimuatkan.' };
 }
 
@@ -323,11 +325,12 @@ function getBatchSummaryData(month, year) {
   var prevMonth = month ? (parseInt(month) === 1 ? 12        : parseInt(month) - 1) : '';
   var prevYear  = month ? (parseInt(month) === 1 ? parseInt(year) - 1 : year)       : year;
 
-  // Baca transaksi semua bulan dari satu bacaan sheet
-  var allExp = getTransactions('', year);  // kosong = semua bulan
+  // Baca transaksi semua bulan dari satu bacaan sheet (tahun semasa sahaja)
+  var allExp = getTransactions('', year);
   
   var expData     = month ? allExp.filter(function(t) { var d = new Date(t.date); return (d.getMonth()+1) == month; }) : allExp;
-  var prevExpData = month ? allExp.filter(function(t) { var d = new Date(t.date); return (d.getMonth()+1) == prevMonth; }) : [];
+  // prevExpData: untuk Januari, prevYear berbeza — guna getTransactions(prevMonth, prevYear) supaya perbandingan tepat
+  var prevExpData = month ? getTransactions(prevMonth, prevYear) : [];
 
   return {
     expData      : expData,
@@ -336,6 +339,8 @@ function getBatchSummaryData(month, year) {
     prevExpData  : prevExpData,
     prevEvData   : prevMonth ? getEVData(prevMonth, prevYear) : [],
     prevPetData  : prevMonth ? getPetrolData(prevMonth, prevYear) : [],
+    prevMonth    : prevMonth,
+    prevYear     : prevYear,
     expYearly    : getYearlyData(year),
     evYearly     : getEVYearlyData(year)
   };
