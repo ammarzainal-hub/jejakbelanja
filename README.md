@@ -8,7 +8,7 @@ Aplikasi web untuk menguruskan perbelanjaan harian, menjejaki kos kenderaan elek
 - **Belanja Harian** — Rekod perbelanjaan dengan kategori, carta kategori interaktif (expand + trend 3 bulan), carta pembayaran (boleh tapis), trend tahunan, dan carian
 - **EV Cas Tracker** — Rekod cas EV (rumah/luar) dan isi minyak dengan pecahan CPO/stesen, 3 carta interaktif (tapis data guna klik carta), dan carian
 - **Bil Bulanan** — Senarai bil auto-jana dengan status Belum Terima, Bil Diterima, dan Dibayar; perubahan status disimpan secara pukal mengikut lokasi; template sokong `CYCLE_HARI`, `FREKUENSI`, dan `BULAN_AKTIF`
-- **Solar Tracker** — Rekod penjanaan solar bulanan (Jana TNB, Guna TNB, Jana Apps), auto-kira baki & luar grid, bar chart stacked + line chart kumulatif, ringkasan di Ringkasan
+- **Solar Tracker** — Rekod penjanaan solar bulanan (Jana TNB, Guna TNB, Jana Apps), auto-kira baki & luar grid, bar chart stacked + line chart kumulatif, edit bulan/tahun rekod sedia ada, ringkasan di Ringkasan
 - **Rekod Pukal** — Tambah multiple entries sekaligus di modul Belanja dan EV/Minyak
 - **Carta Interaktif** — Klik carta untuk menapis data
 - **Eksport CSV** — Eksport data dari setiap modul (Belanja / EV+Minyak / Bil / Solar)
@@ -160,8 +160,9 @@ jejak-belanja/
 
 - Cas EV Rumah: RM 0.4443/kWh
 - Minyak: RM 1.99/liter
+- Cas EV Luar: tiada harga default tetap; harga/kWh diisi mengikut rekod.
 
-Harga ini boleh diubah dalam kod mengikut kadar semasa.
+Harga Cas Rumah dan Minyak digunakan di frontend dan backend, termasuk rekod pukal. Jika kadar berubah, kemas kini nilai default di `index.html` serta constant `DEFAULT_HOME_KWH_PRICE` dan `DEFAULT_PETROL_PRICE` dalam `code.gs`.
 
 ## Business Rules
 
@@ -172,6 +173,7 @@ Harga ini boleh diubah dalam kod mengikut kadar semasa.
 - Status bil diterima adalah berasingan daripada status bayaran. Bil boleh diterima tetapi masih belum dibayar.
 - Menandakan bil sebagai dibayar turut menandakan `BIL_DITERIMA` sebagai `Ya`.
 - `JUMLAH_BAKI` solar reset semula pada permulaan tahun baharu; kumulatif solar dikira dalam sempadan tahun yang sama.
+- Rekod Solar boleh dipindah bulan/tahun semasa edit, tetapi gabungan `TAHUN + BULAN` masih mesti unik.
 
 ## Penambahbaikan Terkini
 
@@ -184,6 +186,11 @@ Harga ini boleh diubah dalam kod mengikut kadar semasa.
 - Tarikh input default dan tarikh simpanan kini konsisten menggunakan tarikh lokal Malaysia tanpa offset UTC.
 - `JUMLAH_BAKI` Solar reset semula apabila tahun bertukar dan kumulatif dikira ikut tahun.
 - Save bil kekal pada bulan/tahun yang sedang dipilih selepas simpan.
+- Paparan jumlah Bil dikira semula selepas amaun bil tak tetap dikemaskini.
+- Loader tab Bil kekal sehingga data bil selesai dimuatkan.
+- `batchUpdateBil()` kini sahkan status bil dan status bil diterima sebelum simpan.
+- Cache empty result untuk trend, Solar bulanan, dan Solar tahunan kini juga disimpan sebagai cache ringan.
+- Section Solar Ringkasan lama yang tersembunyi telah dibuang; kad Solar aktif kekal pada `sumSolarCard`.
 
 ## Aliran Bil Bulanan
 
@@ -213,9 +220,13 @@ Edit senarai dalam tab `BIL_TEMPLATE` di Google Sheet. Setiap bulan baru, app ak
 
 ### Tukar Harga Default
 
-Dalam `index.html`, cari dan ubah nilai:
+Dalam `index.html`, cari dan ubah nilai default form:
 - `value="0.4443"` untuk harga cas rumah
 - `value="1.99"` untuk harga minyak
+
+Dalam `code.gs`, kemas kini constant backend yang digunakan untuk rekod pukal dan fallback server:
+- `DEFAULT_HOME_KWH_PRICE` untuk harga cas rumah
+- `DEFAULT_PETROL_PRICE` untuk harga minyak
 
 ## Limitasi
 

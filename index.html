@@ -764,15 +764,6 @@
     </div>
         </div>
       </div>
-      <div id="sumSolarSection" class="space-y-3 pt-2 hidden">
-        <div class="flex items-center gap-2 px-1"><span class="text-sm">☀️</span><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Solar</p></div>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <div class="shadow-card bg-white rounded-2xl p-4 border border-slate-100"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">⚡ Jana TNB</p><p id="sumSolJanaGrid" class="text-sm font-black text-amber-700 mt-1">-</p></div>
-          <div class="shadow-card bg-white rounded-2xl p-4 border border-slate-100"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">🏠 Guna TNB</p><p id="sumSolGunaGrid" class="text-sm font-black text-slate-700 mt-1">-</p></div>
-          <div class="shadow-card bg-white rounded-2xl p-4 border border-slate-100"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">📊 Baki</p><p id="sumSolBakiGrid" class="text-sm font-black text-emerald-600 mt-1">-</p></div>
-        </div>
-      </div>
-
   <!-- Mobile Expand Modal -->
   <div id="mobileBackdrop" class="mobile-backdrop" onclick="closeMobileCategoryModal()"></div>
   <div id="mobileCategoryModal" class="mobile-modal">
@@ -1140,7 +1131,6 @@ var CATEGORY_COLORS = {
 
       } else if (activeTab === 'bil') {
         loadBilData();
-        showLoader(false);
       } else if (activeTab === 'solar') {
         loadSolarData();
       }
@@ -2597,8 +2587,9 @@ function confirmPetrolDelete(id) {
         html += '<div class="flex items-center gap-3">';
         html += '<span class="text-xs font-bold ' + (allDone ? 'text-emerald-600' : 'text-amber-600') + '">' + l.done + '/' + l.count + (allDone ? ' ✅' : ' ⏳') + '</span>';
         html += '<span class="text-xs font-bold text-purple-600">RM ' + fRM(l.dibayar) + '</span>';
-        if (hasPending) html += '<button onclick="event.stopPropagation(); simpanBilLokasi(\'' + escapeJsString(lok) + '\')" class="text-[9px] font-black uppercase bg-amber-400 hover:bg-amber-500 text-white px-3 py-1 rounded-lg transition-all whitespace-nowrap animate-pulse">💾 Simpan</button> <button onclick="event.stopPropagation(); batalBilLokasi(\'' + escapeJsString(lok) + '\')" class="text-[9px] font-bold uppercase bg-slate-200 hover:bg-slate-300 text-slate-500 px-2 py-1 rounded-lg transition-all whitespace-nowrap">↩ Batal</button>';
-        if (!allDone && !hasPending) html += '<button onclick="tandaiSemuaLokasi(\'' + escapeJsString(lok) + '\')" class="text-[9px] font-bold uppercase bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded-lg transition-all whitespace-nowrap">✅ Semua</button>';
+        var safeLokArg = escapeHtml(escapeJsString(lok));
+        if (hasPending) html += '<button onclick="event.stopPropagation(); simpanBilLokasi(\'' + safeLokArg + '\')" class="text-[9px] font-black uppercase bg-amber-400 hover:bg-amber-500 text-white px-3 py-1 rounded-lg transition-all whitespace-nowrap animate-pulse">💾 Simpan</button> <button onclick="event.stopPropagation(); batalBilLokasi(\'' + safeLokArg + '\')" class="text-[9px] font-bold uppercase bg-slate-200 hover:bg-slate-300 text-slate-500 px-2 py-1 rounded-lg transition-all whitespace-nowrap">↩ Batal</button>';
+        if (!allDone && !hasPending) html += '<button onclick="tandaiSemuaLokasi(\'' + safeLokArg + '\')" class="text-[9px] font-bold uppercase bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded-lg transition-all whitespace-nowrap">✅ Semua</button>';
         html += '<svg class="bil-arrow w-4 h-4 text-slate-400 transform transition-transform ' + (allDone ? 'rotate-0' : 'rotate-180') + '" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
         html += '</div></div>';
 
@@ -2753,9 +2744,18 @@ function confirmPetrolDelete(id) {
     function editBilAmount(rowId, input) {
       var val = parseFloat(input.value);
       if (isNaN(val) || val <= 0) { showToast('Amaun mesti lebih dari 0', 'error'); loadBilData(); return; }
+      var m = document.getElementById('bilFilterMonth').value;
+      var y = document.getElementById('bilFilterYear').value;
       google.script.run
         .withSuccessHandler(function() {
           showToast('Amaun dikemaskini', 'success');
+          google.script.run
+            .withSuccessHandler(function(summary) {
+              bilData = summary;
+              updateBilUI(summary);
+            })
+            .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); })
+            .getBilSummary(m, y);
         })
         .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); })
         .kemaskiniBilAmount(rowId, input.value);
@@ -3090,10 +3090,6 @@ function confirmPetrolDelete(id) {
       document.getElementById('sumSolJana').innerText = fRM(jana) + ' kWh';
       document.getElementById('sumSolGuna').innerText = fRM(guna) + ' kWh';
       document.getElementById('sumSolBaki').innerText = (bakiVal >= 0 ? '+' : '') + fRM(bakiVal) + ' kWh';
-
-      document.getElementById('sumSolJanaGrid').innerText = fRM(jana) + ' kWh';
-      document.getElementById('sumSolGunaGrid').innerText = fRM(guna) + ' kWh';
-      document.getElementById('sumSolBakiGrid').innerText = (bakiVal >= 0 ? '+' : '') + fRM(bakiVal) + ' kWh';
     }
 
     var pendingDelete = null;

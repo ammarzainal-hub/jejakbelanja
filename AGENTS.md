@@ -7,12 +7,15 @@
 - Data/cache aplikasi disasarkan untuk tahun 2026 hingga 2031.
 - Nilai solar `Jana TNB`, `Guna TNB`, dan `Jana Apps` boleh bernilai `0` jika bacaan bulan tersebut memang sifar.
 - `JUMLAH_BAKI` solar reset semula pada permulaan tahun baharu; kumulatif solar dikira dalam sempadan tahun yang sama.
+- Rekod Solar boleh dipindah bulan/tahun semasa edit, tetapi gabungan `TAHUN + BULAN` mesti kekal unik.
 - Status bil diterima adalah berasingan daripada status bayaran: bil boleh diterima tetapi belum dibayar.
 - Menandakan bil sebagai dibayar mesti turut menetapkan `BIL_DITERIMA` kepada `Ya`.
 - Perubahan status bil (`Bil Ada`, dibayar, dan tandai semua) dipending di client dan disimpan secara batch mengikut lokasi.
 - `Batal` membuang pending changes lokasi sebelum simpan. Selepas simpan, pembetulan dibuat dengan ubah semula status dan simpan sekali lagi.
 - Perubahan amaun bil disimpan terus apabila input berubah; ia bukan sebahagian daripada batch status.
+- Selepas perubahan amaun bil berjaya disimpan, paparan ringkasan bil perlu dikira semula.
 - Bil tahunan dalam `BIL_TEMPLATE` hanya dijana pada `BULAN_AKTIF`.
+- `batchUpdateBil()` mesti sahkan nilai `STATUS` dan `BIL_DITERIMA` sebelum menulis ke sheet.
 
 ## Implementation Notes
 
@@ -27,3 +30,4 @@
 - Struktur `BIL_TEMPLATE` ialah 10 kolum: `NAMA`, `KATEGORI`, `ANGGARAN`, `TETAP`, `LOKASI`, `IKON_LOKASI`, `IKON_KATEGORI`, `CYCLE_HARI`, `FREKUENSI`, `BULAN_AKTIF`.
 - Rekod pukal EV/Minyak mesti menyokong campuran `Cas Rumah`, `Cas Luar`, dan `Minyak` dengan tarikh berasingan setiap baris.
 - Operasi tulis mesti menggunakan helper sheet wajib supaya sheet yang hilang menghasilkan mesej ralat yang jelas.
+- Fungsi baca agregat yang kembali kosong juga boleh cache hasil kosong untuk kurangkan bacaan sheet berulang.

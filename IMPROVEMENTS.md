@@ -40,9 +40,12 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - **Bil auto-jana ikut lokasi + nama** — `initBilMonth()` guna key `LOKASI + NAMA` untuk elak bil nama sama di lokasi berbeza daripada dianggap duplicate.
 - **Batch EV/Minyak preflight** — `addBulkEVRecords()` semak semua sheet wajib terlebih dahulu sebelum tulis, jadi batch tidak akan masuk separuh jika satu sheet hilang.
 - **Solar duplicate guard** — `addSolarRecord()` dan `updateSolarRecord()` menolak duplicate bagi gabungan `TAHUN + BULAN`.
+- **Solar edit bulan/tahun** — rekod Solar kini boleh dipindah bulan/tahun semasa edit, dengan semakan duplicate kekal aktif.
 - **Solar kumulatif tahunan** — `JUMLAH_BAKI` kini reset semula apabila tahun bertukar, jadi tahun baharu bermula dari 0 dan chart tahunan kekal konsisten.
 - **RowId guard solar/bil** — `updateSolarRecord()`, `deleteSolarRecord()`, `kemaskiniBilAmount()`, `batchUpdateBil()`, `deleteTransaction()`, `deleteEVData()`, dan `deletePetrolRecord()` kini guna guard rowId yang sama.
 - **Fungsi bil lama dinyahaktifkan** — `toggolBilStatus()`, `toggolBilDiterima()`, dan `tandaiSemuaBilLokasi()` tidak lagi menulis terus ke Sheet; aliran bil mesti melalui batch pending di client.
+- **Validasi enum bil** — `batchUpdateBil()` kini tolak status bil/status bil diterima yang bukan nilai sah.
+- **Cache empty result** — `getCategoryTrend()`, `getSolarData()`, dan `getSolarYearlyData()` kini cache hasil kosong juga supaya panggilan seterusnya lebih konsisten.
 
 ### Frontend/Data Export
 - **CSV escaping** — `doDownload()` kini escape semua tanda petik berganda dalam data supaya eksport CSV kekal sah walaupun nota/nama mengandungi `"`.
@@ -111,7 +114,7 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - **2 Carta** — Bar stacked (Jana vs Guna vs Luar Grid) + Line (Baki kumulatif)
 - **Jadual Bulanan** — 12 baris dengan edit/delete per bulan
 - **Form Modal** — Input 3 medan (Jana TNB, Guna TNB, Jana Apps) + auto-kira Baki & Luar Grid (read-only)
-- **Edit instant** — Data disimpan client-side, cari terus tanpa API call
+- **Edit pantas** — Rekod Solar semasa disimpan di client untuk carian/edit pantas; simpan perubahan tetap melalui backend
 - **Default bulan semasa** — Bila buka tab Solar, auto ke bulan/tahun semasa
 - **Kad Ringkasan** — 3 line (⚡ Jana / 🏠 Guna / 📊 Baki) dalam kad gradient amber di Ringkasan
 
@@ -225,9 +228,12 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - Fix exportCSV Solar — tambah loader + error handler
 - Fix kad Solar di Ringkasan — tambah error handler
 - Fix `jumlahKeseluruhan` bil — kini benar-benar jumlah dibayar + belum
+- Fix amaun Bil — selepas amaun bil tak tetap disimpan, ringkasan Bil dimuat semula supaya jumlah terus tepat
+- Fix loader Bil — loader tidak lagi ditutup sebelum data Bil selesai dimuatkan
 - Fix validasi Solar — nilai `0` tidak lagi dianggap input kosong
 - Fix `JUMLAH_BAKI` Solar — dikira semula untuk semua rekod selepas tambah, edit, atau padam
 - Fix output dinamik — kategori, ikon, payment, filter EV, dan lokasi bil di-escape sebelum masuk `innerHTML`
+- Fix section Solar Ringkasan lama — `sumSolarSection` dan grid lama dibuang; kad Solar aktif kekal pada `sumSolarCard`
 
 ---
 
@@ -240,3 +246,4 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - **Sanitize** — Semua input di-trim & dihadkan panjang di server; dan di-escape (`escapeHtml`) di client sebelum dipapar ke DOM untuk elak XSS
 - **Input validation** — Semua fungsi CRUD validate input sebelum simpan
 - **Sheet helpers** — `getRequiredSheet()` memberi mesej jelas jika sheet wajib tidak wujud; `getOptionalSheet()` digunakan untuk bacaan yang boleh pulangkan data kosong
+- **Bil status validation** — `batchUpdateBil()` sahkan `STATUS` dan `BIL_DITERIMA` sebelum menulis ke sheet

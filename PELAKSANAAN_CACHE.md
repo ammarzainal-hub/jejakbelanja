@@ -33,10 +33,10 @@ Sistem cache 2 lapisan menggunakan `CacheService` (bina dalam Google Apps Script
 | `solar_data_YYYY_MM` | Rekod Solar ikut bulan (Array) | 2 jam | Tambah/ubah/padam Solar atau Refresh Solar |
 | `solar_yearly_YYYY` | Data Solar tahunan untuk carta (Object) | 2 jam | Tambah/ubah/padam Solar atau Refresh Solar |
 
-**CacheService** — storan dalam RAM server Google.
+**CacheService** — storan sementara dalam RAM server Google.
 - BUKAN Google Drive
 - BUKAN Google Sheet
-- Percuma, tiada had kuota
+- Percuma untuk kegunaan Apps Script biasa, tetapi masih tertakluk kepada limit Google Apps Script seperti saiz entry dan tempoh TTL
 - Max 100KB per entry
 - TTL maksimum 6 jam (21,600 saat)
 
@@ -78,7 +78,7 @@ Empat laluan refresh digunakan untuk kosongkan cache secara manual:
 
 | Tab | Butang | Fungsi Backend | Cache Dikosongkan |
 |---|---|---|---|
-| Ringkasan | ⟳ Refresh | `clearDashboardCache()` | Belanja, EV/Minyak, kategori, dan CPO |
+| Ringkasan | ⟳ Refresh | `clearDashboardCache()` | Belanja, EV/Minyak, kategori, CPO, Bil, dan Solar |
 | Belanja | ⟳ Refresh | `refreshExpenseOnly()` | yearly + trend + categories |
 | EV Cas | ⟳ Refresh | `refreshEVOnly()` | evyearly + cpo_types |
 | Solar | ⟳ Refresh | `invalidateSolarCache()` | solar_data + solar_yearly untuk 2026-2031 |
@@ -538,3 +538,4 @@ Selepas semua perubahan dibuat dan di-deploy semula:
 4. Struktur sheet boleh berubah mengikut modul aplikasi; cache tidak mengubah format data yang disimpan.
 5. **Tidak perlu trigger automatik** — cache dibina secara "lazy" (bila diperlukan sahaja).
 6. Semua cache bersuffix tahun disasarkan kepada 2026-2031.
+7. Fungsi baca yang memulangkan hasil kosong juga boleh menyimpan cache kosong untuk mengurangkan bacaan sheet berulang.
