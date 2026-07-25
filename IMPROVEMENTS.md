@@ -4,6 +4,18 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 
 ---
 
+## Rekod Lengkap Fix Terkini
+
+- **Tarikh lokal frontend** — semua tarikh default/pending kini guna tarikh lokal Malaysia, bukan `toISOString()` UTC.
+- **Tarikh simpanan backend** — rekod baru/kemaskini untuk Belanja, EV, Minyak, EV pukal, Minyak pukal, dan status bil kini disimpan sebagai tarikh-only (`yyyy-mm-dd`).
+- **Template bil ikut lokasi + nama** — frontend sekarang guna key gabungan `LOKASI + NAMA`, selaras dengan backend.
+- **Simpan bil kekal pada bulan semasa dipilih** — selepas simpan lokasi, paparan bil kekal pada filter bulan/tahun yang sedang dibuka.
+- **Solar tahunan reset ikut tahun** — `JUMLAH_BAKI` kini reset bila tahun bertukar; kumulatif Solar dikira dalam sempadan tahun yang sama.
+- **Duplicate function dibuang** — `switchBilMonth()` yang duplikat telah dibersihkan.
+- **Dokumentasi diselaraskan** — rule solar tahunan dan behavior baharu telah dimasukkan dalam `AGENTS.md` dan `README.md`.
+
+---
+
 ## Kemaskini Julai 2026 (24 Jul) — Ringkasan Comparison & UI
 
 ### Bug Fixes
@@ -27,6 +39,7 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - **Bil auto-jana ikut lokasi + nama** — `initBilMonth()` guna key `LOKASI + NAMA` untuk elak bil nama sama di lokasi berbeza daripada dianggap duplicate.
 - **Batch EV/Minyak preflight** — `addBulkEVRecords()` semak semua sheet wajib terlebih dahulu sebelum tulis, jadi batch tidak akan masuk separuh jika satu sheet hilang.
 - **Solar duplicate guard** — `addSolarRecord()` dan `updateSolarRecord()` menolak duplicate bagi gabungan `TAHUN + BULAN`.
+- **Solar kumulatif tahunan** — `JUMLAH_BAKI` kini reset semula apabila tahun bertukar, jadi tahun baharu bermula dari 0 dan chart tahunan kekal konsisten.
 - **RowId guard solar/bil** — `updateSolarRecord()`, `deleteSolarRecord()`, `toggolBilStatus()`, `toggolBilDiterima()`, `kemaskiniBilAmount()`, `batchUpdateBil()`, `deleteTransaction()`, `deleteEVData()`, dan `deletePetrolRecord()` kini guna guard rowId yang sama.
 
 ### Frontend/Data Export

@@ -909,6 +909,17 @@ var CATEGORY_COLORS = {
       });
     }
 
+    function formatLocalDate(date) {
+      var d = date || new Date();
+      var month = String(d.getMonth() + 1).padStart(2, '0');
+      var day = String(d.getDate()).padStart(2, '0');
+      return d.getFullYear() + '-' + month + '-' + day;
+    }
+
+    function getBilTemplateKey(lokasi, nama) {
+      return String(lokasi || '').trim().toLowerCase() + '|' + String(nama || '').trim().toLowerCase();
+    }
+
     function initDarkMode() {
       var saved = localStorage.getItem('darkMode');
       if (saved === 'true') {
@@ -1008,12 +1019,12 @@ var CATEGORY_COLORS = {
       if (id === 'bulkModal' && show) {
         var bulkDate = document.getElementById('bulkDateMain');
         if (bulkDate && !bulkDate.value) {
-          bulkDate.value = new Date().toISOString().split('T')[0];
+          bulkDate.value = formatLocalDate();
         }
       } else if (id === 'evBulkModal' && show) {
         var evBulkDate = document.getElementById('evBulkDateMain');
         if (evBulkDate && !evBulkDate.value) {
-          evBulkDate.value = new Date().toISOString().split('T')[0];
+          evBulkDate.value = formatLocalDate();
         }
       }
     }
@@ -1639,7 +1650,7 @@ var CATEGORY_COLORS = {
       document.getElementById('evModalTitle').innerText = 'Tambah Rekod Cas';
       document.getElementById('evEditRowId').value = '';
       document.getElementById('evForm').reset();
-      document.getElementById('evFormDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('evFormDate').value = formatLocalDate();
       toggleEVFields(false);
       toggleModal('evModal', true);
     }
@@ -1956,7 +1967,7 @@ function confirmEVDelete(id) {
       document.getElementById('petrolModalTitle').innerText = 'Tambah Rekod Minyak';
       document.getElementById('petrolEditRowId').value = '';
       document.getElementById('petrolForm').reset();
-      document.getElementById('petrolFormDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('petrolFormDate').value = formatLocalDate();
       document.getElementById('petrolTotalCalc').innerText = 'RM 0.00';
       document.getElementById('petrolFormNote').value = '';
       toggleModal('petrolModal', true);
@@ -2012,7 +2023,7 @@ function confirmPetrolDelete(id) {
 }
 
     function openEVBulkModal() {
-      var today = new Date().toISOString().split('T')[0];
+      var today = formatLocalDate();
       document.getElementById('evBulkDateMain').value = today;
       document.getElementById('evBulkRowsContainer').innerHTML = '';
       addEVBulkRow('home');
@@ -2032,7 +2043,7 @@ function confirmPetrolDelete(id) {
       var con = document.getElementById('evBulkRowsContainer');
       var div = document.createElement('div');
       div.className = 'ev-bulk-row bg-slate-50 p-4 rounded-2xl border mb-3 text-left';
-      var date = document.getElementById('evBulkDateMain').value || new Date().toISOString().split('T')[0];
+      var date = document.getElementById('evBulkDateMain').value || formatLocalDate();
       div.innerHTML = '<div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">'
         + '<div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Jenis</label><select class="ev-bulk-kind w-full rounded-xl border p-3 text-xs font-bold" onchange="updateEVBulkRowFields(this)"><option value="home">Cas Rumah</option><option value="public">Cas Luar</option><option value="petrol">Minyak</option></select></div>'
         + '<div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Tarikh</label><input type="date" class="ev-bulk-date w-full rounded-xl border p-3 text-xs font-bold" value="' + escapeHtml(date) + '"></div>'
@@ -2214,7 +2225,7 @@ function confirmPetrolDelete(id) {
       document.getElementById('modalTitle').innerText = 'Rekod Belanja';
       document.getElementById('editRowId').value = '';
       document.getElementById('expenseForm').reset();
-      document.getElementById('formDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('formDate').value = formatLocalDate();
       toggleModal('expenseModal', true);
     }
 
@@ -2463,14 +2474,14 @@ function confirmPetrolDelete(id) {
       bilTemplate.forEach(function(t) {
         if (t.ikonLokasi && !lokIcons[t.lokasi]) lokIcons[t.lokasi] = t.ikonLokasi;
         if (t.ikonKategori) katIcons[t.kategori] = t.ikonKategori;
-        templateMap[t.nama] = t;
+        templateMap[getBilTemplateKey(t.lokasi, t.nama)] = t;
       });
       rekod.forEach(function(r) { r._ikonKategori = katIcons[r.kategori] || ''; });
 
       var today = new Date();
       var todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       var lepasCycle = belumTerima.filter(function(r) {
-        var tpl = templateMap[r.nama] || {};
+        var tpl = templateMap[getBilTemplateKey(r.lokasi, r.nama)] || {};
         var cycle = parseInt(tpl.cycleHari);
         if (!cycle || isNaN(cycle) || cycle < 1) return false;
         var y = parseInt(r.tahun);
@@ -2493,7 +2504,7 @@ function confirmPetrolDelete(id) {
         for (var ck in lepasCycleByLok) {
           var ci = lokIcons[ck] || '📍';
           var citems = lepasCycleByLok[ck].map(function(r) {
-            var tpl = templateMap[r.nama] || {};
+            var tpl = templateMap[getBilTemplateKey(r.lokasi, r.nama)] || {};
             var cycle = parseInt(tpl.cycleHari);
             var katIkon = r._ikonKategori || '';
             return (katIkon ? escapeHtml(katIkon) + ' ' : '') + escapeHtml(r.nama) + ' (' + escapeHtml(cycle) + 'hb)';
@@ -2553,7 +2564,7 @@ function confirmPetrolDelete(id) {
       var templateMap = {};
       bilTemplate.forEach(function(t) { 
         if (t.ikonLokasi && !lokasiIcons[t.lokasi]) lokasiIcons[t.lokasi] = t.ikonLokasi;
-        templateMap[t.nama] = t;
+        templateMap[getBilTemplateKey(t.lokasi, t.nama)] = t;
       });
 
       var katIcons = {};
@@ -2595,7 +2606,7 @@ function confirmPetrolDelete(id) {
         items.forEach(function(r) {
           var isDone = r.status === 'Dibayar';
           var isDiterima = r.bilDiterima === 'Ya';
-          var tpl = templateMap[r.nama] || {};
+          var tpl = templateMap[getBilTemplateKey(r.lokasi, r.nama)] || {};
           var isTetap = tpl.tetap || false;
           var katIkon = r._ikonKategori || '';
           var cycle = parseInt(tpl.cycleHari);
@@ -2653,7 +2664,7 @@ function confirmPetrolDelete(id) {
       var m = document.getElementById('bilFilterMonth').value;
       var y = document.getElementById('bilFilterYear').value;
       var serverRekod = bilData.rekod || [];
-      var todayStr = new Date().toISOString().split('T')[0];
+      var todayStr = formatLocalDate();
       serverRekod.forEach(function(r) {
         if (r.lokasi === lokasi && r.status !== 'Dibayar') {
           bilPendingChanges[r.rowId] = { status: 'Dibayar', bilDiterima: 'Ya', tarikhBayar: todayStr, tarikhBil: (r.bilDiterima === 'Ya' && r.tarikhBil) ? r.tarikhBil : todayStr };
@@ -2695,7 +2706,7 @@ function confirmPetrolDelete(id) {
         .withSuccessHandler(function(r) {
           lokasiItems.forEach(function(item) { delete bilPendingChanges[item.rowId]; });
           showToast('💾 ' + r.count + ' bil disimpan untuk ' + lokasi, 'success');
-          loadBilData();
+          initAndLoadBil(m, y);
         })
         .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
         .batchUpdateBil(lokasiItems);
@@ -2708,7 +2719,7 @@ function confirmPetrolDelete(id) {
       var currentStatus = (bilPendingChanges[rowId] && bilPendingChanges[rowId].status !== undefined) ? bilPendingChanges[rowId].status : r.status;
       var newStatus = currentStatus === 'Dibayar' ? 'Belum' : 'Dibayar';
       if (newStatus === 'Dibayar') {
-        var todayStr = new Date().toISOString().split('T')[0];
+        var todayStr = formatLocalDate();
         bilPendingChanges[rowId] = { status: newStatus, bilDiterima: 'Ya', tarikhBayar: todayStr, tarikhBil: (r.bilDiterima === 'Ya' && r.tarikhBil) ? r.tarikhBil : todayStr };
       } else {
         bilPendingChanges[rowId] = { status: newStatus, tarikhBayar: '' };
@@ -2725,7 +2736,7 @@ function confirmPetrolDelete(id) {
       var newVal = currentDiterima === 'Ya' ? 'Tidak' : 'Ya';
       bilPendingChanges[rowId] = bilPendingChanges[rowId] || {};
       bilPendingChanges[rowId].bilDiterima = newVal;
-      bilPendingChanges[rowId].tarikhBil = newVal === 'Ya' ? new Date().toISOString().split('T')[0] : '';
+      bilPendingChanges[rowId].tarikhBil = newVal === 'Ya' ? formatLocalDate() : '';
       var merged = mergePendingBil(serverRekod);
       updateBilUI(bilData);
     }
@@ -2842,12 +2853,6 @@ function confirmPetrolDelete(id) {
       var m = document.getElementById('solarFilterMonth').value;
       var y = document.getElementById('solarFilterYear').value;
       fetchSolarBatch(m, y);
-    }
-
-    function switchBilMonth() {
-      var m = document.getElementById('bilFilterMonth').value;
-      var y = document.getElementById('bilFilterYear').value;
-      initAndLoadBil(m, y);
     }
 
     function switchSolarMonth() {

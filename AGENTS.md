@@ -6,6 +6,7 @@
 - Bil Bulanan dan Solar dipaparkan sebagai modul/kad berasingan dan tidak dimasukkan dalam jumlah besar.
 - Data/cache aplikasi disasarkan untuk tahun 2026 hingga 2031.
 - Nilai solar `Jana TNB`, `Guna TNB`, dan `Jana Apps` boleh bernilai `0` jika bacaan bulan tersebut memang sifar.
+- `JUMLAH_BAKI` solar reset semula pada permulaan tahun baharu; kumulatif solar dikira dalam sempadan tahun yang sama.
 - Status bil diterima adalah berasingan daripada status bayaran: bil boleh diterima tetapi belum dibayar.
 - Menandakan bil sebagai dibayar mesti turut menetapkan `BIL_DITERIMA` kepada `Ya`.
 - Perubahan status bil (`Bil Ada`, dibayar, dan tandai semua) dipending di client dan disimpan secara batch mengikut lokasi.

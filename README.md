@@ -172,6 +172,7 @@ Harga ini boleh diubah dalam kod mengikut kadar semasa.
 - Nilai solar `Jana TNB`, `Guna TNB`, dan `Jana Apps` boleh bernilai `0` jika bacaan bulan tersebut memang sifar.
 - Status bil diterima adalah berasingan daripada status bayaran. Bil boleh diterima tetapi masih belum dibayar.
 - Menandakan bil sebagai dibayar turut menandakan `BIL_DITERIMA` sebagai `Ya`.
+- `JUMLAH_BAKI` solar reset semula pada permulaan tahun baharu; kumulatif solar dikira dalam sempadan tahun yang sama.
 
 ## Penambahbaikan Terkini
 
@@ -181,6 +182,9 @@ Harga ini boleh diubah dalam kod mengikut kadar semasa.
 - Rekod pukal EV/Minyak semak semua sheet wajib terlebih dahulu sebelum menulis apa-apa.
 - Solar menolak duplicate untuk gabungan `TAHUN + BULAN`.
 - CSV export kini escape tanda petik `"` dengan betul.
+- Tarikh input default dan tarikh simpanan kini konsisten menggunakan tarikh lokal Malaysia tanpa offset UTC.
+- `JUMLAH_BAKI` Solar reset semula apabila tahun bertukar dan kumulatif dikira ikut tahun.
+- Save bil kekal pada bulan/tahun yang sedang dipilih selepas simpan.
 
 ## Aliran Bil Bulanan
 

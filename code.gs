@@ -98,6 +98,17 @@ function isValidDate(dateStr) {
   return parsed.getFullYear() === y && parsed.getMonth() === m - 1 && parsed.getDate() === d;
 }
 
+function toSheetDate(dateStr) {
+  if (!isValidDate(dateStr)) throw new Error('Tarikh tidak sah');
+  var parts = dateStr.toString().split('-');
+  return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+}
+
+function todaySheetDate() {
+  var today = new Date();
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+}
+
 function parseRowId(rowId, label) {
   var safeRowId = parseInt(rowId, 10);
   if (isNaN(safeRowId) || safeRowId < 2) throw new Error((label || 'ID rekod') + ' tidak sah');
@@ -252,7 +263,7 @@ function addTransaction(data) {
   var safePayment = sanitize(data.payment, 50) || '💵 Cash';
   
   getRequiredSheet(DATA_SHEET)
-.appendRow([new Date(data.date), safeAmount, safeCategory, safeNote, safePayment]);
+.appendRow([toSheetDate(data.date), safeAmount, safeCategory, safeNote, safePayment]);
 invalidateExpenseCache();
   return { status: 'success', message: 'Transaksi berjaya ditambah' };
 }
@@ -272,7 +283,7 @@ function updateTransaction(data) {
   
   getRequiredSheet(DATA_SHEET)
     .getRange(safeRowId, 1, 1, 5)
-.setValues([[new Date(data.date), safeAmount, safeCategory, safeNote, safePayment]]);
+.setValues([[toSheetDate(data.date), safeAmount, safeCategory, safeNote, safePayment]]);
 invalidateExpenseCache();
   return { status: 'success', message: 'Transaksi berjaya dikemaskini' };
 }
@@ -300,7 +311,7 @@ function addBulkTransactions(rows) {
     if (!r.category) throw new Error('Baris ' + (i+1) + ': Kategori diperlukan');
     
 dataToAppend.push([
-  new Date(r.date),
+  toSheetDate(r.date),
   parseFloat(r.amount),
   sanitize(r.category, 100),
   sanitize(r.note, 500),
@@ -363,7 +374,7 @@ function addEVCharging(data) {
   var location = safeType === 'Rumah' ? 'Kediaman' : sanitize(data.location, 200);
   
   getRequiredSheet(EV_SHEET)
-    .appendRow([new Date(data.date), safeType, cpo, safeKwh, safePrice, location, total]);
+    .appendRow([toSheetDate(data.date), safeType, cpo, safeKwh, safePrice, location, total]);
     invalidateEVCache();
   return { status: 'success', message: 'Rekod cas berjaya ditambah' };
 }
@@ -387,7 +398,7 @@ function updateEVCharging(data) {
   
   getRequiredSheet(EV_SHEET)
     .getRange(safeRowId, 1, 1, 7)
-    .setValues([[new Date(data.date), safeType, cpo, safeKwh, safePrice, location, total]]);
+    .setValues([[toSheetDate(data.date), safeType, cpo, safeKwh, safePrice, location, total]]);
     invalidateEVCache();
   return { status: 'success', message: 'Rekod cas berjaya dikemaskini' };
 }
@@ -460,7 +471,7 @@ function addPetrolRecord(data) {
   var safeNote = sanitize(data.note, 500);
   
   getRequiredSheet(PETROL_SHEET)
-    .appendRow([new Date(data.date), safeStation, liter, price, total, safeNote]);
+    .appendRow([toSheetDate(data.date), safeStation, liter, price, total, safeNote]);
     invalidateEVCache();
   return { status: 'success', message: 'Rekod minyak berjaya ditambah' };
 }
@@ -481,7 +492,7 @@ function updatePetrolRecord(data) {
   
   getRequiredSheet(PETROL_SHEET)
     .getRange(safeRowId, 1, 1, 6)
-    .setValues([[new Date(data.date), safeStation, liter, price, total, safeNote]]);
+    .setValues([[toSheetDate(data.date), safeStation, liter, price, total, safeNote]]);
     invalidateEVCache();
   return { status: 'success', message: 'Rekod minyak berjaya dikemaskini' };
 }
@@ -526,14 +537,14 @@ function addBulkEVRecords(rows) {
       var cpo = type === 'Rumah' ? 'Rumah' : sanitize(row.cpo, 100);
       if (type === 'Luar' && !cpo) throw new Error(label + 'CPO diperlukan untuk cas luar');
       var location = type === 'Rumah' ? 'Kediaman' : sanitize(row.location, 200);
-      evRows.push([new Date(row.date), type, cpo, kwh, price, location, kwh * price]);
+      evRows.push([toSheetDate(row.date), type, cpo, kwh, price, location, kwh * price]);
     } else if (row.kind === 'petrol') {
       var station = sanitize(row.station, 100);
       var liter = parseFloat(row.liter);
       var petrolPrice = parseFloat(row.pricePerLiter) || 1.99;
       if (!station) throw new Error(label + 'Stesen diperlukan');
       if (isNaN(liter) || liter <= 0) throw new Error(label + 'Liter mesti lebih dari 0');
-      petrolRows.push([new Date(row.date), station, liter, petrolPrice, liter * petrolPrice, sanitize(row.note, 500)]);
+      petrolRows.push([toSheetDate(row.date), station, liter, petrolPrice, liter * petrolPrice, sanitize(row.note, 500)]);
     } else {
       throw new Error(label + 'Jenis rekod tidak sah');
     }
@@ -658,7 +669,7 @@ function toggolBilStatus(rowId) {
   var row = sheet.getRange(safeRowId, 1, 1, 11).getValues()[0];
   var currentStatus = row[6] || 'Belum';
   var newStatus = currentStatus === 'Dibayar' ? 'Belum' : 'Dibayar';
-  var bayarDate = newStatus === 'Dibayar' ? new Date() : '';
+  var bayarDate = newStatus === 'Dibayar' ? todaySheetDate() : '';
   var bilDiterima = newStatus === 'Dibayar' ? 'Ya' : (row[8] || 'Tidak');
 
   sheet.getRange(safeRowId, 7, 1, 3).setValues([[newStatus, bayarDate, bilDiterima]]);
@@ -673,7 +684,7 @@ function toggolBilDiterima(rowId) {
   var row = sheet.getRange(safeRowId, 1, 1, 11).getValues()[0];
   var current = row[8] || 'Tidak';
   var newVal = current === 'Ya' ? 'Tidak' : 'Ya';
-  var bilDate = newVal === 'Ya' ? new Date() : '';
+  var bilDate = newVal === 'Ya' ? todaySheetDate() : '';
 
   sheet.getRange(safeRowId, 9, 1, 2).setValues([[newVal, bilDate]]);
   invalidateBilCache();
@@ -740,7 +751,7 @@ function batchUpdateBil(updates) {
     throw new Error('Tiada data untuk dikemaskini');
   }
   var sheet = getRequiredSheet(BIL_REKOD_SHEET);
-  var today = new Date();
+  var today = todaySheetDate();
   var count = 0;
 
   updates.forEach(function(u) {
@@ -773,7 +784,7 @@ function tandaiSemuaBilLokasi(month, year, lokasi) {
 
   var lastRow = sheet.getLastRow();
   var allData = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
-  var today = new Date();
+  var today = todaySheetDate();
   var count = 0;
   var updates = [];
 
@@ -920,8 +931,14 @@ function recalculateSolarRunningBalance() {
   });
 
   var running = 0;
+  var currentYear = null;
   rows.forEach(function(item) {
     var row = item.values;
+    var rowYear = parseInt(row[0]);
+    if (currentYear !== rowYear) {
+      currentYear = rowYear;
+      running = 0;
+    }
     var janaTNB = parseFloat(row[2]) || 0;
     var gunaTNB = parseFloat(row[3]) || 0;
     var janaApps = parseFloat(row[6]) || 0;
