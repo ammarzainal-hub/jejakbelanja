@@ -128,7 +128,7 @@ TAHUN | BULAN | JANA_TNB | GUNA_TNB | BAKI | JUMLAH_BAKI | JANA_APPS | GUNA_LUAR
 3. Isi maklumat:
    - **Description**: Jejak Belanja
    - **Execute as**: Me
-   - **Who has access**: Anyone (atau pilih sesuai keperluan)
+   - **Who has access**: Pilih akses mengikut keperluan. Untuk data kewangan peribadi, akses terhad kepada akaun sendiri/organisasi lebih selamat berbanding `Anyone`.
 4. Klik **Deploy**
 5. Klik **Authorize access** dan ikut proses authorization
 6. Copy URL yang diberikan
@@ -146,8 +146,7 @@ jejak-belanja/
 ├── AGENTS.md       # Business rules dan arahan pelaksanaan
 ├── README.md       # Dokumentasi
 ├── IMPROVEMENTS.md # Changelog penambahbaikan
-├── PELAKSANAAN_CACHE.md # Rujukan pelaksanaan cache
-└── Old Version/    # Versi lama (arkib)
+└── PELAKSANAAN_CACHE.md # Rujukan pelaksanaan cache
 ```
 
 ## Teknologi

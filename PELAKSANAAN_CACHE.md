@@ -29,7 +29,7 @@ Sistem cache 2 lapisan menggunakan `CacheService` (bina dalam Google Apps Script
 | `trend_MM_YYYY` | Category trend 3 bulan (Object) | 2 jam | Tambah/ubah/padam transaksi |
 | `categories` | Senarai kategori + icon (Array) | 6 jam | Tekan butang Refresh |
 | `cpo_types` | Senarai CPO (Array) | 6 jam | Tekan butang Refresh EV |
-| `bil_template` | Template bil bulanan (Array) | 6 jam | Perubahan berkaitan bil / refresh template |
+| `bil_template` | Template bil bulanan (Array) | 6 jam | Refresh Semua / perubahan template bil |
 | `solar_data_YYYY_MM` | Rekod Solar ikut bulan (Array) | 2 jam | Tambah/ubah/padam Solar atau Refresh Solar |
 | `solar_yearly_YYYY` | Data Solar tahunan untuk carta (Object) | 2 jam | Tambah/ubah/padam Solar atau Refresh Solar |
 

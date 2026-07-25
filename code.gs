@@ -633,7 +633,6 @@ function initBilMonth(month, year) {
     }
   }
 
-  invalidateBilCache();
   return { status: 'success', created: newRows.length, already: Object.keys(existing).length };
 }
 
@@ -663,32 +662,11 @@ function getBilRekod(month, year) {
 }
 
 function toggolBilStatus(rowId) {
-  if (!rowId) throw new Error('ID rekod diperlukan');
-  var safeRowId = parseRowId(rowId, 'ID rekod');
-  var sheet = getRequiredSheet(BIL_REKOD_SHEET);
-  var row = sheet.getRange(safeRowId, 1, 1, 11).getValues()[0];
-  var currentStatus = row[6] || 'Belum';
-  var newStatus = currentStatus === 'Dibayar' ? 'Belum' : 'Dibayar';
-  var bayarDate = newStatus === 'Dibayar' ? todaySheetDate() : '';
-  var bilDiterima = newStatus === 'Dibayar' ? 'Ya' : (row[8] || 'Tidak');
-
-  sheet.getRange(safeRowId, 7, 1, 3).setValues([[newStatus, bayarDate, bilDiterima]]);
-  invalidateBilCache();
-  return { status: 'success', bilStatus: newStatus, tarikhBayar: bayarDate instanceof Date ? Utilities.formatDate(bayarDate, 'GMT+8', 'yyyy-MM-dd') : '', bilDiterima: bilDiterima };
+  throw new Error('Guna batchUpdateBil(): perubahan status bil mesti dipending dan disimpan mengikut lokasi.');
 }
 
 function toggolBilDiterima(rowId) {
-  if (!rowId) throw new Error('ID rekod diperlukan');
-  var safeRowId = parseRowId(rowId, 'ID rekod');
-  var sheet = getRequiredSheet(BIL_REKOD_SHEET);
-  var row = sheet.getRange(safeRowId, 1, 1, 11).getValues()[0];
-  var current = row[8] || 'Tidak';
-  var newVal = current === 'Ya' ? 'Tidak' : 'Ya';
-  var bilDate = newVal === 'Ya' ? todaySheetDate() : '';
-
-  sheet.getRange(safeRowId, 9, 1, 2).setValues([[newVal, bilDate]]);
-  invalidateBilCache();
-  return { status: 'success', bilDiterima: newVal, tarikhBil: bilDate instanceof Date ? Utilities.formatDate(bilDate, 'GMT+8', 'yyyy-MM-dd') : '' };
+  throw new Error('Guna batchUpdateBil(): perubahan status bil mesti dipending dan disimpan mengikut lokasi.');
 }
 
 function kemaskiniBilAmount(rowId, amaunBaru) {
@@ -698,7 +676,6 @@ function kemaskiniBilAmount(rowId, amaunBaru) {
 
   var sheet = getRequiredSheet(BIL_REKOD_SHEET);
   sheet.getRange(parseRowId(rowId, 'ID rekod'), 6).setValue(amt);
-  invalidateBilCache();
   return { status: 'success', amaun: amt };
 }
 
@@ -772,38 +749,11 @@ function batchUpdateBil(updates) {
     count++;
   });
 
-  invalidateBilCache();
   return { status: 'success', count: count };
 }
 
 function tandaiSemuaBilLokasi(month, year, lokasi) {
-  var m = parseInt(month);
-  var y = parseInt(year);
-  var sheet = getOptionalSheet(BIL_REKOD_SHEET);
-  if (!sheet || sheet.getLastRow() < 2) return { status: 'success', count: 0 };
-
-  var lastRow = sheet.getLastRow();
-  var allData = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
-  var today = todaySheetDate();
-  var count = 0;
-  var updates = [];
-
-  for (var i = 0; i < allData.length; i++) {
-    var row = allData[i];
-    if (parseInt(row[0]) === y && parseInt(row[1]) === m && row[2] === lokasi && (row[6] !== 'Dibayar')) {
-      updates.push({ range: sheet.getRange(i + 2, 7, 1, 3), values: [['Dibayar', today, 'Ya']] });
-      count++;
-    }
-  }
-
-  if (count > 0) {
-    for (var j = 0; j < updates.length; j++) {
-      updates[j].range.setValues(updates[j].values);
-    }
-  }
-
-  invalidateBilCache();
-  return { status: 'success', count: count };
+  throw new Error('Guna batchUpdateBil(): tandai semua bil mesti dipending di client dan disimpan mengikut lokasi.');
 }
 
 

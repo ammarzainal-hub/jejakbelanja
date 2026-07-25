@@ -1464,7 +1464,7 @@ var CATEGORY_COLORS = {
         '𖣯 QR':      '#0891b2',
         '🏦 Transfer': '#f59e0b',
         '💵 Cash':    '#10b981',
-        '👛 E-wallet': '#e11d48'
+        '👛 E-Wallet': '#e11d48'
       };
       var bg = labels.map(function(l) { return COLORS[l] || '#64748b'; });
 
@@ -2691,6 +2691,8 @@ function confirmPetrolDelete(id) {
     }
 
     function simpanBilLokasi(lokasi) {
+      var m = document.getElementById('bilFilterMonth').value;
+      var y = document.getElementById('bilFilterYear').value;
       var lokasiItems = [];
       for (var rid in bilPendingChanges) {
         var r = bilPendingChanges[rid];
@@ -2706,7 +2708,14 @@ function confirmPetrolDelete(id) {
         .withSuccessHandler(function(r) {
           lokasiItems.forEach(function(item) { delete bilPendingChanges[item.rowId]; });
           showToast('💾 ' + r.count + ' bil disimpan untuk ' + lokasi, 'success');
-          initAndLoadBil(m, y);
+          google.script.run
+            .withSuccessHandler(function(summary) {
+              bilData = summary;
+              updateBilUI(summary);
+              showLoader(false);
+            })
+            .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
+            .getBilSummary(m, y);
         })
         .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
         .batchUpdateBil(lokasiItems);

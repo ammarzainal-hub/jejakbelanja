@@ -10,6 +10,7 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - **Tarikh simpanan backend** — rekod baru/kemaskini untuk Belanja, EV, Minyak, EV pukal, Minyak pukal, dan status bil kini disimpan sebagai tarikh-only (`yyyy-mm-dd`).
 - **Template bil ikut lokasi + nama** — frontend sekarang guna key gabungan `LOKASI + NAMA`, selaras dengan backend.
 - **Simpan bil kekal pada bulan semasa dipilih** — selepas simpan lokasi, paparan bil kekal pada filter bulan/tahun yang sedang dibuka.
+- **Simpan bil lebih laju** — selepas batch status bil berjaya, UI kini reload ringkasan bil sahaja, bukan init semula modul penuh.
 - **Solar tahunan reset ikut tahun** — `JUMLAH_BAKI` kini reset bila tahun bertukar; kumulatif Solar dikira dalam sempadan tahun yang sama.
 - **Duplicate function dibuang** — `switchBilMonth()` yang duplikat telah dibersihkan.
 - **Dokumentasi diselaraskan** — rule solar tahunan dan behavior baharu telah dimasukkan dalam `AGENTS.md` dan `README.md`.
@@ -40,7 +41,8 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - **Batch EV/Minyak preflight** — `addBulkEVRecords()` semak semua sheet wajib terlebih dahulu sebelum tulis, jadi batch tidak akan masuk separuh jika satu sheet hilang.
 - **Solar duplicate guard** — `addSolarRecord()` dan `updateSolarRecord()` menolak duplicate bagi gabungan `TAHUN + BULAN`.
 - **Solar kumulatif tahunan** — `JUMLAH_BAKI` kini reset semula apabila tahun bertukar, jadi tahun baharu bermula dari 0 dan chart tahunan kekal konsisten.
-- **RowId guard solar/bil** — `updateSolarRecord()`, `deleteSolarRecord()`, `toggolBilStatus()`, `toggolBilDiterima()`, `kemaskiniBilAmount()`, `batchUpdateBil()`, `deleteTransaction()`, `deleteEVData()`, dan `deletePetrolRecord()` kini guna guard rowId yang sama.
+- **RowId guard solar/bil** — `updateSolarRecord()`, `deleteSolarRecord()`, `kemaskiniBilAmount()`, `batchUpdateBil()`, `deleteTransaction()`, `deleteEVData()`, dan `deletePetrolRecord()` kini guna guard rowId yang sama.
+- **Fungsi bil lama dinyahaktifkan** — `toggolBilStatus()`, `toggolBilDiterima()`, dan `tandaiSemuaBilLokasi()` tidak lagi menulis terus ke Sheet; aliran bil mesti melalui batch pending di client.
 
 ### Frontend/Data Export
 - **CSV escaping** — `doDownload()` kini escape semua tanda petik berganda dalam data supaya eksport CSV kekal sah walaupun nota/nama mengandungi `"`.
@@ -58,11 +60,11 @@ Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
 - **`getBilTemplate()`** — Baca template dengan caching 6 jam
 - **`initBilMonth()`** — Auto-jana rekod bil untuk bulan baharu
 - **`getBilRekod()`** — Baca rekod bil ikut bulan/tahun
-- **`toggolBilStatus()`** — Tandai bil dibayar/belum; bil dibayar turut dianggap telah diterima
-- **`toggolBilDiterima()`** — Tandai bil sudah diterima atau belum diterima
+- **`toggolBilStatus()`** — Dinyahtulis; fungsi lama ini kini error jika dipanggil secara terus
+- **`toggolBilDiterima()`** — Dinyahtulis; fungsi lama ini kini error jika dipanggil secara terus
 - **`batchUpdateBil()`** — Simpan perubahan status secara pukal mengikut lokasi
 - **`kemaskiniBilAmount()`** — Ubah amaun bil (untuk bil tak tetap)
-- **`tandaiSemuaBilLokasi()`** — Tandai semua bil dalam satu lokasi
+- **`tandaiSemuaBilLokasi()`** — Dinyahtulis; fungsi lama ini kini error jika dipanggil secara terus
 - **`getBilSummary()`** — Summary dengan pecahan lokasi, jumlah dibayar, diterima belum bayar, dan belum dibayar
 - **`getBilYearlyData()`** — Data tahunan bil (untuk chart)
 
