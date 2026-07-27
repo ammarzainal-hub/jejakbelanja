@@ -1,249 +1,79 @@
-﻿# PENAMBAHBAIKAN JULAI 2026
+﻿# Penambahbaikan Julai 2026
 
-Ringkasan semua penambahbaikan yang dibuat ke atas `code.gs` dan `index.html`.
+Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 
----
+## Keselamatan & Data Safety
 
-## Rekod Lengkap Fix Terkini
+- `parseRowId()` digunakan untuk operasi edit/padam supaya `rowId < 2` ditolak dan header sheet tidak boleh terpadam.
+- Validasi tarikh backend hanya menerima format `yyyy-mm-dd` yang sah dan menolak tarikh tidak wujud.
+- Rekod harian Belanja, EV, Minyak, Belanja pukal, dan EV/Minyak pukal menolak tarikh masa hadapan di frontend dan backend.
+- `doGet()` tidak lagi menggunakan `XFrameOptionsMode.ALLOWALL`, jadi aplikasi tidak dibenarkan embed bebas dalam iframe luar.
+- CSV export escape tanda petik berganda dan melindungi nilai bermula `=`, `+`, `-`, atau `@` supaya tidak ditafsir sebagai formula spreadsheet.
+- Output dinamik daripada Google Sheet di-escape sebelum dimasukkan ke `innerHTML`.
 
-- **Tarikh lokal frontend** — semua tarikh default/pending kini guna tarikh lokal Malaysia, bukan `toISOString()` UTC.
-- **Tarikh simpanan backend** — rekod baru/kemaskini untuk Belanja, EV, Minyak, EV pukal, Minyak pukal, dan status bil kini disimpan sebagai tarikh-only (`yyyy-mm-dd`).
-- **Template bil ikut lokasi + nama** — frontend sekarang guna key gabungan `LOKASI + NAMA`, selaras dengan backend.
-- **Simpan bil kekal pada bulan semasa dipilih** — selepas simpan lokasi, paparan bil kekal pada filter bulan/tahun yang sedang dibuka.
-- **Simpan bil lebih laju** — selepas batch status bil berjaya, UI kini reload ringkasan bil sahaja, bukan init semula modul penuh.
-- **Solar tahunan reset ikut tahun** — `JUMLAH_BAKI` kini reset bila tahun bertukar; kumulatif Solar dikira dalam sempadan tahun yang sama.
-- **Duplicate function dibuang** — `switchBilMonth()` yang duplikat telah dibersihkan.
-- **Dokumentasi diselaraskan** — rule solar tahunan dan behavior baharu telah dimasukkan dalam `AGENTS.md` dan `README.md`.
+## Belanja Harian
 
----
+- Tarikh default dan tarikh simpanan menggunakan tarikh lokal, bukan offset UTC.
+- Carta kategori menyokong expand dan trend 3 bulan.
+- Carta bayaran boleh ditapis dengan klik carta.
+- Carian meliputi kategori, nota, amaun, dan bayaran.
+- Pagination ditetapkan kepada 25 rekod per halaman.
+- Kategori, trend, dan data tahunan menggunakan cache.
 
-## Kemaskini Julai 2026 (24 Jul) — Ringkasan Comparison & UI
+## EV Cas & Minyak
 
-### Bug Fixes
-- **Fix perbandingan Januari** — `prevExpData` kini guna `getTransactions(prevMonth, prevYear)` berbanding tapis dari `allExp` tahun semasa. Contoh: Januari 2027 kini dibandingkan dengan Disember 2026 (sebelum: silap rujuk Disember 2027). `code.gs:956`
-- **Fix `clearDashboardCache()`** — Refresh Semua di Ringkasan kini kosongkan cache Bil dan Solar juga (sebelum: hanya Belanja + EV/Minyak). `code.gs:62-63`
+- Rekod EV menyokong Cas Rumah dan Cas Luar.
+- Rekod Minyak menggunakan harga default petrol yang dipusatkan.
+- EV/Minyak pukal menyokong campuran Cas Rumah, Cas Luar, dan Minyak dengan tarikh berasingan setiap baris.
+- `addBulkEVRecords()` membuat preflight sheet wajib sebelum sebarang tulis supaya batch tidak masuk separuh.
+- CPO dan data tahunan EV/Minyak menggunakan cache.
+- Harga default frontend dipusatkan melalui `DEFAULT_HOME_KWH_PRICE` dan `DEFAULT_PETROL_PRICE` di `index.html`.
 
-### UI Penambahbaikan (Ringkasan)
-- **Label bulan sebenar** — Paparan mengapaikini dinamik: `vs April 2026` / `April 2026`, bukan `vs Bulan Lepas` / `Bulan Lepas` generik. Label dikemaskini melalui `MONTHS_FULL` array + `prevMonth`/`prevYear` daripada backend. `index.html:1510,1532-1533`
-- **Warna perbandingan** — Lebih tinggi = rose-200 (buruk untuk belanja), lebih rendah = emerald-200 (baik), sama = neutral ➖. `index.html:1518-1519`
-- **Nota scope jumlah** — Kad Jumlah Keseluruhan kini memaparkan `Tidak termasuk Bil Bulanan & Solar`. `index.html:295`
-- **Badge Bil** — Kad Bil di Ringkasan kini ada badge `⚠️ Asing dari Jumlah Keseluruhan`. `index.html:345`
-- **Header Ringkasan** — Label header boleh menyebut semua modul sistem (`Belanja + EV Cas + Minyak + Bil + Solar`), tetapi formula jumlah besar kekal hanya `Belanja + EV Cas + Minyak`.
+## Bil Bulanan
 
----
+- `BIL_TEMPLATE` menggunakan 10 kolum: `NAMA`, `KATEGORI`, `ANGGARAN`, `TETAP`, `LOKASI`, `IKON_LOKASI`, `IKON_KATEGORI`, `CYCLE_HARI`, `FREKUENSI`, `BULAN_AKTIF`.
+- `BIL_REKOD` menggunakan 11 kolum termasuk `BIL_DITERIMA`, `TARIKH_BIL`, dan `CATATAN`.
+- `CATATAN` ialah medan manual/rujukan; UI bil semasa tidak menulis catatan.
+- Bil auto-jana menggunakan key gabungan `LOKASI + NAMA` supaya bil nama sama di lokasi berbeza tidak dianggap duplicate.
+- Bil tahunan hanya dijana pada `BULAN_AKTIF`.
+- Status bil diterima berasingan daripada status bayaran.
+- Menanda bil sebagai dibayar turut menetapkan `BIL_DITERIMA` kepada `Ya`.
+- Perubahan `Bil Ada`, checkbox bayaran, dan `Semua` dipending di client dan disimpan secara batch mengikut lokasi.
+- `batchUpdateBil()` mengesahkan nilai `STATUS` dan `BIL_DITERIMA` sebelum menulis ke sheet.
+- Fungsi bil lama `toggolBilStatus()`, `toggolBilDiterima()`, dan `tandaiSemuaBilLokasi()` dinyahaktifkan dan hanya memberi error jika dipanggil.
+- Selepas amaun bil tak tetap disimpan, ringkasan bil dimuat semula supaya jumlah tepat.
 
-## Kemaskini Julai 2026 (25 Jul) — Hardening & Data Safety
+## Solar Tracker
 
-### Backend Hardening
-- **`parseRowId()`** — Semua operasi edit/padam kini tolak `rowId < 2`, jadi header sheet tidak boleh terpadam walaupun input client tersasar.
-- **Validasi tarikh ketat** — `isValidDate()` kini hanya terima format `yyyy-mm-dd` yang sah; tarikh tidak wujud seperti `2026-02-31` ditolak.
-- **Bil auto-jana ikut lokasi + nama** — `initBilMonth()` guna key `LOKASI + NAMA` untuk elak bil nama sama di lokasi berbeza daripada dianggap duplicate.
-- **Batch EV/Minyak preflight** — `addBulkEVRecords()` semak semua sheet wajib terlebih dahulu sebelum tulis, jadi batch tidak akan masuk separuh jika satu sheet hilang.
-- **Solar duplicate guard** — `addSolarRecord()` dan `updateSolarRecord()` menolak duplicate bagi gabungan `TAHUN + BULAN`.
-- **Solar edit bulan/tahun** — rekod Solar kini boleh dipindah bulan/tahun semasa edit, dengan semakan duplicate kekal aktif.
-- **Solar kumulatif tahunan** — `JUMLAH_BAKI` kini reset semula apabila tahun bertukar, jadi tahun baharu bermula dari 0 dan chart tahunan kekal konsisten.
-- **RowId guard solar/bil** — `updateSolarRecord()`, `deleteSolarRecord()`, `kemaskiniBilAmount()`, `batchUpdateBil()`, `deleteTransaction()`, `deleteEVData()`, dan `deletePetrolRecord()` kini guna guard rowId yang sama.
-- **Fungsi bil lama dinyahaktifkan** — `toggolBilStatus()`, `toggolBilDiterima()`, dan `tandaiSemuaBilLokasi()` tidak lagi menulis terus ke Sheet; aliran bil mesti melalui batch pending di client.
-- **Validasi enum bil** — `batchUpdateBil()` kini tolak status bil/status bil diterima yang bukan nilai sah.
-- **Cache empty result** — `getCategoryTrend()`, `getSolarData()`, dan `getSolarYearlyData()` kini cache hasil kosong juga supaya panggilan seterusnya lebih konsisten.
+- Solar hanya membenarkan satu rekod untuk setiap gabungan `TAHUN + BULAN`.
+- Rekod Solar boleh dipindah bulan/tahun semasa edit, dengan duplicate guard kekal aktif.
+- Input tahun Solar di frontend dihadkan kepada 2026-2031.
+- Nilai `Jana TNB`, `Guna TNB`, dan `Jana Apps` boleh bernilai `0`.
+- `BAKI`, `JUMLAH_BAKI`, dan `GUNA_LUAR_GRID` dikira secara automatik.
+- Selepas tambah, edit, atau padam rekod Solar, `JUMLAH_BAKI` dikira semula.
+- `JUMLAH_BAKI` reset pada permulaan tahun baharu; kumulatif Solar dikira dalam sempadan tahun yang sama.
+- Data Solar bulanan dan tahunan menggunakan cache.
 
-### Frontend/Data Export
-- **CSV escaping** — `doDownload()` kini escape semua tanda petik berganda dalam data supaya eksport CSV kekal sah walaupun nota/nama mengandungi `"`.
+## Ringkasan
 
-### Arkib
-- **`Old Version/` dibuang** — Semua fail arkib lama telah dipadam supaya tidak mengelirukan semasa rujukan atau deployment.
+- Header Ringkasan boleh menyebut semua modul: Belanja, EV Cas, Minyak, Bil, dan Solar.
+- Jumlah besar Ringkasan hanya mengira Belanja Harian, EV Cas, dan Minyak.
+- Bil Bulanan dan Solar dipaparkan sebagai kad/section berasingan dan tidak masuk jumlah besar.
+- Perbandingan bulan menyokong roll-over Januari ke Disember tahun sebelumnya.
+- Label perbandingan menggunakan nama bulan sebenar, bukan label generik.
+- Carta trend Ringkasan memaparkan Belanja dan EV+Minyak.
 
----
+## UI & UX
 
-## Modul Baharu: Bil Bulanan (Tab 4)
+- Dark mode menggunakan `localStorage`.
+- Nav hover dan active state menggunakan tema warna modul.
+- Kad utama menggunakan gradient mengikut modul.
+- Belanja dan EV/Minyak mempunyai carian dan pagination.
+- Eksport CSV tersedia untuk Belanja, EV/Minyak, Bil, dan Solar.
 
-### Backend (`code.gs`)
-- **`BIL_TEMPLATE`** — Sheet template untuk senarai bil tetap (NAMA, KATEGORI, ANGGARAN, TETAP, LOKASI, IKON_LOKASI, IKON_KATEGORI, CYCLE_HARI, FREKUENSI, BULAN_AKTIF)
-- **`BIL_REKOD`** — Sheet rekod bil 11 kolum: status bayaran, bil diterima, tarikh bayar, tarikh bil, dan catatan
-- **`getBilTemplate()`** — Baca template dengan caching 6 jam
-- **`initBilMonth()`** — Auto-jana rekod bil untuk bulan baharu
-- **`getBilRekod()`** — Baca rekod bil ikut bulan/tahun
-- **`toggolBilStatus()`** — Dinyahtulis; fungsi lama ini kini error jika dipanggil secara terus
-- **`toggolBilDiterima()`** — Dinyahtulis; fungsi lama ini kini error jika dipanggil secara terus
-- **`batchUpdateBil()`** — Simpan perubahan status secara pukal mengikut lokasi
-- **`kemaskiniBilAmount()`** — Ubah amaun bil (untuk bil tak tetap)
-- **`tandaiSemuaBilLokasi()`** — Dinyahtulis; fungsi lama ini kini error jika dipanggil secara terus
-- **`getBilSummary()`** — Summary dengan pecahan lokasi, jumlah dibayar, diterima belum bayar, dan belum dibayar
-- **`getBilYearlyData()`** — Data tahunan bil (untuk chart)
+## Cache
 
-### Backend/Frontend Energy Pukal
-- **`addBulkEVRecords()`** — Tambah rekod campuran Cas Rumah, Cas Luar, dan Minyak dalam satu batch
-- **Modal EV Pukal** — Tarikh setiap baris berasingan dengan validasi ikut jenis rekod
-- **EV/Minyak** kini boleh direkod secara campur dalam satu operasi simpan
-
-### Frontend (`index.html`)
-- Tab ke-4 di nav bar — ikon checklist, warna purple
-- **Progress Card** — Hero card dengan progress bar serta amaun Dibayar, Diterima, dan Belum
-- **Kad Peringatan** — Bezakan Bil Diterima Belum Bayar dan Belum Terima Bil
-- **Grid 2 Kolum** — Lokasi disusun dalam 2 kolum (mobile: 1)
-- **Collapse/Expand** — Klik header lokasi untuk buka/tutup
-- **Auto-collapse** — Kalau semua bil di lokasi dah dibayar
-- **Auto-expand** — Kalau ada bil belum dibayar
-- **Bil Ada** — Toggle berasingan untuk tanda bil sudah diterima tanpa menandakan bayaran
-- **Pending Changes** — Toggle Bil Ada, bayaran, dan Tandai Semua tidak terus menulis ke Sheet
-- **Simpan per Lokasi** — Butang Simpan menghantar semua pending changes lokasi dalam satu batch
-- **Batal per Lokasi** — Batalkan pending changes sebelum disimpan
-- **Tandai Semua** — Queue semua bil lokasi sebagai dibayar, kemudian simpan secara batch
-- **Visual Pending** — Border/baris amber menunjukkan perubahan belum disimpan
-- **Ikon Lokasi** — Dari kolum IKON_LOKASI di template
-- **Ikon Kategori** — Dari kolum IKON_KATEGORI di template
-- **Default ke bulan semasa** — Bila buka tab Bil, auto ke bulan/tahun semasa
-
----
-
-## Modul Baharu: Solar Tracker (Tab 5)
-
-### Backend (`code.gs`)
-- **`SOLAR`** — Sheet rekod penjanaan solar bulanan
-- **`getSolarData()`** — Baca rekod solar ikut bulan/tahun dengan caching TTL 2 jam
-- **`addSolarRecord()`** — Tambah rekod + auto-kira Baki, Jumlah Baki, Luar Grid
-- **`updateSolarRecord()`** — Kemaskini + auto-kira semula
-- **`deleteSolarRecord()`** — Padam rekod
-- **`getSolarYearlyData()`** — Data 12 bulan untuk chart (jana, guna, baki, kumulatif, luar grid) dengan caching
-- **`getSolarBatch()`** — Gabungan data + yearly
-- **`invalidateSolarCache()`** — Hapus semua cache Solar (dipanggil bila CRUD)
-
-### Frontend (`index.html`)
-- Tab ke-5 di nav bar — ikon matahari, warna amber
-- **Grid Stats 4×2** — Jana TNB, Guna TNB, Jana Apps, Luar Grid | Baki, Jml Baki, +Rekod Baru
-- **2 Carta** — Bar stacked (Jana vs Guna vs Luar Grid) + Line (Baki kumulatif)
-- **Jadual Bulanan** — 12 baris dengan edit/delete per bulan
-- **Form Modal** — Input 3 medan (Jana TNB, Guna TNB, Jana Apps) + auto-kira Baki & Luar Grid (read-only)
-- **Edit pantas** — Rekod Solar semasa disimpan di client untuk carian/edit pantas; simpan perubahan tetap melalui backend
-- **Default bulan semasa** — Bila buka tab Solar, auto ke bulan/tahun semasa
-- **Kad Ringkasan** — 3 line (⚡ Jana / 🏠 Guna / 📊 Baki) dalam kad gradient amber di Ringkasan
-
----
-
-## Ringkasan — Bil Diasingkan
-
-- Bil **tidak** termasuk dalam Jumlah Keseluruhan, Pie Chart, Bar Chart
-- Bil dipapar sebagai **section berasingan** di bawah jadual bulanan
-- Kad Bil Ringkasan diseragamkan dengan modul Bil: progress bar dan amaun Dibayar, Diterima, Belum
-- Solar dipapar sebagai kad ke-4 dalam grid Ringkasan (berasingan dari 3 kad utama)
-
----
-
-## Kard Gradient Ringkasan
-
-- 4 kad utama di Ringkasan kini guna **gradient background** ikut tema: emerald (Belanja), blue (EV), orange (Minyak), amber (Solar)
-- Kad Bil di bawah jadual juga guna gradient purple
-- Teks putih, icon `bg-white/20`, progress bar `bg-white/20`
-- Accent-border-top dibuang — tak relevan pada kad gradient
-- Dark mode: gradient kekal menyerlah
-
----
-
-## Dark Mode
-
-- Toggle 🌙/☀️ di pojok kanan atas (kecil: `top-2 right-2 p-1.5`)
-- Preference disimpan di `localStorage`
-- Palet warna gelap: `#0b1120` background, `#111827` cards
-- CSS overrides untuk semua background, text, border, input, select, shadow
-- Card berwarna guna opacity tinted
-- Nav bar dengan glass effect `backdrop-filter: blur`
-- Active nav tab dengan glow ikut warna modul
-- Hero gradient card dengan indigo glow shadow
-- Butang gradient dengan hover glow shadow
-
----
-
-## Nav Hover Effects
-
-- 5 butang nav — setiap satu ada `:hover` state ikut warna tema
-- Light mode: background pastel + teks ikut tema
-- Dark mode: background `rgba(theme, 0.12)` + teks glow
-- Tidak ganggu `nav-active` state sedia ada
-
----
-
-## UI Polish
-
-- **Gradient Buttons** — Semua butang utama guna gradient: emerald, slate, blue, orange, amber
-- **Card Shadows** — `shadow-card` 2-layer shadow dengan hover elevate
-- **Background** — Light mode: `#f1f5f9` (lebih cerah dan segar)
-- **Loader** — Spinner + teks "Memuat sistem"
-- **Toggle Dark Mode** — Lebih kecil & tinggi, tak bertindih content
-
----
-
-## Carian
-
-- **Belanja** — Input carian sebaris di header. Cakupan: kategori, nota, amaun, bayaran
-- **EV Cas** — Input carian sebaris di header. Cakupan: CPO, stesen, lokasi, nota, amaun
-- Debounce 300ms, butang ✕ untuk clear
-- Berfungsi bersama filter kategori, payment, tarikh yang sedia ada
-
----
-
-## Eksport CSV
-
-- Butang 📥 di kiri tajuk setiap header (5 modul)
-- **Belanja** — Eksport tarikh, kategori, amaun, nota, bayaran
-- **EV Cas** — Eksport tarikh, jenis, CPO/stesen, kWh/liter, RM, lokasi
-- **Bil** — Eksport lokasi, nama, kategori, amaun, status, bil diterima, tarikh bayar, dan tarikh bil
-- **Solar** — Eksport tahun, bulan, jana TNB, guna TNB, jana apps, luar grid, baki, jumlah baki
-- BOM UTF-8 — terus buka di Excel tanpa masalah aksara Melayu
-- Ikut filter + carian semasa. Solar guna async fetch.
-
----
-
-## Pagination
-
-- Belanja & EV: 25 rekod per halaman
-- Controls: Awal / ← / Hal X / → / Akhir
-- Auto hidden kalau rekod ≤ 25
-- Reset ke page 1 bila filter/sort berubah
-
----
-
-## Client-side Validation
-
-- **Belanja**: amaun > 0, kategori dipilih, tarikh tak boleh masa depan
-- **EV Cas**: kWh > 0, harga/kWh > 0, CPO dipilih (untuk Luar)
-- **Minyak**: liter > 0, stesen dipilih
-- **Solar**: Jana TNB ≥ 0, Guna TNB ≥ 0, Jana Apps ≥ 0; nilai sifar dibenarkan
-- Instant feedback tanpa tunggu API call
-
----
-
-## Bug Fixes
-
-- Fix duplicate `</select>` tags di header Belanja & EV
-- Fix `filteredTransactions` stale data selepas tukar bulan/tahun
-- Fix `noSpendDays` — kini tunjuk kiraan hari tanpa belanja yang betul (per tahun)
-- Fix bil filter month default ke bulan semasa
-- Fix solar filter month default ke bulan semasa
-- Fix icon edit di EV Cas disamakan dengan Belanja
-- Fix category hover background (tak putih lagi, guna opacity)
-- Fix `toggolBilStatus` — tarikh bayar auto-set bila ditanda
-- Fix `openSolarModal` — cari client-side, elak 1-2 saat sela
-- Fix `getSolarData` filter — handle null month/year dengan betul
-- Fix `initCategoryFilter` — sentiasa aktifkan semua kategori, elak jadual kosong
-- Fix exportCSV Solar — tambah loader + error handler
-- Fix kad Solar di Ringkasan — tambah error handler
-- Fix `jumlahKeseluruhan` bil — kini benar-benar jumlah dibayar + belum
-- Fix amaun Bil — selepas amaun bil tak tetap disimpan, ringkasan Bil dimuat semula supaya jumlah terus tepat
-- Fix loader Bil — loader tidak lagi ditutup sebelum data Bil selesai dimuatkan
-- Fix validasi Solar — nilai `0` tidak lagi dianggap input kosong
-- Fix `JUMLAH_BAKI` Solar — dikira semula untuk semua rekod selepas tambah, edit, atau padam
-- Fix output dinamik — kategori, ikon, payment, filter EV, dan lokasi bil di-escape sebelum masuk `innerHTML`
-- Fix section Solar Ringkasan lama — `sumSolarSection` dan grid lama dibuang; kad Solar aktif kekal pada `sumSolarCard`
-
----
-
-## `code.gs` — Penambahbaikan Lain
-
-- **CacheService** — Cache untuk semua modul: kategori, CPO, data tahunan, template bil, solar data, solar yearly
-- **Cache 2026-2031** — Invalidation cache tahunan diselaraskan kepada julat data aplikasi
-- **Invalidation cache** — Setiap modul mempunyai fungsi invalidation sendiri
-- **`getBatchSummaryData()`** — Dioptimumkan untuk baca semua data dalam satu panggilan
-- **Sanitize** — Semua input di-trim & dihadkan panjang di server; dan di-escape (`escapeHtml`) di client sebelum dipapar ke DOM untuk elak XSS
-- **Input validation** — Semua fungsi CRUD validate input sebelum simpan
-- **Sheet helpers** — `getRequiredSheet()` memberi mesej jelas jika sheet wajib tidak wujud; `getOptionalSheet()` digunakan untuk bacaan yang boleh pulangkan data kosong
-- **Bil status validation** — `batchUpdateBil()` sahkan `STATUS` dan `BIL_DITERIMA` sebelum menulis ke sheet
+- Cache aktif untuk kategori, CPO, data tahunan Belanja, trend kategori, data tahunan EV/Minyak, template bil, Solar bulanan, dan Solar tahunan.
+- Invalidation cache disasarkan kepada tahun 2026-2031.
+- Hasil kosong untuk trend dan Solar boleh disimpan sebagai cache ringan.
+- Butang refresh menggunakan ikon `🔄` dan memanggil fungsi refresh backend yang berkaitan.

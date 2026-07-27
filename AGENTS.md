@@ -20,14 +20,18 @@
 ## Implementation Notes
 
 - Escape semua nilai daripada Google Sheet sebelum dimasukkan ke `innerHTML`.
+- CSV export mesti escape tanda petik dan lindungi nilai yang bermula dengan `=`, `+`, `-`, atau `@` supaya tidak ditafsir sebagai formula spreadsheet.
 - Selepas tambah, edit, atau padam rekod solar, kira semula `JUMLAH_BAKI` supaya baki kumulatif kekal tepat.
 - `parseRowId()` wajib digunakan untuk semua operasi edit/padam; `rowId < 2` mesti ditolak supaya header sheet tidak boleh terpadam.
 - Validasi tarikh wajib ketat pada format `yyyy-mm-dd` dan menolak tarikh tidak wujud.
+- Rekod bertarikh harian tidak boleh menggunakan tarikh masa hadapan, termasuk rekod pukal.
 - Auto-jana bil mesti guna key gabungan `LOKASI + NAMA` untuk elak bil lokasi berbeza terlangkau.
 - Rekod pukal EV/Minyak mesti buat preflight pada semua sheet wajib sebelum sebarang tulis.
 - Solar hanya boleh ada satu rekod bagi setiap gabungan `TAHUN + BULAN`.
 - Struktur `BIL_REKOD` ialah 11 kolum: `TAHUN`, `BULAN`, `LOKASI`, `NAMA`, `KATEGORI`, `AMAUN`, `STATUS`, `TARIKH_BAYAR`, `BIL_DITERIMA`, `TARIKH_BIL`, `CATATAN`.
+- Kolum `CATATAN` dalam `BIL_REKOD` ialah medan manual/rujukan; aliran UI bil semasa tidak menulis catatan bil.
 - Struktur `BIL_TEMPLATE` ialah 10 kolum: `NAMA`, `KATEGORI`, `ANGGARAN`, `TETAP`, `LOKASI`, `IKON_LOKASI`, `IKON_KATEGORI`, `CYCLE_HARI`, `FREKUENSI`, `BULAN_AKTIF`.
 - Rekod pukal EV/Minyak mesti menyokong campuran `Cas Rumah`, `Cas Luar`, dan `Minyak` dengan tarikh berasingan setiap baris.
+- Harga default Cas Rumah dan Minyak mesti dikemas kini di constant frontend `index.html` dan constant backend `code.gs`.
 - Operasi tulis mesti menggunakan helper sheet wajib supaya sheet yang hilang menghasilkan mesej ralat yang jelas.
 - Fungsi baca agregat yang kembali kosong juga boleh cache hasil kosong untuk kurangkan bacaan sheet berulang.

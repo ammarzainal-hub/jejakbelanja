@@ -104,7 +104,7 @@ Astro | Hiburan | 109.16 | Ya | Muar | | 📺 | 0 | Tahunan | 1
 TAHUN | BULAN | LOKASI | NAMA | KATEGORI | AMAUN | STATUS | TARIKH_BAYAR | BIL_DITERIMA | TARIKH_BIL | CATATAN
 ```
 
-> `STATUS` menyimpan `Belum` atau `Dibayar`. `BIL_DITERIMA` menyimpan `Tidak` atau `Ya`. Apabila bil ditanda dibayar, sistem turut menandakan bil sebagai diterima. `TARIKH_BAYAR` dan `TARIKH_BIL` diisi secara automatik.
+> `STATUS` menyimpan `Belum` atau `Dibayar`. `BIL_DITERIMA` menyimpan `Tidak` atau `Ya`. Apabila bil ditanda dibayar, sistem turut menandakan bil sebagai diterima. `TARIKH_BAYAR` dan `TARIKH_BIL` diisi secara automatik. `CATATAN` ialah medan manual/rujukan dan tidak ditulis oleh UI bil semasa.
 
 **Tab SOLAR** — Header di baris pertama:
 ```
@@ -162,7 +162,7 @@ jejak-belanja/
 - Minyak: RM 1.99/liter
 - Cas EV Luar: tiada harga default tetap; harga/kWh diisi mengikut rekod.
 
-Harga Cas Rumah dan Minyak digunakan di frontend dan backend, termasuk rekod pukal. Jika kadar berubah, kemas kini nilai default di `index.html` serta constant `DEFAULT_HOME_KWH_PRICE` dan `DEFAULT_PETROL_PRICE` dalam `code.gs`.
+Harga Cas Rumah dan Minyak digunakan di frontend dan backend, termasuk rekod pukal. Jika kadar berubah, kemas kini constant `DEFAULT_HOME_KWH_PRICE` dan `DEFAULT_PETROL_PRICE` dalam `index.html` serta `code.gs`.
 
 ## Business Rules
 
@@ -174,23 +174,6 @@ Harga Cas Rumah dan Minyak digunakan di frontend dan backend, termasuk rekod puk
 - Menandakan bil sebagai dibayar turut menandakan `BIL_DITERIMA` sebagai `Ya`.
 - `JUMLAH_BAKI` solar reset semula pada permulaan tahun baharu; kumulatif solar dikira dalam sempadan tahun yang sama.
 - Rekod Solar boleh dipindah bulan/tahun semasa edit, tetapi gabungan `TAHUN + BULAN` masih mesti unik.
-
-## Penambahbaikan Terkini
-
-- `parseRowId()` melindungi semua operasi edit/padam supaya header sheet tidak boleh tersasar.
-- Validasi tarikh kini ketat pada format `yyyy-mm-dd` dan menolak tarikh tidak wujud.
-- Bil auto-jana menggunakan key `LOKASI + NAMA` supaya bil nama sama tetapi lokasi berbeza tidak hilang.
-- Rekod pukal EV/Minyak semak semua sheet wajib terlebih dahulu sebelum menulis apa-apa.
-- Solar menolak duplicate untuk gabungan `TAHUN + BULAN`.
-- CSV export kini escape tanda petik `"` dengan betul.
-- Tarikh input default dan tarikh simpanan kini konsisten menggunakan tarikh lokal Malaysia tanpa offset UTC.
-- `JUMLAH_BAKI` Solar reset semula apabila tahun bertukar dan kumulatif dikira ikut tahun.
-- Save bil kekal pada bulan/tahun yang sedang dipilih selepas simpan.
-- Paparan jumlah Bil dikira semula selepas amaun bil tak tetap dikemaskini.
-- Loader tab Bil kekal sehingga data bil selesai dimuatkan.
-- `batchUpdateBil()` kini sahkan status bil dan status bil diterima sebelum simpan.
-- Cache empty result untuk trend, Solar bulanan, dan Solar tahunan kini juga disimpan sebagai cache ringan.
-- Section Solar Ringkasan lama yang tersembunyi telah dibuang; kad Solar aktif kekal pada `sumSolarCard`.
 
 ## Aliran Bil Bulanan
 
@@ -220,9 +203,9 @@ Edit senarai dalam tab `BIL_TEMPLATE` di Google Sheet. Setiap bulan baru, app ak
 
 ### Tukar Harga Default
 
-Dalam `index.html`, cari dan ubah nilai default form:
-- `value="0.4443"` untuk harga cas rumah
-- `value="1.99"` untuk harga minyak
+Dalam `index.html`, cari dan ubah constant frontend:
+- `DEFAULT_HOME_KWH_PRICE` untuk harga cas rumah
+- `DEFAULT_PETROL_PRICE` untuk harga minyak
 
 Dalam `code.gs`, kemas kini constant backend yang digunakan untuk rekod pukal dan fallback server:
 - `DEFAULT_HOME_KWH_PRICE` untuk harga cas rumah

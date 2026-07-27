@@ -106,6 +106,12 @@ function toSheetDate(dateStr) {
   return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
 }
 
+function isFutureDateString(dateStr) {
+  var d = toSheetDate(dateStr);
+  var today = todaySheetDate();
+  return d.getTime() > today.getTime();
+}
+
 function todaySheetDate() {
   var today = new Date();
   return new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -149,7 +155,6 @@ function validateBilDiterimaValue(value) {
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('index')
       .setTitle('💸 Hub Kewangan 💸')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
@@ -277,6 +282,7 @@ function getPreviousMonth(month, year, offset) {
 function addTransaction(data) {
   if (!data) throw new Error('Data tidak diberikan');
   if (!isValidDate(data.date)) throw new Error('Tarikh tidak sah');
+  if (isFutureDateString(data.date)) throw new Error('Tarikh tidak boleh pada masa hadapan');
   if (!data.amount || parseFloat(data.amount) <= 0) throw new Error('Amaun mesti lebih dari 0');
   if (!data.category) throw new Error('Kategori diperlukan');
   
@@ -295,6 +301,7 @@ function updateTransaction(data) {
   if (!data) throw new Error('Data tidak diberikan');
   if (!data.rowId) throw new Error('ID transaksi diperlukan');
   if (!isValidDate(data.date)) throw new Error('Tarikh tidak sah');
+  if (isFutureDateString(data.date)) throw new Error('Tarikh tidak boleh pada masa hadapan');
   if (!data.amount || parseFloat(data.amount) <= 0) throw new Error('Amaun mesti lebih dari 0');
   if (!data.category) throw new Error('Kategori diperlukan');
   
@@ -330,6 +337,7 @@ function addBulkTransactions(rows) {
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
     if (!isValidDate(r.date)) throw new Error('Baris ' + (i+1) + ': Tarikh tidak sah');
+    if (isFutureDateString(r.date)) throw new Error('Baris ' + (i+1) + ': Tarikh tidak boleh pada masa hadapan');
     if (!r.amount || parseFloat(r.amount) <= 0) throw new Error('Baris ' + (i+1) + ': Amaun mesti lebih dari 0');
     if (!r.category) throw new Error('Baris ' + (i+1) + ': Kategori diperlukan');
     
@@ -384,6 +392,7 @@ function getCPOTypes() {
 function addEVCharging(data) {
   if (!data) throw new Error('Data tidak diberikan');
   if (!isValidDate(data.date)) throw new Error('Tarikh tidak sah');
+  if (isFutureDateString(data.date)) throw new Error('Tarikh tidak boleh pada masa hadapan');
   if (!data.type) throw new Error('Jenis cas diperlukan');
   if (!data.kwh || parseFloat(data.kwh) <= 0) throw new Error('kWh mesti lebih dari 0');
   if (!data.pricePerKwh || parseFloat(data.pricePerKwh) <= 0) throw new Error('Harga/kWh mesti lebih dari 0');
@@ -406,6 +415,7 @@ function updateEVCharging(data) {
   if (!data) throw new Error('Data tidak diberikan');
   if (!data.rowId) throw new Error('ID rekod diperlukan');
   if (!isValidDate(data.date)) throw new Error('Tarikh tidak sah');
+  if (isFutureDateString(data.date)) throw new Error('Tarikh tidak boleh pada masa hadapan');
   if (!data.type) throw new Error('Jenis cas diperlukan');
   if (!data.kwh || parseFloat(data.kwh) <= 0) throw new Error('kWh mesti lebih dari 0');
   if (!data.pricePerKwh || parseFloat(data.pricePerKwh) <= 0) throw new Error('Harga/kWh mesti lebih dari 0');
@@ -484,6 +494,7 @@ function getBatchEVData(month, year) {
 function addPetrolRecord(data) {
   if (!data) throw new Error('Data tidak diberikan');
   if (!isValidDate(data.date)) throw new Error('Tarikh tidak sah');
+  if (isFutureDateString(data.date)) throw new Error('Tarikh tidak boleh pada masa hadapan');
   if (!data.station) throw new Error('Stesen diperlukan');
   if (!data.liter || parseFloat(data.liter) <= 0) throw new Error('Liter mesti lebih dari 0');
   
@@ -503,6 +514,7 @@ function updatePetrolRecord(data) {
   if (!data) throw new Error('Data tidak diberikan');
   if (!data.rowId) throw new Error('ID rekod diperlukan');
   if (!isValidDate(data.date)) throw new Error('Tarikh tidak sah');
+  if (isFutureDateString(data.date)) throw new Error('Tarikh tidak boleh pada masa hadapan');
   if (!data.station) throw new Error('Stesen diperlukan');
   if (!data.liter || parseFloat(data.liter) <= 0) throw new Error('Liter mesti lebih dari 0');
   
@@ -550,6 +562,7 @@ function addBulkEVRecords(rows) {
     var label = 'Baris ' + (index + 1) + ': ';
     if (!row || !row.kind) throw new Error(label + 'Jenis rekod diperlukan');
     if (!isValidDate(row.date)) throw new Error(label + 'Tarikh tidak sah');
+    if (isFutureDateString(row.date)) throw new Error(label + 'Tarikh tidak boleh pada masa hadapan');
 
     if (row.kind === 'home' || row.kind === 'public') {
       var kwh = parseFloat(row.kwh);
@@ -728,18 +741,6 @@ function getBilSummary(month, year) {
     jumlahKeseluruhan: dibayar + belum,
     byLokasi: byLokasi
   };
-}
-
-function getBilYearlyData(year) {
-  var data = Array(12).fill(0);
-  var sheet = getOptionalSheet(BIL_REKOD_SHEET);
-  if (!sheet || sheet.getLastRow() < 2) return data;
-  sheet.getRange(2, 1, sheet.getLastRow() - 1, 11).getValues().forEach(function(row) {
-    if (parseInt(row[0]) == year && row[6] === 'Dibayar') {
-      data[parseInt(row[1]) - 1] += parseFloat(row[5] || 0);
-    }
-  });
-  return data;
 }
 
 function invalidateBilCache() {
@@ -998,7 +999,6 @@ function getBatchSummaryData(month, year) {
     prevMonth    : prevMonth,
     prevYear     : prevYear,
     expYearly    : getYearlyData(year),
-    evYearly     : getEVYearlyData(year),
-    bilYearly    : getBilYearlyData(year)
+    evYearly     : getEVYearlyData(year)
   };
 }

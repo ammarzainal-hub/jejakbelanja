@@ -62,22 +62,17 @@
     body.dark .nav-active-ev  { background: rgba(59,130,246,0.2) !important; color: #93c5fd !important; }
     body.dark .nav-active-bil { background: rgba(147,51,234,0.2) !important; color: #c4b5fd !important; }
     body.dark .nav-active-solar { background: rgba(217,119,6,0.2) !important; color: #fcd34d !important; }
-    body.dark .bg-amber-50   { background-color: rgba(217,119,6,0.15) !important; border-color: rgba(217,119,6,0.25) !important; }
+    body.dark .bg-amber-50   { background-color: rgba(251,191,36,0.12) !important; border-color: rgba(217,119,6,0.25) !important; }
     body.dark .bg-amber-100  { background-color: rgba(217,119,6,0.2) !important; }
     body.dark .border-amber-100 { border-color: rgba(217,119,6,0.25) !important; }
-    body.dark .border-amber-200 { border-color: rgba(217,119,6,0.35) !important; }
-    body.dark .border-amber-300 { border-color: rgba(217,119,6,0.35) !important; }
+    body.dark .border-amber-200 { border-color: rgba(251,191,36,0.25) !important; }
+    body.dark .border-amber-300 { border-color: rgba(251,191,36,0.35) !important; }
     body.dark .text-amber-800 { color: #fbbf24 !important; }
     body.dark .text-amber-600 { color: #f59e0b !important; }
     body.dark .bg-purple-50   { background-color: rgba(147,51,234,0.15) !important; border-color: rgba(147,51,234,0.25) !important; }
     body.dark .bg-purple-100  { background-color: rgba(147,51,234,0.2) !important; }
     body.dark .border-purple-100 { border-color: rgba(147,51,234,0.25) !important; }
     body.dark .border-purple-200 { border-color: rgba(147,51,234,0.35) !important; }
-    body.dark .bg-amber-50  { background-color: rgba(251,191,36,0.12) !important; }
-    body.dark .border-amber-300 { border-color: rgba(251,191,36,0.35) !important; }
-    body.dark .border-amber-200 { border-color: rgba(251,191,36,0.25) !important; }
-    body.dark .text-amber-800 { color: #fbbf24 !important; }
-    body.dark .text-amber-600 { color: #f59e0b !important; }
     body.dark .text-amber-700 { color: #fbbf24 !important; }
     body.dark .loading-overlay { background: rgba(11,17,32,0.95) !important; }
     body.dark .toast { color: #fff !important; }
@@ -637,7 +632,11 @@
             <option value="7">Jul</option><option value="8">Ogos</option><option value="9">Sep</option>
             <option value="10">Okt</option><option value="11">Nov</option><option value="12">Dis</option>
           </select>
-          <input type="number" id="solarFormTahun" name="tahun" value="2026" class="flex-1 rounded-xl border bg-slate-50 p-4 font-bold outline-none">
+          <select id="solarFormTahun" name="tahun" class="flex-1 rounded-xl border bg-slate-50 p-4 font-bold outline-none">
+            <option value="2026">2026</option><option value="2027">2027</option>
+            <option value="2028">2028</option><option value="2029">2029</option>
+            <option value="2030">2030</option><option value="2031">2031</option>
+          </select>
         </div>
         <div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">⚡ Jana TNB (kWh)</label><input type="number" id="solarJanaTNB" name="janaTNB" step="0.01" required placeholder="0.00" oninput="calcSolarAuto()" class="w-full rounded-xl border bg-slate-50 p-4 font-black outline-none"></div>
         <div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">🏠 Guna TNB (kWh)</label><input type="number" id="solarGunaTNB" name="gunaTNB" step="0.01" required placeholder="0.00" oninput="calcSolarAuto()" class="w-full rounded-xl border bg-slate-50 p-4 font-black outline-none"></div>
@@ -668,7 +667,7 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">kWh</label><input type="number" id="evFormKwh" name="kwh" step="0.001" required placeholder="0.000" class="w-full rounded-2xl border bg-slate-50 p-4 font-black outline-none"></div>
-          <div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">RM/kWh</label><input type="number" id="evPriceField" name="pricePerKwh" step="0.0001" value="0.4443" required class="w-full rounded-2xl border bg-slate-50 p-4 font-black outline-none"></div>
+          <div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">RM/kWh</label><input type="number" id="evPriceField" name="pricePerKwh" step="0.0001" required class="w-full rounded-2xl border bg-slate-50 p-4 font-black outline-none"></div>
         </div>
         <div class="flex gap-4 pt-4"><button type="button" onclick="toggleModal('evModal', false)" class="flex-1 py-4 text-slate-400 font-bold uppercase text-[10px]">Batal</button><button type="submit" class="flex-1 py-4 btn-gradient-blue text-white rounded-2xl font-black shadow-lg uppercase text-[10px]">Simpan</button></div>
       </form>
@@ -687,7 +686,7 @@
           </select>
         </div>
         <div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Liter (sehingga 4 titik perpuluhan)</label><input type="number" id="petrolFormLiter" name="liter" step="0.0001" required placeholder="0.0000" class="w-full rounded-2xl border bg-slate-50 p-4 font-black outline-none" oninput="calcPetrolTotal()"></div>
-        <div class="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex justify-between items-center"><div><p class="text-[9px] font-black text-orange-400 uppercase tracking-widest">Harga Tetap</p><p class="font-black text-orange-600 text-lg">RM 1.99 / Liter</p></div><input type="hidden" name="pricePerLiter" value="1.99"></div>
+        <div class="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex justify-between items-center"><div><p class="text-[9px] font-black text-orange-400 uppercase tracking-widest">Harga Tetap</p><p class="font-black text-orange-600 text-lg">RM <span id="petrolDefaultPriceLabel">-</span> / Liter</p></div><input type="hidden" id="petrolPriceField" name="pricePerLiter"></div>
         <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex justify-between items-center"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Jumlah RM</p><p id="petrolTotalCalc" class="font-black text-slate-900 text-lg">RM 0.00</p></div>
         <div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Nota (pilihan)</label><input type="text" id="petrolFormNote" name="note" placeholder="cth: isi penuh, lebuh raya..." class="w-full rounded-2xl border bg-slate-50 p-4 text-sm outline-none"></div>
         <div class="flex gap-4 pt-4"><button type="button" onclick="toggleModal('petrolModal', false)" class="flex-1 py-4 text-slate-400 font-bold uppercase text-[10px]">Batal</button><button type="submit" class="flex-1 py-4 btn-gradient-orange text-white rounded-2xl font-black shadow-lg uppercase text-[10px]">Simpan</button></div>
@@ -783,6 +782,8 @@
     var pieChart, barChart, evPieChart, cpoStasenChart, evBarChart, sumPieChart, sumBarChart;
     var paymentPieChart;
   var activePaymentFilter = null;
+    var DEFAULT_HOME_KWH_PRICE = 0.4443;
+    var DEFAULT_PETROL_PRICE = 1.99;
     var transactionsData = [], displayedData = [], evData = [], petrolData = [], globalCategories = [], globalCPOs = [];
     var activeTab = 'summary';
     var sortConfig = { key: 'date', direction: 'desc' };
@@ -907,6 +908,24 @@ var CATEGORY_COLORS = {
       return d.getFullYear() + '-' + month + '-' + day;
     }
 
+    function isFutureDate(dateStr) {
+      if (!dateStr) return false;
+      var parts = String(dateStr).split('-');
+      if (parts.length !== 3) return false;
+      var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      if (isNaN(d.getTime())) return false;
+      var today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return d > today;
+    }
+
+    function getSupportedYear(year) {
+      var y = parseInt(year, 10);
+      if (isNaN(y) || y < 2026) return 2026;
+      if (y > 2031) return 2031;
+      return y;
+    }
+
     function getBilTemplateKey(lokasi, nama) {
       return String(lokasi || '').trim().toLowerCase() + '|' + String(nama || '').trim().toLowerCase();
     }
@@ -974,8 +993,7 @@ var CATEGORY_COLORS = {
       if (!data.date) return { valid: false, message: 'Tarikh diperlukan' };
       var d = new Date(data.date);
       if (isNaN(d.getTime())) return { valid: false, message: 'Format tarikh tidak sah' };
-      var today = new Date(); today.setHours(23,59,59,999);
-      if (d > today) return { valid: false, message: 'Tarikh tidak boleh pada masa hadapan' };
+      if (isFutureDate(data.date)) return { valid: false, message: 'Tarikh tidak boleh pada masa hadapan' };
 
       if (type === 'expense') {
         if (!data.amount || parseFloat(data.amount) <= 0) return { valid: false, message: 'Amaun mesti lebih dari RM 0' };
@@ -996,6 +1014,9 @@ var CATEGORY_COLORS = {
 
     window.onload = function() {
       initDarkMode();
+      document.getElementById('evPriceField').value = DEFAULT_HOME_KWH_PRICE;
+      document.getElementById('petrolPriceField').value = DEFAULT_PETROL_PRICE;
+      document.getElementById('petrolDefaultPriceLabel').innerText = DEFAULT_PETROL_PRICE.toFixed(2);
       loadCategories();
       loadCPOTypes();
       loadAllData();
@@ -1056,7 +1077,7 @@ var CATEGORY_COLORS = {
         var y = document.getElementById('sumFilterYear').value;
         google.script.run
           .withSuccessHandler(function(b) {
-            updateSummaryUI(b.expData, b.evData, b.petrolData, b.bilData, b.prevExpData, b.prevEvData, b.prevPetData, b.prevBilData, b.prevMonth, b.prevYear, m, y);
+            updateSummaryUI(b.expData, b.evData, b.petrolData, b.bilData, b.prevExpData, b.prevEvData, b.prevPetData, b.prevMonth, b.prevYear, m, y);
             renderSumBarChart(b.expYearly, b.evYearly, y);
             google.script.run.withSuccessHandler(function(s) {
               if (s.records && s.records.length > 0) {
@@ -1495,11 +1516,10 @@ var CATEGORY_COLORS = {
 
     var MONTHS_FULL = ['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember'];
 
-    function updateSummaryUI(expArr, evArr, petArr, bilSummary, prevExpArr, prevEVArr, prevPetArr, prevBilSummary, prevMonth, prevYear, month, year) {
+    function updateSummaryUI(expArr, evArr, petArr, bilSummary, prevExpArr, prevEVArr, prevPetArr, prevMonth, prevYear, month, year) {
       var eT = expArr.reduce(function(s,i) { return s + parseFloat(i.amount); }, 0);
       var vT = evArr.reduce(function(s,i) { return s + parseFloat(i.total); }, 0);
       var pT = petArr.reduce(function(s,i) { return s + parseFloat(i.total); }, 0);
-      var bT = bilSummary ? (bilSummary.jumlahDibayar || 0) : 0;
       var gT = eT + vT + pT;
       var prevT = prevExpArr.reduce(function(s,i) { return s + parseFloat(i.amount); }, 0)
                 + prevEVArr.reduce(function(s,i) { return s + parseFloat(i.total); }, 0)
@@ -1633,7 +1653,7 @@ var CATEGORY_COLORS = {
     function toggleEVFields(pub) {
       document.getElementById('ev-public-fields').classList.toggle('hidden', !pub);
       var f = document.getElementById('evPriceField');
-      if (!pub) { f.value = '0.4443'; f.readOnly = true; } else { f.readOnly = false; }
+      if (!pub) { f.value = DEFAULT_HOME_KWH_PRICE; f.readOnly = true; } else { f.readOnly = false; }
     }
 
     function openAddEVModal() {
@@ -1950,7 +1970,7 @@ function confirmEVDelete(id) {
 
     function calcPetrolTotal() {
       var l = parseFloat(document.getElementById('petrolFormLiter').value) || 0;
-      document.getElementById('petrolTotalCalc').innerText = 'RM ' + fRM(l * 1.99);
+      document.getElementById('petrolTotalCalc').innerText = 'RM ' + fRM(l * DEFAULT_PETROL_PRICE);
     }
 
     function openAddPetrolModal() {
@@ -1978,7 +1998,7 @@ function confirmEVDelete(id) {
     }
 
     function handlePetrolSubmit(f) {
-      var d = { rowId: f.rowId.value, date: f.date.value, station: f.station.value, liter: f.liter.value, pricePerLiter: 1.99, note: f.note.value || '' };
+      var d = { rowId: f.rowId.value, date: f.date.value, station: f.station.value, liter: f.liter.value, pricePerLiter: DEFAULT_PETROL_PRICE, note: f.note.value || '' };
       var v = validateFormData('petrol', d);
       if (!v.valid) { showToast(v.message, 'error'); return false; }
 
@@ -2039,7 +2059,7 @@ function confirmPetrolDelete(id) {
         + '<div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Tarikh</label><input type="date" class="ev-bulk-date w-full rounded-xl border p-3 text-xs font-bold" value="' + escapeHtml(date) + '"></div>'
         + '<div class="ev-bulk-energy-field"><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">kWh</label><input type="number" step="0.001" placeholder="0.000" class="ev-bulk-kwh w-full rounded-xl border p-3 font-black text-sm"></div>'
         + '<div class="ev-bulk-petrol-field hidden"><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Liter</label><input type="number" step="0.0001" placeholder="0.0000" class="ev-bulk-liter w-full rounded-xl border p-3 font-black text-sm"></div>'
-        + '<div class="ev-bulk-rate-field"><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">RM/kWh</label><input type="number" step="0.0001" value="0.4443" class="ev-bulk-price w-full rounded-xl border p-3 font-black text-sm"></div>'
+        + '<div class="ev-bulk-rate-field"><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">RM/kWh</label><input type="number" step="0.0001" value="' + DEFAULT_HOME_KWH_PRICE + '" class="ev-bulk-price w-full rounded-xl border p-3 font-black text-sm"></div>'
         + '<div class="ev-bulk-public-field hidden"><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">CPO</label><select class="ev-bulk-cpo w-full rounded-xl border p-3 text-xs font-bold">' + getEVBulkCPOOptions() + '</select></div>'
         + '<div class="ev-bulk-station-field hidden"><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Stesen</label><select class="ev-bulk-station w-full rounded-xl border p-3 text-xs font-bold"><option>Petronas</option><option>Shell</option><option>BHP</option><option>Caltex</option><option>Petron</option></select></div>'
         + '<div><label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Nota/Lokasi</label><div class="flex gap-2"><input type="text" placeholder="..." class="ev-bulk-note w-full rounded-xl border p-3 text-xs"><button onclick="this.closest(\'.ev-bulk-row\').remove()" class="text-red-400 font-bold text-xl">x</button></div></div>'
@@ -2058,7 +2078,7 @@ function confirmPetrolDelete(id) {
       row.querySelector('.ev-bulk-public-field').classList.toggle('hidden', kind !== 'public');
       row.querySelector('.ev-bulk-station-field').classList.toggle('hidden', kind !== 'petrol');
       var price = row.querySelector('.ev-bulk-price');
-      if (kind === 'home') { price.value = '0.4443'; price.readOnly = true; }
+      if (kind === 'home') { price.value = DEFAULT_HOME_KWH_PRICE; price.readOnly = true; }
       else { price.readOnly = false; }
     }
 
@@ -2073,10 +2093,11 @@ function confirmPetrolDelete(id) {
         var date = r.querySelector('.ev-bulk-date').value;
         var rowNo = idx + 1;
         if (!date) { error = 'Baris ' + rowNo + ': Tarikh diperlukan'; return; }
+        if (isFutureDate(date)) { error = 'Baris ' + rowNo + ': Tarikh tidak boleh pada masa hadapan'; return; }
         if (kind === 'petrol') {
           var liter = r.querySelector('.ev-bulk-liter').value;
           if (!liter || parseFloat(liter) <= 0) { error = 'Baris ' + rowNo + ': Liter mesti lebih dari 0'; return; }
-          rows.push({ kind: kind, date: date, station: r.querySelector('.ev-bulk-station').value, liter: liter, pricePerLiter: 1.99, note: r.querySelector('.ev-bulk-note').value || '' });
+          rows.push({ kind: kind, date: date, station: r.querySelector('.ev-bulk-station').value, liter: liter, pricePerLiter: DEFAULT_PETROL_PRICE, note: r.querySelector('.ev-bulk-note').value || '' });
         } else {
           var kwh = r.querySelector('.ev-bulk-kwh').value;
           var price = r.querySelector('.ev-bulk-price').value;
@@ -2263,6 +2284,8 @@ function confirmPetrolDelete(id) {
 
     function submitBulkData() {
       var date = document.getElementById('bulkDateMain').value;
+      if (!date) { showToast('Tarikh diperlukan', 'error'); return; }
+      if (isFutureDate(date)) { showToast('Tarikh tidak boleh pada masa hadapan', 'error'); return; }
       var rows = [];
       document.querySelectorAll('.bulk-row').forEach(function(r) {
         var a = r.querySelector('.bulk-amt').value;
@@ -2437,11 +2460,11 @@ function confirmPetrolDelete(id) {
       var pct = merged.length > 0 ? (done / merged.length) * 100 : 0;
       document.getElementById('bilProgressBar').style.width = pct + '%';
 
-      renderBilWarning(merged, summary);
+      renderBilWarning(merged);
       renderBilLokasiGrid(merged, mergedSummary);
     }
 
-    function renderBilWarning(rekod, summary) {
+    function renderBilWarning(rekod) {
       var warn = document.getElementById('bilWarningCard');
       var content = document.getElementById('bilWarningContent');
       var belumList = rekod.filter(function(r) { return r.status !== 'Dibayar'; });
@@ -2661,7 +2684,6 @@ function confirmPetrolDelete(id) {
           bilPendingChanges[r.rowId] = { status: 'Dibayar', bilDiterima: 'Ya', tarikhBayar: todayStr, tarikhBil: (r.bilDiterima === 'Ya' && r.tarikhBil) ? r.tarikhBil : todayStr };
         }
       });
-      var merged = mergePendingBil(serverRekod);
       updateBilUI(bilData);
     }
 
@@ -2676,7 +2698,6 @@ function confirmPetrolDelete(id) {
       }
       if (count > 0) {
         showToast('↩ ' + count + ' perubahan dibatalkan untuk ' + lokasi, 'info');
-        var merged = mergePendingBil(bilData.rekod || []);
         updateBilUI(bilData);
       }
     }
@@ -2724,7 +2745,6 @@ function confirmPetrolDelete(id) {
       } else {
         bilPendingChanges[rowId] = { status: newStatus, tarikhBayar: '' };
       }
-      var merged = mergePendingBil(serverRekod);
       updateBilUI(bilData);
     }
 
@@ -2737,7 +2757,6 @@ function confirmPetrolDelete(id) {
       bilPendingChanges[rowId] = bilPendingChanges[rowId] || {};
       bilPendingChanges[rowId].bilDiterima = newVal;
       bilPendingChanges[rowId].tarikhBil = newVal === 'Ya' ? formatLocalDate() : '';
-      var merged = mergePendingBil(serverRekod);
       updateBilUI(bilData);
     }
 
@@ -2803,7 +2822,11 @@ function confirmPetrolDelete(id) {
 
     function doDownload(rows, filename) {
       var csv = rows.map(function(row) {
-        return row.map(function(cell) { return '"' + String(cell == null ? '' : cell).replace(/"/g, '""') + '"'; }).join(',');
+        return row.map(function(cell) {
+          var val = String(cell == null ? '' : cell);
+          if (/^[=+\-@]/.test(val)) val = "'" + val;
+          return '"' + val.replace(/"/g, '""') + '"';
+        }).join(',');
       }).join('\n');
       var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
       var url = URL.createObjectURL(blob);
@@ -3032,7 +3055,7 @@ function confirmPetrolDelete(id) {
         document.getElementById('solarModalTitle').innerText = 'Tambah Rekod Solar';
         document.getElementById('solarEditRowId').value = '';
         document.getElementById('solarFormBulan').value = today.getMonth() + 1;
-        document.getElementById('solarFormTahun').value = today.getFullYear();
+        document.getElementById('solarFormTahun').value = getSupportedYear(today.getFullYear());
         document.getElementById('solarJanaTNB').value = '';
         document.getElementById('solarGunaTNB').value = '';
         document.getElementById('solarJanaApps').value = '';
@@ -3046,6 +3069,7 @@ function confirmPetrolDelete(id) {
       var d = { rowId: f.rowId.value, bulan: f.bulan.value, tahun: f.tahun.value, janaTNB: f.janaTNB.value, gunaTNB: f.gunaTNB.value, janaApps: f.janaApps.value };
       if (!d.janaTNB || parseFloat(d.janaTNB) < 0) { showToast('Jana TNB mesti >= 0', 'error'); return false; }
       if (!d.gunaTNB || parseFloat(d.gunaTNB) < 0) { showToast('Guna TNB mesti >= 0', 'error'); return false; }
+      if (d.janaApps !== '' && parseFloat(d.janaApps) < 0) { showToast('Jana Apps mesti >= 0', 'error'); return false; }
 
       var submitBtn = f.querySelector('button[type="submit"]');
       var originalText = submitBtn.innerText;
