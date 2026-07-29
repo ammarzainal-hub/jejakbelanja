@@ -15,7 +15,7 @@
 - Perubahan amaun bil disimpan terus apabila input berubah; ia bukan sebahagian daripada batch status.
 - Selepas perubahan amaun bil berjaya disimpan, paparan ringkasan bil perlu dikira semula.
 - Bil tahunan dalam `BIL_TEMPLATE` hanya dijana pada `BULAN_AKTIF`.
-- `batchUpdateBil()` mesti sahkan nilai `STATUS` dan `BIL_DITERIMA` sebelum menulis ke sheet.
+- `batchUpdateBil()` mesti sahkan semua nilai `STATUS` dan `BIL_DITERIMA` sebelum sebarang tulis ke sheet supaya batch tidak tersimpan separuh.
 
 ## Implementation Notes
 
@@ -33,5 +33,8 @@
 - Struktur `BIL_TEMPLATE` ialah 10 kolum: `NAMA`, `KATEGORI`, `ANGGARAN`, `TETAP`, `LOKASI`, `IKON_LOKASI`, `IKON_KATEGORI`, `CYCLE_HARI`, `FREKUENSI`, `BULAN_AKTIF`.
 - Rekod pukal EV/Minyak mesti menyokong campuran `Cas Rumah`, `Cas Luar`, dan `Minyak` dengan tarikh berasingan setiap baris.
 - Harga default Cas Rumah dan Minyak mesti dikemas kini di constant frontend `index.html` dan constant backend `code.gs`.
+- Cas Luar tiada harga default tetap; frontend tidak boleh memenuhkan harga Cas Rumah apabila pengguna memilih Cas Luar.
+- Harga minyak yang dihantar ke backend mesti lebih daripada `0`; nilai kosong boleh fallback kepada `DEFAULT_PETROL_PRICE`.
 - Operasi tulis mesti menggunakan helper sheet wajib supaya sheet yang hilang menghasilkan mesej ralat yang jelas.
+- `BIL_TEMPLATE` mesti dibaca melalui helper sheet wajib supaya sheet template yang hilang tidak disenyapkan sebagai senarai kosong.
 - Fungsi baca agregat yang kembali kosong juga boleh cache hasil kosong untuk kurangkan bacaan sheet berulang.

@@ -908,12 +908,21 @@ var CATEGORY_COLORS = {
       return d.getFullYear() + '-' + month + '-' + day;
     }
 
+    function isValidDateString(dateStr) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr || ''))) return false;
+      var parts = String(dateStr).split('-');
+      var y = parseInt(parts[0], 10);
+      var m = parseInt(parts[1], 10);
+      var d = parseInt(parts[2], 10);
+      var parsed = new Date(y, m - 1, d);
+      return parsed.getFullYear() === y && parsed.getMonth() === m - 1 && parsed.getDate() === d;
+    }
+
     function isFutureDate(dateStr) {
       if (!dateStr) return false;
+      if (!isValidDateString(dateStr)) return false;
       var parts = String(dateStr).split('-');
-      if (parts.length !== 3) return false;
       var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-      if (isNaN(d.getTime())) return false;
       var today = new Date();
       today.setHours(0, 0, 0, 0);
       return d > today;
@@ -991,8 +1000,7 @@ var CATEGORY_COLORS = {
 
     function validateFormData(type, data) {
       if (!data.date) return { valid: false, message: 'Tarikh diperlukan' };
-      var d = new Date(data.date);
-      if (isNaN(d.getTime())) return { valid: false, message: 'Format tarikh tidak sah' };
+      if (!isValidDateString(data.date)) return { valid: false, message: 'Format tarikh mesti yyyy-mm-dd dan tarikh wujud' };
       if (isFutureDate(data.date)) return { valid: false, message: 'Tarikh tidak boleh pada masa hadapan' };
 
       if (type === 'expense') {
@@ -1650,10 +1658,16 @@ var CATEGORY_COLORS = {
       }).getCPOTypes();
     }
 
-    function toggleEVFields(pub) {
+    function toggleEVFields(pub, keepPrice) {
       document.getElementById('ev-public-fields').classList.toggle('hidden', !pub);
       var f = document.getElementById('evPriceField');
-      if (!pub) { f.value = DEFAULT_HOME_KWH_PRICE; f.readOnly = true; } else { f.readOnly = false; }
+      if (!pub) {
+        f.value = DEFAULT_HOME_KWH_PRICE;
+        f.readOnly = true;
+      } else {
+        f.readOnly = false;
+        if (!keepPrice) f.value = '';
+      }
     }
 
     function openAddEVModal() {
@@ -1676,7 +1690,7 @@ var CATEGORY_COLORS = {
       document.getElementById('evPriceField').value = it.pricePerKwh;
       var pub = it.type === 'Luar';
       document.querySelector('input[name="type"][value="' + it.type + '"]').checked = true;
-      toggleEVFields(pub);
+      toggleEVFields(pub, true);
       if (pub) { document.getElementById('evCPODropdown').value = it.cpo; document.getElementById('evFormLocation').value = it.location; }
       toggleModal('evModal', true);
     }
@@ -2079,7 +2093,7 @@ function confirmPetrolDelete(id) {
       row.querySelector('.ev-bulk-station-field').classList.toggle('hidden', kind !== 'petrol');
       var price = row.querySelector('.ev-bulk-price');
       if (kind === 'home') { price.value = DEFAULT_HOME_KWH_PRICE; price.readOnly = true; }
-      else { price.readOnly = false; }
+      else { price.readOnly = false; if (kind === 'public') price.value = ''; }
     }
 
     function submitEVBulkData() {
@@ -2093,6 +2107,7 @@ function confirmPetrolDelete(id) {
         var date = r.querySelector('.ev-bulk-date').value;
         var rowNo = idx + 1;
         if (!date) { error = 'Baris ' + rowNo + ': Tarikh diperlukan'; return; }
+        if (!isValidDateString(date)) { error = 'Baris ' + rowNo + ': Format tarikh mesti yyyy-mm-dd dan tarikh wujud'; return; }
         if (isFutureDate(date)) { error = 'Baris ' + rowNo + ': Tarikh tidak boleh pada masa hadapan'; return; }
         if (kind === 'petrol') {
           var liter = r.querySelector('.ev-bulk-liter').value;
@@ -2285,6 +2300,7 @@ function confirmPetrolDelete(id) {
     function submitBulkData() {
       var date = document.getElementById('bulkDateMain').value;
       if (!date) { showToast('Tarikh diperlukan', 'error'); return; }
+      if (!isValidDateString(date)) { showToast('Format tarikh mesti yyyy-mm-dd dan tarikh wujud', 'error'); return; }
       if (isFutureDate(date)) { showToast('Tarikh tidak boleh pada masa hadapan', 'error'); return; }
       var rows = [];
       document.querySelectorAll('.bulk-row').forEach(function(r) {

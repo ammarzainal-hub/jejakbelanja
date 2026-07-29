@@ -162,7 +162,7 @@ jejak-belanja/
 - Minyak: RM 1.99/liter
 - Cas EV Luar: tiada harga default tetap; harga/kWh diisi mengikut rekod.
 
-Harga Cas Rumah dan Minyak digunakan di frontend dan backend, termasuk rekod pukal. Jika kadar berubah, kemas kini constant `DEFAULT_HOME_KWH_PRICE` dan `DEFAULT_PETROL_PRICE` dalam `index.html` serta `code.gs`.
+Harga Cas Rumah dan Minyak digunakan di frontend dan backend, termasuk rekod pukal. Jika kadar berubah, kemas kini constant `DEFAULT_HOME_KWH_PRICE` dan `DEFAULT_PETROL_PRICE` dalam `index.html` serta `code.gs`. Untuk Cas Luar, medan harga dikosongkan supaya kadar sebenar perlu diisi dan tidak tersimpan menggunakan harga Cas Rumah secara tidak sengaja.
 
 ## Business Rules
 

@@ -134,6 +134,13 @@ function parseNonNegativeNumber(value, label) {
   return parsed;
 }
 
+function parsePositiveNumberOrDefault(value, fallback, label) {
+  if (value === '' || value === null || value === undefined) return fallback;
+  var parsed = parseFloat(value);
+  if (isNaN(parsed) || parsed <= 0) throw new Error(label + ' mesti lebih dari 0');
+  return parsed;
+}
+
 function parseSolarMonthYear(month, year) {
   var bulan = parseInt(month, 10);
   var tahun = parseInt(year, 10);
@@ -500,7 +507,7 @@ function addPetrolRecord(data) {
   
   var safeStation = sanitize(data.station, 100);
   var liter = parseFloat(data.liter);
-  var price = parseFloat(data.pricePerLiter) || DEFAULT_PETROL_PRICE;
+  var price = parsePositiveNumberOrDefault(data.pricePerLiter, DEFAULT_PETROL_PRICE, 'Harga/Liter');
   var total = liter * price;
   var safeNote = sanitize(data.note, 500);
   
@@ -521,7 +528,7 @@ function updatePetrolRecord(data) {
   var safeRowId = parseRowId(data.rowId, 'ID rekod');
   var safeStation = sanitize(data.station, 100);
   var liter = parseFloat(data.liter);
-  var price = parseFloat(data.pricePerLiter) || DEFAULT_PETROL_PRICE;
+  var price = parsePositiveNumberOrDefault(data.pricePerLiter, DEFAULT_PETROL_PRICE, 'Harga/Liter');
   var total = liter * price;
   var safeNote = sanitize(data.note, 500);
   
@@ -577,7 +584,7 @@ function addBulkEVRecords(rows) {
     } else if (row.kind === 'petrol') {
       var station = sanitize(row.station, 100);
       var liter = parseFloat(row.liter);
-      var petrolPrice = parseFloat(row.pricePerLiter) || DEFAULT_PETROL_PRICE;
+      var petrolPrice = parsePositiveNumberOrDefault(row.pricePerLiter, DEFAULT_PETROL_PRICE, label + 'Harga/Liter');
       if (!station) throw new Error(label + 'Stesen diperlukan');
       if (isNaN(liter) || liter <= 0) throw new Error(label + 'Liter mesti lebih dari 0');
       petrolRows.push([toSheetDate(row.date), station, liter, petrolPrice, liter * petrolPrice, sanitize(row.note, 500)]);
@@ -606,11 +613,11 @@ function addBulkEVRecords(rows) {
 // ============================================================
 
 function getBilTemplate() {
+  var sheet = getRequiredSheet(BIL_TEMPLATE_SHEET);
   var ck = 'bil_template';
   var cached = cacheGet(ck);
   if (cached) return JSON.parse(cached);
 
-  var sheet = getOptionalSheet(BIL_TEMPLATE_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
   var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues();
   var result = data.map(function(row, idx) {
@@ -753,7 +760,7 @@ function batchUpdateBil(updates) {
   }
   var sheet = getRequiredSheet(BIL_REKOD_SHEET);
   var today = todaySheetDate();
-  var count = 0;
+  var prepared = [];
 
   updates.forEach(function(u) {
     var rowId = parseRowId(u.rowId, 'ID rekod');
@@ -769,11 +776,14 @@ function batchUpdateBil(updates) {
       tarikhBil = today;
     }
 
-    sheet.getRange(rowId, 7, 1, 4).setValues([[status, tarikhBayar, bilDiterima, tarikhBil]]);
-    count++;
+    prepared.push({ rowId: rowId, values: [status, tarikhBayar, bilDiterima, tarikhBil] });
   });
 
-  return { status: 'success', count: count };
+  prepared.forEach(function(item) {
+    sheet.getRange(item.rowId, 7, 1, 4).setValues([item.values]);
+  });
+
+  return { status: 'success', count: prepared.length };
 }
 
 function tandaiSemuaBilLokasi(month, year, lokasi) {

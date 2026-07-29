@@ -5,11 +5,12 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 ## Keselamatan & Data Safety
 
 - `parseRowId()` digunakan untuk operasi edit/padam supaya `rowId < 2` ditolak dan header sheet tidak boleh terpadam.
-- Validasi tarikh backend hanya menerima format `yyyy-mm-dd` yang sah dan menolak tarikh tidak wujud.
+- Validasi tarikh frontend dan backend hanya menerima format `yyyy-mm-dd` yang sah dan menolak tarikh tidak wujud.
 - Rekod harian Belanja, EV, Minyak, Belanja pukal, dan EV/Minyak pukal menolak tarikh masa hadapan di frontend dan backend.
 - `doGet()` tidak lagi menggunakan `XFrameOptionsMode.ALLOWALL`, jadi aplikasi tidak dibenarkan embed bebas dalam iframe luar.
 - CSV export escape tanda petik berganda dan melindungi nilai bermula `=`, `+`, `-`, atau `@` supaya tidak ditafsir sebagai formula spreadsheet.
 - Output dinamik daripada Google Sheet di-escape sebelum dimasukkan ke `innerHTML`.
+- Harga minyak yang dihantar ke backend mesti lebih daripada `0`; nilai kosong masih menggunakan `DEFAULT_PETROL_PRICE` sebagai fallback.
 
 ## Belanja Harian
 
@@ -23,6 +24,7 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 ## EV Cas & Minyak
 
 - Rekod EV menyokong Cas Rumah dan Cas Luar.
+- Cas Luar tidak menggunakan harga default Cas Rumah; medan harga dikosongkan supaya kadar sebenar perlu diisi.
 - Rekod Minyak menggunakan harga default petrol yang dipusatkan.
 - EV/Minyak pukal menyokong campuran Cas Rumah, Cas Luar, dan Minyak dengan tarikh berasingan setiap baris.
 - `addBulkEVRecords()` membuat preflight sheet wajib sebelum sebarang tulis supaya batch tidak masuk separuh.
@@ -39,7 +41,8 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Status bil diterima berasingan daripada status bayaran.
 - Menanda bil sebagai dibayar turut menetapkan `BIL_DITERIMA` kepada `Ya`.
 - Perubahan `Bil Ada`, checkbox bayaran, dan `Semua` dipending di client dan disimpan secara batch mengikut lokasi.
-- `batchUpdateBil()` mengesahkan nilai `STATUS` dan `BIL_DITERIMA` sebelum menulis ke sheet.
+- `batchUpdateBil()` mengesahkan semua nilai `STATUS` dan `BIL_DITERIMA` sebelum sebarang tulis ke sheet supaya batch tidak tersimpan separuh.
+- `BIL_TEMPLATE` dibaca sebagai sheet wajib supaya konfigurasi sheet yang hilang memaparkan ralat jelas.
 - Fungsi bil lama `toggolBilStatus()`, `toggolBilDiterima()`, dan `tandaiSemuaBilLokasi()` dinyahaktifkan dan hanya memberi error jika dipanggil.
 - Selepas amaun bil tak tetap disimpan, ringkasan bil dimuat semula supaya jumlah tepat.
 
