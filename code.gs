@@ -410,6 +410,7 @@ function addEVCharging(data) {
   var total = safeKwh * safePrice;
   
   var cpo = safeType === 'Rumah' ? 'Rumah' : sanitize(data.cpo, 100);
+  if (safeType !== 'Rumah' && !cpo) throw new Error('CPO diperlukan untuk cas luar');
   var location = safeType === 'Rumah' ? 'Kediaman' : sanitize(data.location, 200);
   
   getRequiredSheet(EV_SHEET)
@@ -434,6 +435,7 @@ function updateEVCharging(data) {
   var total = safeKwh * safePrice;
   
   var cpo = safeType === 'Rumah' ? 'Rumah' : sanitize(data.cpo, 100);
+  if (safeType !== 'Rumah' && !cpo) throw new Error('CPO diperlukan untuk cas luar');
   var location = safeType === 'Rumah' ? 'Kediaman' : sanitize(data.location, 200);
   
   getRequiredSheet(EV_SHEET)
@@ -680,8 +682,8 @@ function initBilMonth(month, year) {
 }
 
 function getBilRekod(month, year) {
-  var sheet = getOptionalSheet(BIL_REKOD_SHEET);
-  if (!sheet || sheet.getLastRow() < 2) return [];
+  var sheet = getRequiredSheet(BIL_REKOD_SHEET);
+  if (sheet.getLastRow() < 2) return [];
   return sheet.getRange(2, 1, sheet.getLastRow() - 1, 11).getValues()
     .map(function(row, index) {
       return {

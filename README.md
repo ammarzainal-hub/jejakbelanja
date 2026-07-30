@@ -199,7 +199,7 @@ Edit senarai dalam tab `JENIS_CPO` di Google Sheet.
 
 ### Tukar Senarai Bil
 
-Edit senarai dalam tab `BIL_TEMPLATE` di Google Sheet. Setiap bulan baru, app akan auto-jana checklist dari template.
+Edit senarai dalam tab `BIL_TEMPLATE` di Google Sheet. Setiap bulan baru, app akan auto-jana checklist dari template. Jika tab `BIL_TEMPLATE` atau `BIL_REKOD` tiada, app akan paparkan ralat jelas.
 
 ### Tukar Harga Default
 

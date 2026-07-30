@@ -2390,6 +2390,20 @@ function confirmPetrolDelete(id) {
     var bilPendingChanges = {};
     var kolomBil = [];
 
+    function getExportExpenseData() {
+      var sDate = document.getElementById('filterSpecificDate').value;
+      var hasCategoryFilter = false;
+      for (var k in categoryFilter) {
+        if (!categoryFilter[k]) hasCategoryFilter = true;
+      }
+      var isFiltered = !!sDate || !!activePaymentFilter || !!expenseSearchQuery || hasCategoryFilter;
+      return isFiltered ? allFilteredData : transactionsData;
+    }
+
+    function getExportEVData() {
+      return (evActiveFilter || evSearchQuery) ? evAllData : evAllRows;
+    }
+
     function mergePendingBil(rekod) {
       return (rekod || []).map(function(r) {
         var p = bilPendingChanges[r.rowId];
@@ -2446,15 +2460,20 @@ function confirmPetrolDelete(id) {
         .withSuccessHandler(function(r) {
           if (r.status === 'error') { showToast(r.message, 'error'); showLoader(false); return; }
           if (r.created > 0) showToast(r.created + ' bil baru dijana untuk bulan ini', 'info');
-          google.script.run.withSuccessHandler(function(t) { bilTemplate = t; }).getBilTemplate();
           google.script.run
-            .withSuccessHandler(function(summary) {
-              bilData = summary;
-              updateBilUI(summary);
-              showLoader(false);
+            .withSuccessHandler(function(t) {
+              bilTemplate = t;
+              google.script.run
+                .withSuccessHandler(function(summary) {
+                  bilData = summary;
+                  updateBilUI(summary);
+                  showLoader(false);
+                })
+                .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
+                .getBilSummary(m, y);
             })
             .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
-            .getBilSummary(m, y);
+            .getBilTemplate();
         })
         .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
         .initBilMonth(m, y);
@@ -2796,8 +2815,6 @@ function confirmPetrolDelete(id) {
         .kemaskiniBilAmount(rowId, input.value);
     }
 
-    google.script.run.withSuccessHandler(function(t) { bilTemplate = t; }).getBilTemplate();
-
     var expenseSearchQuery = '';
     var evSearchQuery = '';
     var expenseSearchTimeout, evSearchTimeout;
@@ -2856,13 +2873,13 @@ function confirmPetrolDelete(id) {
     function exportCSV(modul) {
       var rows = []; var filename = '';
       if (modul === 'expense') {
-        var data = allFilteredData.length > 0 ? allFilteredData : transactionsData;
+        var data = getExportExpenseData();
         filename = 'jejak_belanja_transaksi.csv';
         rows.push(['Tarikh', 'Kategori', 'Amaun', 'Nota', 'Bayaran']);
         data.forEach(function(r) { rows.push([r.date, r.category, r.amount, (r.note || ''), (r.payment || '💵 Cash')]); });
         doDownload(rows, filename);
       } else if (modul === 'ev') {
-        var data = evAllData.length > 0 ? evAllData : evAllRows;
+        var data = getExportEVData();
         filename = 'jejak_belanja_ev_minyak.csv';
         rows.push(['Tarikh', 'Jenis', 'CPO/Stesen', 'kWh/Liter', 'RM', 'Lokasi/Nota']);
         data.forEach(function(r) {

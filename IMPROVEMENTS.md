@@ -25,6 +25,7 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 
 - Rekod EV menyokong Cas Rumah dan Cas Luar.
 - Cas Luar tidak menggunakan harga default Cas Rumah; medan harga dikosongkan supaya kadar sebenar perlu diisi.
+- Cas Luar kini divalidasi di backend juga supaya CPO wajib diisi.
 - Rekod Minyak menggunakan harga default petrol yang dipusatkan.
 - EV/Minyak pukal menyokong campuran Cas Rumah, Cas Luar, dan Minyak dengan tarikh berasingan setiap baris.
 - `addBulkEVRecords()` membuat preflight sheet wajib sebelum sebarang tulis supaya batch tidak masuk separuh.
@@ -43,6 +44,7 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Perubahan `Bil Ada`, checkbox bayaran, dan `Semua` dipending di client dan disimpan secara batch mengikut lokasi.
 - `batchUpdateBil()` mengesahkan semua nilai `STATUS` dan `BIL_DITERIMA` sebelum sebarang tulis ke sheet supaya batch tidak tersimpan separuh.
 - `BIL_TEMPLATE` dibaca sebagai sheet wajib supaya konfigurasi sheet yang hilang memaparkan ralat jelas.
+- `BIL_REKOD` juga dibaca sebagai sheet wajib supaya sheet yang hilang tidak disenyapkan sebagai senarai kosong.
 - Fungsi bil lama `toggolBilStatus()`, `toggolBilDiterima()`, dan `tandaiSemuaBilLokasi()` dinyahaktifkan dan hanya memberi error jika dipanggil.
 - Selepas amaun bil tak tetap disimpan, ringkasan bil dimuat semula supaya jumlah tepat.
 
@@ -79,4 +81,5 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Cache aktif untuk kategori, CPO, data tahunan Belanja, trend kategori, data tahunan EV/Minyak, template bil, Solar bulanan, dan Solar tahunan.
 - Invalidation cache disasarkan kepada tahun 2026-2031.
 - Hasil kosong untuk trend dan Solar boleh disimpan sebagai cache ringan.
+- Fungsi bil menambah baik kesejajaran template/load flow supaya render UI bil tidak bergantung pada template yang dimuat lambat secara berasingan.
 - Butang refresh menggunakan ikon `🔄` dan memanggil fungsi refresh backend yang berkaitan.
