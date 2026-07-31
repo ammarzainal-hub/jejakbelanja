@@ -4,7 +4,8 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 
 ## Keselamatan & Data Safety
 
-- `parseRowId()` digunakan untuk operasi edit/padam supaya `rowId < 2` ditolak dan header sheet tidak boleh terpadam.
+- `parseRowId()` dan semakan row wujud digunakan untuk operasi edit/padam supaya `rowId < 2`, row kosong, dan header sheet tidak boleh diubah/padam.
+- Parser nombor backend membezakan medan wajib positif, wajib bukan negatif, optional fallback, dan bacaan sheet yang tidak sah.
 - Validasi tarikh frontend dan backend hanya menerima format `yyyy-mm-dd` yang sah dan menolak tarikh tidak wujud.
 - Rekod harian Belanja, EV, Minyak, Belanja pukal, dan EV/Minyak pukal menolak tarikh masa hadapan di frontend dan backend.
 - `doGet()` tidak lagi menggunakan `XFrameOptionsMode.ALLOWALL`, jadi aplikasi tidak dibenarkan embed bebas dalam iframe luar.
@@ -19,7 +20,10 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Carta bayaran boleh ditapis dengan klik carta.
 - Carian meliputi kategori, nota, amaun, dan bayaran.
 - Pagination ditetapkan kepada 25 rekod per halaman.
+- Dropdown pagination dijana dengan DOM API, bukan `innerHTML +=`.
+- Rekod pukal Belanja dihadkan kepada maksimum 50 rekod sekali simpan.
 - Kategori, trend, dan data tahunan menggunakan cache.
+- Cache trend kategori menggunakan key bulan/tahun sebenar selepas fallback bulan semasa dikira.
 
 ## EV Cas & Minyak
 
@@ -28,21 +32,23 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Cas Luar kini divalidasi di backend juga supaya CPO wajib diisi.
 - Rekod Minyak menggunakan harga default petrol yang dipusatkan.
 - EV/Minyak pukal menyokong campuran Cas Rumah, Cas Luar, dan Minyak dengan tarikh berasingan setiap baris.
+- EV/Minyak pukal dihadkan kepada maksimum 50 rekod sekali simpan.
 - `addBulkEVRecords()` membuat preflight sheet wajib sebelum sebarang tulis supaya batch tidak masuk separuh.
 - CPO dan data tahunan EV/Minyak menggunakan cache.
 - Harga default frontend dipusatkan melalui `DEFAULT_HOME_KWH_PRICE` dan `DEFAULT_PETROL_PRICE` di `index.html`.
 
 ## Bil Bulanan
 
-- `BIL_TEMPLATE` menggunakan 10 kolum: `NAMA`, `KATEGORI`, `ANGGARAN`, `TETAP`, `LOKASI`, `IKON_LOKASI`, `IKON_KATEGORI`, `CYCLE_HARI`, `FREKUENSI`, `BULAN_AKTIF`.
+- `BIL_TEMPLATE` menggunakan 11 kolum: `NAMA`, `KATEGORI`, `ANGGARAN`, `TETAP`, `LOKASI`, `IKON_LOKASI`, `IKON_KATEGORI`, `CYCLE_HARI`, `FREKUENSI`, `BULAN_AKTIF`, `CATATAN`.
 - `BIL_REKOD` menggunakan 11 kolum termasuk `BIL_DITERIMA`, `TARIKH_BIL`, dan `CATATAN`.
-- `CATATAN` ialah medan manual/rujukan; UI bil semasa tidak menulis catatan.
+- `CATATAN` dalam `BIL_TEMPLATE` ialah rujukan tetap untuk `LOKASI + NAMA`; rekod baharu menyalin catatan itu ke `BIL_REKOD.CATATAN` dan rekod lama fallback kepada template semasa paparan.
+- UI bil memaparkan catatan kecil di bawah nama bil dan export CSV bil menyertakan kolum `Catatan`.
 - Bil auto-jana menggunakan key gabungan `LOKASI + NAMA` supaya bil nama sama di lokasi berbeza tidak dianggap duplicate.
 - Bil tahunan hanya dijana pada `BULAN_AKTIF`.
 - Status bil diterima berasingan daripada status bayaran.
 - Menanda bil sebagai dibayar turut menetapkan `BIL_DITERIMA` kepada `Ya`.
 - Perubahan `Bil Ada`, checkbox bayaran, dan `Semua` dipending di client dan disimpan secara batch mengikut lokasi.
-- `batchUpdateBil()` mengesahkan semua nilai `STATUS` dan `BIL_DITERIMA` sebelum sebarang tulis ke sheet supaya batch tidak tersimpan separuh.
+- `batchUpdateBil()` mengesahkan row wujud, bulan, tahun, lokasi, `STATUS`, dan `BIL_DITERIMA` sebelum sebarang tulis ke sheet supaya batch tidak tersimpan separuh atau tersasar lokasi.
 - `BIL_TEMPLATE` dibaca sebagai sheet wajib supaya konfigurasi sheet yang hilang memaparkan ralat jelas.
 - `BIL_REKOD` juga dibaca sebagai sheet wajib supaya sheet yang hilang tidak disenyapkan sebagai senarai kosong.
 - Fungsi bil lama `toggolBilStatus()`, `toggolBilDiterima()`, dan `tandaiSemuaBilLokasi()` dinyahaktifkan dan hanya memberi error jika dipanggil.
@@ -74,6 +80,7 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Nav hover dan active state menggunakan tema warna modul.
 - Kad utama menggunakan gradient mengikut modul.
 - Belanja dan EV/Minyak mempunyai carian dan pagination.
+- Modal rekod belanja berada di atas nav bawah supaya nav tidak boleh diklik semasa modal dibuka.
 - Eksport CSV tersedia untuk Belanja, EV/Minyak, Bil, dan Solar.
 
 ## Cache
@@ -82,4 +89,5 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Invalidation cache disasarkan kepada tahun 2026-2031.
 - Hasil kosong untuk trend dan Solar boleh disimpan sebagai cache ringan.
 - Fungsi bil menambah baik kesejajaran template/load flow supaya render UI bil tidak bergantung pada template yang dimuat lambat secara berasingan.
+- Cache template bil dibuang melalui `invalidateBilTemplateCache()`.
 - Butang refresh menggunakan ikon `🔄` dan memanggil fungsi refresh backend yang berkaitan.

@@ -2678,6 +2678,8 @@ function confirmPetrolDelete(id) {
           var tpl = templateMap[getBilTemplateKey(r.lokasi, r.nama)] || {};
           var isTetap = tpl.tetap || false;
           var katIkon = r._ikonKategori || '';
+          var catatan = r.catatan || tpl.catatan || '';
+          r._catatanPaparan = catatan;
           var cycle = parseInt(tpl.cycleHari);
           var isLepasCycle = false;
           if (!isDone && !isDiterima && cycle && !isNaN(cycle) && cycle > 0) {
@@ -2695,7 +2697,7 @@ function confirmPetrolDelete(id) {
 
           html += '<div class="flex items-center gap-3 px-5 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors' + pendingClass + '">';
           html += '<input type="checkbox" ' + (isDone ? 'checked' : '') + ' onclick="toggleBilItem(' + r.rowId + ', this)" class="w-4 h-4 rounded accent-purple-600 cursor-pointer flex-shrink-0">';
-          html += '<div class="flex-1 min-w-0"><p class="font-bold text-xs text-slate-800 truncate">' + (katIkon ? escapeHtml(katIkon) + ' ' : '') + escapeHtml(r.nama) + (r._pending ? ' <span class="text-[8px] text-amber-500 font-black">●</span>' : '') + (isLepasCycle ? ' <span class="text-[8px] font-black text-red-600 bg-red-50 border border-red-100 rounded-full px-2 py-0.5 whitespace-nowrap">Lewat ' + escapeHtml(cycle) + 'hb</span>' : '') + '</p></div>';
+          html += '<div class="flex-1 min-w-0"><p class="font-bold text-xs text-slate-800 truncate">' + (katIkon ? escapeHtml(katIkon) + ' ' : '') + escapeHtml(r.nama) + (r._pending ? ' <span class="text-[8px] text-amber-500 font-black">●</span>' : '') + (isLepasCycle ? ' <span class="text-[8px] font-black text-red-600 bg-red-50 border border-red-100 rounded-full px-2 py-0.5 whitespace-nowrap">Lewat ' + escapeHtml(cycle) + 'hb</span>' : '') + '</p>' + (catatan ? '<p class="mt-0.5 text-[10px] font-semibold text-slate-400 truncate">' + escapeHtml(catatan) + '</p>' : '') + '</div>';
           html += '<div class="flex items-center gap-2 flex-shrink-0">';
           if (!isDone) {
             html += '<button onclick="toggleBilDiterima(' + r.rowId + ', this)" class="text-[9px] font-bold rounded-lg px-2 py-0.5 transition-all whitespace-nowrap ' + (isDiterima ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-400') + '">' + (isDiterima ? '🧾 Bil Ada' : '🧾 Bil Ada') + '</button>';
@@ -2912,8 +2914,8 @@ function confirmPetrolDelete(id) {
       } else if (modul === 'bil') {
         var data = kolomBil.length > 0 ? kolomBil : [];
         filename = 'jejak_belanja_bil.csv';
-        rows.push(['Lokasi', 'Nama', 'Kategori', 'Amaun', 'Status', 'Bil Diterima', 'Tarikh Bayar', 'Tarikh Bil']);
-        data.forEach(function(r) { rows.push([r.lokasi, r.nama, (r.kategori || ''), r.amaun, r.status, (r.bilDiterima || 'Tidak'), (r.tarikhBayar || ''), (r.tarikhBil || '')]); });
+        rows.push(['Lokasi', 'Nama', 'Kategori', 'Amaun', 'Status', 'Bil Diterima', 'Tarikh Bayar', 'Tarikh Bil', 'Catatan']);
+        data.forEach(function(r) { rows.push([r.lokasi, r.nama, (r.kategori || ''), r.amaun, r.status, (r.bilDiterima || 'Tidak'), (r.tarikhBayar || ''), (r.tarikhBil || ''), (r._catatanPaparan || r.catatan || '')]); });
         doDownload(rows, filename);
       } else if (modul === 'solar') {
         showLoader(true);

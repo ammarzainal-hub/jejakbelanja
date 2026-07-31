@@ -7,9 +7,9 @@ Aplikasi web untuk menguruskan perbelanjaan harian, menjejaki kos kenderaan elek
 - **Ringkasan Bulanan** — Pandangan sistem kewangan yang memaparkan modul Belanja, EV Cas, Minyak, Bil, dan Solar. Jumlah besar hanya mengira Belanja Harian, EV Cas, dan Minyak; Bil Bulanan dan Solar dipaparkan sebagai maklumat berasingan.
 - **Belanja Harian** — Rekod perbelanjaan dengan kategori, carta kategori interaktif (expand + trend 3 bulan), carta pembayaran (boleh tapis), trend tahunan, dan carian
 - **EV Cas Tracker** — Rekod cas EV (rumah/luar) dan isi minyak dengan pecahan CPO/stesen, 3 carta interaktif (tapis data guna klik carta), dan carian
-- **Bil Bulanan** — Senarai bil auto-jana dengan status Belum Terima, Bil Diterima, dan Dibayar; perubahan status disimpan secara pukal mengikut lokasi; template sokong `CYCLE_HARI`, `FREKUENSI`, dan `BULAN_AKTIF`
+- **Bil Bulanan** — Senarai bil auto-jana dengan status Belum Terima, Bil Diterima, dan Dibayar; perubahan status disimpan secara pukal mengikut lokasi; template sokong `CYCLE_HARI`, `FREKUENSI`, `BULAN_AKTIF`, dan `CATATAN` tetap
 - **Solar Tracker** — Rekod penjanaan solar bulanan (Jana TNB, Guna TNB, Jana Apps), auto-kira baki & luar grid, bar chart stacked + line chart kumulatif, edit bulan/tahun rekod sedia ada, ringkasan di Ringkasan
-- **Rekod Pukal** — Tambah multiple entries sekaligus di modul Belanja dan EV/Minyak
+- **Rekod Pukal** — Tambah multiple entries sekaligus di modul Belanja dan EV/Minyak, maksimum 50 rekod sekali simpan
 - **Carta Interaktif** — Klik carta untuk menapis data
 - **Eksport CSV** — Eksport data dari setiap modul (Belanja / EV+Minyak / Bil / Solar)
 - **Carian** — Cari transaksi merentasi kategori, nota, amaun di Belanja & EV
@@ -89,22 +89,23 @@ Tarikh | Stesen | Liter | Harga/Liter | Jumlah | Nota
 
 **Tab BIL_TEMPLATE** — Header di baris pertama, kemudian isi senarai bil:
 ```
-NAMA | KATEGORI | ANGGARAN | TETAP | LOKASI | IKON_LOKASI | IKON_KATEGORI | CYCLE_HARI | FREKUENSI | BULAN_AKTIF
------|----------|----------|-------|--------|-------------|--------------|------------|-----------|------------
-Bil TNB | Kos Elektrik | 150.00 | Tidak | Muar | 🏠 | ⚡ | 0 | Bulanan |
-Bil Air | Kos Rumah | 25.00 | Tidak | Muar | | 💧 | 0 | Bulanan |
-Bil Internet | Komunikasi & Topup | 118.90 | Ya | TTI | 🏢 | 🌐 | 0 | Tahunan | 7
-Astro | Hiburan | 109.16 | Ya | Muar | | 📺 | 0 | Tahunan | 1
+NAMA | KATEGORI | ANGGARAN | TETAP | LOKASI | IKON_LOKASI | IKON_KATEGORI | CYCLE_HARI | FREKUENSI | BULAN_AKTIF | CATATAN
+-----|----------|----------|-------|--------|-------------|--------------|------------|-----------|-------------|--------
+Bil TNB | Kos Elektrik | 150.00 | Tidak | Muar | 🏠 | ⚡ | 0 | Bulanan | | No Akaun: 123456
+Bil Air | Kos Rumah | 25.00 | Tidak | Muar | | 💧 | 0 | Bulanan | | No Akaun Air: A9988
+Bil Internet | Komunikasi & Topup | 118.90 | Ya | TTI | 🏢 | 🌐 | 0 | Tahunan | 7 | Akaun: TTI-8899
+Astro | Hiburan | 109.16 | Ya | Muar | | 📺 | 0 | Tahunan | 1 | No Akaun: 776655
 ```
 > `TETAP` = "Ya" jika amaun sentiasa sama setiap bulan. `IKON_LOKASI` cukup isi pada baris pertama setiap lokasi.
 > `FREKUENSI` boleh guna `Bulanan` atau `Tahunan`. `BULAN_AKTIF` hanya diisi untuk bil tahunan.
+> `CATATAN` ialah rujukan tetap bagi gabungan `LOKASI + NAMA`, contohnya nombor akaun bil. Catatan dipaparkan setiap bulan dan disalin ke rekod baharu semasa auto-jana bil.
 
 **Tab BIL_REKOD** — Header di baris pertama (baris kosong, akan auto-dijana):
 ```
 TAHUN | BULAN | LOKASI | NAMA | KATEGORI | AMAUN | STATUS | TARIKH_BAYAR | BIL_DITERIMA | TARIKH_BIL | CATATAN
 ```
 
-> `STATUS` menyimpan `Belum` atau `Dibayar`. `BIL_DITERIMA` menyimpan `Tidak` atau `Ya`. Apabila bil ditanda dibayar, sistem turut menandakan bil sebagai diterima. `TARIKH_BAYAR` dan `TARIKH_BIL` diisi secara automatik. `CATATAN` ialah medan manual/rujukan dan tidak ditulis oleh UI bil semasa.
+> `STATUS` menyimpan `Belum` atau `Dibayar`. `BIL_DITERIMA` menyimpan `Tidak` atau `Ya`. Apabila bil ditanda dibayar, sistem turut menandakan bil sebagai diterima. `TARIKH_BAYAR` dan `TARIKH_BIL` diisi secara automatik. `CATATAN` disalin daripada `BIL_TEMPLATE` semasa rekod baharu dijana.
 
 **Tab SOLAR** — Header di baris pertama:
 ```
@@ -172,6 +173,7 @@ Harga Cas Rumah dan Minyak digunakan di frontend dan backend, termasuk rekod puk
 - Nilai solar `Jana TNB`, `Guna TNB`, dan `Jana Apps` boleh bernilai `0` jika bacaan bulan tersebut memang sifar.
 - Status bil diterima adalah berasingan daripada status bayaran. Bil boleh diterima tetapi masih belum dibayar.
 - Menandakan bil sebagai dibayar turut menandakan `BIL_DITERIMA` sebagai `Ya`.
+- Catatan bil tetap disimpan di `BIL_TEMPLATE.CATATAN` mengikut `LOKASI + NAMA` dan dipaparkan pada item bil setiap bulan.
 - `JUMLAH_BAKI` solar reset semula pada permulaan tahun baharu; kumulatif solar dikira dalam sempadan tahun yang sama.
 - Rekod Solar boleh dipindah bulan/tahun semasa edit, tetapi gabungan `TAHUN + BULAN` masih mesti unik.
 
@@ -187,6 +189,8 @@ Harga Cas Rumah dan Minyak digunakan di frontend dan backend, termasuk rekod puk
 
 Perubahan amaun bil tidak menggunakan pending batch. Amaun disimpan terus apabila nilai input diubah; jika tersalah, masukkan amaun yang betul semula.
 
+Catatan bil dipaparkan di bawah nama bil. Untuk rekod lama yang belum menyimpan `BIL_REKOD.CATATAN`, paparan akan fallback kepada catatan daripada `BIL_TEMPLATE` berdasarkan `LOKASI + NAMA`.
+
 ## Customization
 
 ### Tukar Kategori Belanja
@@ -199,7 +203,7 @@ Edit senarai dalam tab `JENIS_CPO` di Google Sheet.
 
 ### Tukar Senarai Bil
 
-Edit senarai dalam tab `BIL_TEMPLATE` di Google Sheet. Setiap bulan baru, app akan auto-jana checklist dari template. Jika tab `BIL_TEMPLATE` atau `BIL_REKOD` tiada, app akan paparkan ralat jelas.
+Edit senarai dalam tab `BIL_TEMPLATE` di Google Sheet. Setiap bulan baru, app akan auto-jana checklist dari template dan menyalin `CATATAN` ke `BIL_REKOD`. Jika tab `BIL_TEMPLATE` atau `BIL_REKOD` tiada, app akan paparkan ralat jelas.
 
 ### Tukar Harga Default
 
@@ -216,6 +220,7 @@ Dalam `code.gs`, kemas kini constant backend yang digunakan untuk rekod pukal da
 - Memerlukan sambungan internet
 - Tailwind CSS, Chart.js, dan Google Fonts masih dimuatkan melalui CDN; paparan atau carta boleh terjejas jika CDN disekat oleh rangkaian/telco
 - Data disimpan dalam Google Sheet akaun sendiri
+- Rekod pukal Belanja dan EV/Minyak dihadkan kepada 50 rekod sekali simpan untuk elak timeout Apps Script
 - Tidak boleh deploy sebagai GitHub Pages (kerana bergantung kepada Google Apps Script)
 - Maksimum 50MB data (limitasi Google Apps Script)
 

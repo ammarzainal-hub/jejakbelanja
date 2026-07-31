@@ -643,7 +643,7 @@ function getBilTemplate() {
   if (cached) return JSON.parse(cached);
 
   if (!sheet || sheet.getLastRow() < 2) return [];
-  var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues();
+  var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 11).getValues();
   var result = data.map(function(row, idx) {
     var frekuensi = sanitize(row[8], 30) || 'Bulanan';
     return {
@@ -657,7 +657,8 @@ function getBilTemplate() {
       ikonKategori: row[6] || '',
       cycleHari: row[7] ? parseInt(row[7]) : '',
       frekuensi: frekuensi,
-      bulanAktif: row[9] ? parseInt(row[9]) : ''
+      bulanAktif: row[9] ? parseInt(row[9]) : '',
+      catatan: sanitize(row[10], 500)
     };
   }).filter(function(b) { return b.nama; });
 
@@ -688,7 +689,7 @@ function initBilMonth(month, year) {
     var freq = (t.frekuensi || 'Bulanan').toString().toLowerCase();
     var shouldCreate = freq !== 'tahunan' || parseInt(t.bulanAktif) === m;
     if (shouldCreate && !existing[getBilRecordKey(t.lokasi, t.nama)]) {
-      newRows.push([y, m, t.lokasi, t.nama, t.kategori, t.anggaran, 'Belum', '', 'Tidak', '', '']);
+      newRows.push([y, m, t.lokasi, t.nama, t.kategori, t.anggaran, 'Belum', '', 'Tidak', '', t.catatan || '']);
     }
   });
 
