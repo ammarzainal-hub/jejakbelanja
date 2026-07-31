@@ -725,7 +725,7 @@
     </div>
   </div>
 
-  <div id="expenseModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-30 hidden flex items-center justify-center p-4 text-left">
+  <div id="expenseModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 text-left">
     <div class="bg-white rounded-[2rem] w-full max-w-md p-8 shadow-2xl text-left">
       <h3 id="modalTitle" class="text-xl font-black mb-8 text-center uppercase text-slate-800 tracking-widest">Rekod Belanja</h3>
       <form id="expenseForm" onsubmit="handleFormSubmit(this); return false;" class="space-y-4">
@@ -784,6 +784,7 @@
   var activePaymentFilter = null;
     var DEFAULT_HOME_KWH_PRICE = 0.4443;
     var DEFAULT_PETROL_PRICE = 1.99;
+    var MAX_BULK_ROWS = 50;
     var transactionsData = [], displayedData = [], evData = [], petrolData = [], globalCategories = [], globalCPOs = [];
     var activeTab = 'summary';
     var sortConfig = { key: 'date', direction: 'desc' };
@@ -901,6 +902,15 @@ var CATEGORY_COLORS = {
       });
     }
 
+    document.addEventListener('click', function(e) {
+      var simpanBtn = e.target.closest('.js-simpan-bil-lokasi');
+      if (simpanBtn) { e.stopPropagation(); simpanBilLokasi(simpanBtn.dataset.lokasi); return; }
+      var batalBtn = e.target.closest('.js-batal-bil-lokasi');
+      if (batalBtn) { e.stopPropagation(); batalBilLokasi(batalBtn.dataset.lokasi); return; }
+      var semuaBtn = e.target.closest('.js-tandai-semua-lokasi');
+      if (semuaBtn) { e.stopPropagation(); tandaiSemuaLokasi(semuaBtn.dataset.lokasi); }
+    }, true);
+
     function formatLocalDate(date) {
       var d = date || new Date();
       var month = String(d.getMonth() + 1).padStart(2, '0');
@@ -985,7 +995,11 @@ var CATEGORY_COLORS = {
       var sel = document.getElementById('pageSelect');
       sel.innerHTML = '';
       for (var i = 1; i <= totalPages; i++) {
-        sel.innerHTML += '<option value="' + i + '"' + (i === currentPage ? ' selected' : '') + '>Muka ' + i + '</option>';
+        var opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = 'Muka ' + i;
+        opt.selected = i === currentPage;
+        sel.appendChild(opt);
       }
       document.getElementById('btnFirst').disabled = currentPage === 1;
       document.getElementById('btnPrev').disabled = currentPage === 1;
@@ -1873,7 +1887,11 @@ function confirmEVDelete(id) {
       var sel = document.getElementById('evPageSelect');
       sel.innerHTML = '';
       for (var i = 1; i <= evTotalPages; i++) {
-        sel.innerHTML += '<option value="' + i + '"' + (i === evCurrentPage ? ' selected' : '') + '>Muka ' + i + '</option>';
+        var opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = 'Muka ' + i;
+        opt.selected = i === evCurrentPage;
+        sel.appendChild(opt);
       }
       document.getElementById('evBtnFirst').disabled = evCurrentPage === 1;
       document.getElementById('evBtnPrev').disabled = evCurrentPage === 1;
@@ -2123,6 +2141,7 @@ function confirmPetrolDelete(id) {
       });
       if (error) { showToast(error, 'error'); return; }
       if (!rows.length) { showToast('Tiada data untuk disimpan', 'info'); return; }
+      if (rows.length > MAX_BULK_ROWS) { showToast('Maksimum ' + MAX_BULK_ROWS + ' rekod sekali simpan', 'error'); return; }
 
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -2308,6 +2327,7 @@ function confirmPetrolDelete(id) {
       if (a && parseFloat(a) > 0) rows.push({ date: date, category: r.querySelector('.bulk-cat').value, amount: a, note: r.querySelector('.bulk-note').value, payment: r.querySelector('.bulk-pay').value });
       });
       if (!rows.length) { showToast('Tiada data untuk disimpan', 'info'); return; }
+      if (rows.length > MAX_BULK_ROWS) { showToast('Maksimum ' + MAX_BULK_ROWS + ' rekod sekali simpan', 'error'); return; }
       showLoader(true);
       google.script.run
         .withSuccessHandler(function(result) {
@@ -2645,9 +2665,9 @@ function confirmPetrolDelete(id) {
         html += '<div class="flex items-center gap-3">';
         html += '<span class="text-xs font-bold ' + (allDone ? 'text-emerald-600' : 'text-amber-600') + '">' + l.done + '/' + l.count + (allDone ? ' ✅' : ' ⏳') + '</span>';
         html += '<span class="text-xs font-bold text-purple-600">RM ' + fRM(l.dibayar) + '</span>';
-        var safeLokArg = escapeHtml(escapeJsString(lok));
-        if (hasPending) html += '<button onclick="event.stopPropagation(); simpanBilLokasi(\'' + safeLokArg + '\')" class="text-[9px] font-black uppercase bg-amber-400 hover:bg-amber-500 text-white px-3 py-1 rounded-lg transition-all whitespace-nowrap animate-pulse">💾 Simpan</button> <button onclick="event.stopPropagation(); batalBilLokasi(\'' + safeLokArg + '\')" class="text-[9px] font-bold uppercase bg-slate-200 hover:bg-slate-300 text-slate-500 px-2 py-1 rounded-lg transition-all whitespace-nowrap">↩ Batal</button>';
-        if (!allDone && !hasPending) html += '<button onclick="tandaiSemuaLokasi(\'' + safeLokArg + '\')" class="text-[9px] font-bold uppercase bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded-lg transition-all whitespace-nowrap">✅ Semua</button>';
+        var safeLokAttr = escapeHtml(lok);
+        if (hasPending) html += '<button data-lokasi="' + safeLokAttr + '" class="js-simpan-bil-lokasi text-[9px] font-black uppercase bg-amber-400 hover:bg-amber-500 text-white px-3 py-1 rounded-lg transition-all whitespace-nowrap animate-pulse">💾 Simpan</button> <button data-lokasi="' + safeLokAttr + '" class="js-batal-bil-lokasi text-[9px] font-bold uppercase bg-slate-200 hover:bg-slate-300 text-slate-500 px-2 py-1 rounded-lg transition-all whitespace-nowrap">↩ Batal</button>';
+        if (!allDone && !hasPending) html += '<button data-lokasi="' + safeLokAttr + '" class="js-tandai-semua-lokasi text-[9px] font-bold uppercase bg-purple-100 hover:bg-purple-200 text-purple-600 px-2 py-1 rounded-lg transition-all whitespace-nowrap">✅ Semua</button>';
         html += '<svg class="bil-arrow w-4 h-4 text-slate-400 transform transition-transform ' + (allDone ? 'rotate-0' : 'rotate-180') + '" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
         html += '</div></div>';
 
@@ -2765,7 +2785,7 @@ function confirmPetrolDelete(id) {
             .getBilSummary(m, y);
         })
         .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
-        .batchUpdateBil(lokasiItems);
+        .batchUpdateBil(lokasiItems, m, y, lokasi);
     }
 
     function toggleBilItem(rowId, checkbox) {
