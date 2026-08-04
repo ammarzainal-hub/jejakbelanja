@@ -721,7 +721,7 @@
     <div class="bg-white rounded-[2.5rem] w-full max-w-4xl p-8 shadow-2xl max-h-[90vh] flex flex-col overflow-hidden text-left">
       <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 border-b pb-4"><h3 class="text-xl font-black uppercase tracking-widest text-slate-800">Rekod Pukal</h3><div class="flex items-center gap-3 bg-emerald-50 p-3 rounded-2xl border border-emerald-100"><label class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Tarikh:</label><input type="date" id="bulkDateMain" class="rounded-xl border-none bg-transparent font-bold text-sm outline-none"></div></div>
       <div class="flex-1 overflow-y-auto pr-2" id="bulkRowsContainer"></div>
-      <div class="mt-6 border-t pt-6 flex flex-col sm:flex-row gap-4"><button onclick="addBulkRow()" class="flex-1 py-3 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase text-slate-400 hover:bg-slate-50 text-center">+ Tambah Baris</button><div class="flex flex-[2] gap-3"><button onclick="toggleModal('bulkModal', false)" class="flex-1 py-4 text-slate-400 font-bold uppercase text-[10px] text-center">Batal</button><button onclick="submitBulkData()" class="flex-1 py-4 btn-gradient-slate text-white rounded-2xl font-black shadow-xl uppercase text-[10px] tracking-widest active:scale-95 text-center">Simpan Semua</button></div></div>
+  <div class="mt-6 border-t pt-6 flex flex-col sm:flex-row gap-4"><button onclick="addBulkRow()" class="flex-1 py-3 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase text-slate-400 hover:bg-slate-50 text-center">+ Tambah Baris</button><div class="flex flex-[2] gap-3"><button onclick="toggleModal('bulkModal', false)" class="flex-1 py-4 text-slate-400 font-bold uppercase text-[10px] text-center">Batal</button><button id="bulkSubmitBtn" onclick="submitBulkData()" class="flex-1 py-4 btn-gradient-slate text-white rounded-2xl font-black shadow-xl uppercase text-[10px] tracking-widest active:scale-95 text-center disabled:opacity-60 disabled:cursor-not-allowed">Simpan Semua</button></div></div>
     </div>
   </div>
 
@@ -1408,7 +1408,6 @@ var CATEGORY_COLORS = {
         var barW = (cat.total / maxTotal) * 100;
         
         var isMobile = window.innerWidth < 768;
-        var clickAction = isMobile ? "toggleCategoryExpand('" + escapeJsString(cat.name) + "')" : "event.target.closest('.toggle-expand') ? toggleCategoryExpand('" + escapeJsString(cat.name) + "') : null";
         
         html += '<div class="border border-slate-100 rounded-2xl overflow-hidden category-row">';
         
@@ -2317,6 +2316,7 @@ function confirmPetrolDelete(id) {
     }
 
     function submitBulkData() {
+      if (bulkSubmitInProgress) return;
       var date = document.getElementById('bulkDateMain').value;
       if (!date) { showToast('Tarikh diperlukan', 'error'); return; }
       if (!isValidDateString(date)) { showToast('Format tarikh mesti yyyy-mm-dd dan tarikh wujud', 'error'); return; }
@@ -2328,9 +2328,21 @@ function confirmPetrolDelete(id) {
       });
       if (!rows.length) { showToast('Tiada data untuk disimpan', 'info'); return; }
       if (rows.length > MAX_BULK_ROWS) { showToast('Maksimum ' + MAX_BULK_ROWS + ' rekod sekali simpan', 'error'); return; }
+      bulkSubmitInProgress = true;
+      var submitBtn = document.getElementById('bulkSubmitBtn');
+      var originalText = submitBtn ? submitBtn.innerText : 'Simpan Semua';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'MENYIMPAN...';
+      }
       showLoader(true);
       google.script.run
         .withSuccessHandler(function(result) {
+          bulkSubmitInProgress = false;
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalText;
+          }
           document.getElementById('bulkRowsContainer').innerHTML = '';
           for (var i = 0; i < 3; i++) addBulkRow();
           toggleModal('bulkModal', false);
@@ -2338,6 +2350,11 @@ function confirmPetrolDelete(id) {
           loadAllData();
         })
         .withFailureHandler(function(e) {
+          bulkSubmitInProgress = false;
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalText;
+          }
           showToast('Error: ' + e.message, 'error');
           showLoader(false);
         })
@@ -2409,6 +2426,10 @@ function confirmPetrolDelete(id) {
     var bilTemplate = [];
     var bilPendingChanges = {};
     var kolomBil = [];
+    var bulkSubmitInProgress = false;
+    var bilSaveInProgress = {};
+    var bilAmountSaveInProgress = {};
+    var deleteInProgress = false;
 
     function getExportExpenseData() {
       var sDate = document.getElementById('filterSpecificDate').value;
@@ -2760,6 +2781,7 @@ function confirmPetrolDelete(id) {
     }
 
     function simpanBilLokasi(lokasi) {
+      if (bilSaveInProgress[lokasi]) return;
       var m = document.getElementById('bilFilterMonth').value;
       var y = document.getElementById('bilFilterYear').value;
       var lokasiItems = [];
@@ -2772,9 +2794,13 @@ function confirmPetrolDelete(id) {
       }
       if (lokasiItems.length === 0) { showToast('Tiada perubahan untuk disimpan', 'info'); return; }
 
+      bilSaveInProgress[lokasi] = true;
+      setBilLokasiBusy(lokasi, true);
       showLoader(true);
       google.script.run
         .withSuccessHandler(function(r) {
+          bilSaveInProgress[lokasi] = false;
+          setBilLokasiBusy(lokasi, false);
           lokasiItems.forEach(function(item) { delete bilPendingChanges[item.rowId]; });
           showToast('💾 ' + r.count + ' bil disimpan untuk ' + lokasi, 'success');
           google.script.run
@@ -2786,8 +2812,21 @@ function confirmPetrolDelete(id) {
             .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
             .getBilSummary(m, y);
         })
-        .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); showLoader(false); })
+        .withFailureHandler(function(e) {
+          bilSaveInProgress[lokasi] = false;
+          setBilLokasiBusy(lokasi, false);
+          showToast('Error: ' + e.message, 'error');
+          showLoader(false);
+        })
         .batchUpdateBil(lokasiItems, m, y, lokasi);
+    }
+
+    function setBilLokasiBusy(lokasi, busy) {
+      document.querySelectorAll('.js-simpan-bil-lokasi, .js-batal-bil-lokasi, .js-tandai-semua-lokasi').forEach(function(btn) {
+        if (btn.dataset.lokasi === lokasi) {
+          btn.disabled = busy;
+        }
+      });
     }
 
     function toggleBilItem(rowId, checkbox) {
@@ -2818,12 +2857,17 @@ function confirmPetrolDelete(id) {
     }
 
     function editBilAmount(rowId, input) {
+      if (bilAmountSaveInProgress[rowId]) return;
       var val = parseFloat(input.value);
       if (isNaN(val) || val <= 0) { showToast('Amaun mesti lebih dari 0', 'error'); loadBilData(); return; }
       var m = document.getElementById('bilFilterMonth').value;
       var y = document.getElementById('bilFilterYear').value;
+      bilAmountSaveInProgress[rowId] = true;
+      input.disabled = true;
       google.script.run
         .withSuccessHandler(function() {
+          bilAmountSaveInProgress[rowId] = false;
+          input.disabled = false;
           showToast('Amaun dikemaskini', 'success');
           google.script.run
             .withSuccessHandler(function(summary) {
@@ -2833,7 +2877,11 @@ function confirmPetrolDelete(id) {
             .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); })
             .getBilSummary(m, y);
         })
-        .withFailureHandler(function(e) { showToast('Error: ' + e.message, 'error'); })
+        .withFailureHandler(function(e) {
+          bilAmountSaveInProgress[rowId] = false;
+          input.disabled = false;
+          showToast('Error: ' + e.message, 'error');
+        })
         .kemaskiniBilAmount(rowId, input.value);
     }
 
@@ -3175,11 +3223,13 @@ function confirmPetrolDelete(id) {
 
 function openDeleteModal(type, id, icon, label) {
   pendingDelete = { type: type, id: id };
+  deleteInProgress = false;
   
   var iconMap = {
     'expense': '💸',
     'ev':      '⚡',
-    'petrol':  '⛽'
+    'petrol':  '⛽',
+    'solar':   '☀️'
   };
   
   document.getElementById('deleteModalIcon').innerText = iconMap[type] || '🗑️';
@@ -3196,10 +3246,11 @@ function openDeleteModal(type, id, icon, label) {
 function closeDeleteModal() {
   document.getElementById('deleteModal').classList.add('hidden');
   pendingDelete = null;
+  deleteInProgress = false;
 }
 
 function executeDelete() {
-  if (!pendingDelete) return;
+  if (!pendingDelete || deleteInProgress) return;
   
   // ✅ Simpan dulu SEBELUM closeDeleteModal() null-kan pendingDelete
   var id = pendingDelete.id;
@@ -3211,15 +3262,18 @@ function executeDelete() {
   else if (type === 'petrol') funcName = 'deletePetrolRecord';
   else if (type === 'solar') funcName = 'deleteSolarRecord';
   
+  deleteInProgress = true;
   showLoader(true);
   closeDeleteModal();   // ← baru null-kan pendingDelete
   
   google.script.run
     .withSuccessHandler(function(result) {
+      deleteInProgress = false;
       showToast(result.message || 'Rekod berjaya dipadam', 'success');
       loadAllData();
     })
     .withFailureHandler(function(e) {
+      deleteInProgress = false;
       showToast('Error: ' + e.message, 'error');
       showLoader(false);
     })[funcName](id);

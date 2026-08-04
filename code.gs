@@ -124,6 +124,60 @@ function parseRowId(rowId, label) {
   return safeRowId;
 }
 
+function normalizeHeaderName(value) {
+  return sanitize(value, 200).toLowerCase().replace(/[\s_\-]+/g, '');
+}
+
+function sheetHasLeadingRecordId(sheet) {
+  if (!sheet) return false;
+  var firstCell = sheet.getRange(1, 1).getValue();
+  return normalizeHeaderName(firstCell) === 'recordid';
+}
+
+function getSheetRecordOffset(sheet) {
+  return sheetHasLeadingRecordId(sheet) ? 1 : 0;
+}
+
+function generateRecordId(prefix) {
+  var stamp = Utilities.formatDate(new Date(), 'GMT+8', 'yyyyMMddHHmmss');
+  var rand = Math.floor(Math.random() * 1000000).toString(36);
+  return sanitize(prefix || 'REC', 20) + '-' + stamp + '-' + rand;
+}
+
+function fillMissingRecordIds(sheetName, prefix, baseColumns) {
+  var sheet = getOptionalSheet(sheetName);
+  if (!sheet || !sheetHasLeadingRecordId(sheet) || sheet.getLastRow() < 2) {
+    return { sheet: sheetName, updated: 0 };
+  }
+
+  var width = baseColumns + 1;
+  var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, width).getValues();
+  var updated = 0;
+
+  rows = rows.map(function(row) {
+    if (!row[0]) {
+      row[0] = generateRecordId(prefix);
+      updated++;
+    }
+    return row;
+  });
+
+  if (updated > 0) {
+    sheet.getRange(2, 1, rows.length, width).setValues(rows);
+  }
+
+  return { sheet: sheetName, updated: updated };
+}
+
+function migrateRecordIds() {
+  return [
+    fillMissingRecordIds(DATA_SHEET, 'EXP', 5),
+    fillMissingRecordIds(EV_SHEET, 'EV', 7),
+    fillMissingRecordIds(PETROL_SHEET, 'PET', 6),
+    fillMissingRecordIds(SOLAR_SHEET, 'SOL', 8)
+  ];
+}
+
 function assertExistingRow(sheet, rowId, label) {
   var safeRowId = parseRowId(rowId, label);
   if (safeRowId > sheet.getLastRow()) throw new Error((label || 'ID rekod') + ' tidak wujud');
@@ -215,8 +269,19 @@ function getCategories() {
 function getTransactions(month, year) {
   var sheet = getOptionalSheet(DATA_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues()
-.map(function(row, index) { return { rowId: index + 2, date: row[0], amount: row[1], category: row[2], note: row[3], payment: row[4] }; })
+  var offset = getSheetRecordOffset(sheet);
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 5 + offset).getValues()
+    .map(function(row, index) {
+      return {
+        rowId: index + 2,
+        recordId: offset ? (row[0] || '') : '',
+        date: row[offset ? 1 : 0],
+        amount: row[offset ? 2 : 1],
+        category: row[offset ? 3 : 2],
+        note: row[offset ? 4 : 3],
+        payment: row[offset ? 5 : 4]
+      };
+    })
     .filter(function(item) { var d = new Date(item.date); return (month ? (d.getMonth()+1) == month : true) && (d.getFullYear() == year); })
     .map(function(item) { return Object.assign({}, item, { date: item.date instanceof Date ? Utilities.formatDate(item.date,'GMT+8','yyyy-MM-dd') : item.date }); });
 }
@@ -232,9 +297,10 @@ function getYearlyData(year) {
     cacheSet(ck, JSON.stringify(data));
     return data;
   }
-  sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues().forEach(function(row) {
-    var d = new Date(row[0]);
-    if (d.getFullYear() == year) data[d.getMonth()] += parseSheetNumberOrZero(row[1], 'Amaun belanja');
+  var offset = getSheetRecordOffset(sheet);
+  sheet.getRange(2, 1, sheet.getLastRow() - 1, 2 + offset).getValues().forEach(function(row) {
+    var d = new Date(row[offset ? 1 : 0]);
+    if (d.getFullYear() == year) data[d.getMonth()] += parseSheetNumberOrZero(row[offset ? 2 : 1], 'Amaun belanja');
   });
   cacheSet(ck, JSON.stringify(data));
   return data;
@@ -270,16 +336,27 @@ function getCategoryTrend(month, year) {
     };
   });
   
-  var allData = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues();
+  var offset = getSheetRecordOffset(sheet);
+  var allData = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5 + offset).getValues();
   
   allData.forEach(function(row) {
-    var d = new Date(row[0]);
+    var d = new Date(row[offset ? 1 : 0]);
     var rowMonth = d.getMonth() + 1;
     var rowYear = d.getFullYear();
-    var amount = parseSheetNumberOrZero(row[1], 'Amaun belanja');
-    var category = row[2];
+    var amount = parseSheetNumberOrZero(row[offset ? 2 : 1], 'Amaun belanja');
+    var category = row[offset ? 3 : 2];
     
-    if (!result[category]) return;
+    if (!result[category]) {
+      result[category] = {
+        icon: '🕵🏼',
+        months: [
+          { month: getPreviousMonth(m, y, 2), total: 0, count: 0 },
+          { month: getPreviousMonth(m, y, 1), total: 0, count: 0 },
+          { month: { m: m, y: y }, total: 0, count: 0 }
+        ],
+        missingFromCategorySheet: true
+      };
+    }
     
     result[category].months.forEach(function(monthData) {
       if (monthData.month.m == rowMonth && monthData.month.y == rowYear) {
@@ -318,8 +395,10 @@ function addTransaction(data) {
   var safeNote = sanitize(data.note, 500);
   var safePayment = sanitize(data.payment, 50) || '💵 Cash';
   
-  getRequiredSheet(DATA_SHEET)
-.appendRow([toSheetDate(data.date), safeAmount, safeCategory, safeNote, safePayment]);
+  var sheet = getRequiredSheet(DATA_SHEET);
+  var row = [toSheetDate(data.date), safeAmount, safeCategory, safeNote, safePayment];
+  if (sheetHasLeadingRecordId(sheet)) row.unshift(generateRecordId('EXP'));
+  sheet.appendRow(row);
 invalidateExpenseCache();
   return { status: 'success', message: 'Transaksi berjaya ditambah' };
 }
@@ -338,9 +417,13 @@ function updateTransaction(data) {
   var safeNote = sanitize(data.note, 500);
   var safePayment = sanitize(data.payment, 50) || '💵 Cash';
   
+  var offset = sheetHasLeadingRecordId(sheet) ? 1 : 0;
+  var current = sheet.getRange(safeRowId, 1, 1, 5 + offset).getValues()[0];
+  var row = [toSheetDate(data.date), safeAmount, safeCategory, safeNote, safePayment];
+  if (offset) row.unshift(current[0] || sanitize(data.recordId || '', 100) || generateRecordId('EXP'));
   sheet
-    .getRange(safeRowId, 1, 1, 5)
-.setValues([[toSheetDate(data.date), safeAmount, safeCategory, safeNote, safePayment]]);
+    .getRange(safeRowId, 1, 1, 5 + offset)
+    .setValues([row]);
 invalidateExpenseCache();
   return { status: 'success', message: 'Transaksi berjaya dikemaskini' };
 }
@@ -379,7 +462,11 @@ dataToAppend.push([
 ]);
   }
   
-  sheet.getRange(sheet.getLastRow() + 1, 1, dataToAppend.length, 5).setValues(dataToAppend);
+  var offset = sheetHasLeadingRecordId(sheet) ? 1 : 0;
+  var rows = dataToAppend.map(function(r) {
+    return offset ? [generateRecordId('EXP')].concat(r) : r;
+  });
+  sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, 5 + offset).setValues(rows);
   invalidateExpenseCache();
   return { status: 'success', message: dataToAppend.length + ' transaksi berjaya ditambah' };
 }
@@ -433,8 +520,10 @@ function addEVCharging(data) {
   if (safeType !== 'Rumah' && !cpo) throw new Error('CPO diperlukan untuk cas luar');
   var location = safeType === 'Rumah' ? 'Kediaman' : sanitize(data.location, 200);
   
-  getRequiredSheet(EV_SHEET)
-    .appendRow([toSheetDate(data.date), safeType, cpo, safeKwh, safePrice, location, total]);
+  var sheet = getRequiredSheet(EV_SHEET);
+  var row = [toSheetDate(data.date), safeType, cpo, safeKwh, safePrice, location, total];
+  if (sheetHasLeadingRecordId(sheet)) row.unshift(generateRecordId('EV'));
+  sheet.appendRow(row);
     invalidateEVCache();
   return { status: 'success', message: 'Rekod cas berjaya ditambah' };
 }
@@ -457,9 +546,13 @@ function updateEVCharging(data) {
   if (safeType !== 'Rumah' && !cpo) throw new Error('CPO diperlukan untuk cas luar');
   var location = safeType === 'Rumah' ? 'Kediaman' : sanitize(data.location, 200);
   
+  var offset = sheetHasLeadingRecordId(sheet) ? 1 : 0;
+  var current = sheet.getRange(safeRowId, 1, 1, 7 + offset).getValues()[0];
+  var row = [toSheetDate(data.date), safeType, cpo, safeKwh, safePrice, location, total];
+  if (offset) row.unshift(current[0] || sanitize(data.recordId || '', 100) || generateRecordId('EV'));
   sheet
-    .getRange(safeRowId, 1, 1, 7)
-    .setValues([[toSheetDate(data.date), safeType, cpo, safeKwh, safePrice, location, total]]);
+    .getRange(safeRowId, 1, 1, 7 + offset)
+    .setValues([row]);
     invalidateEVCache();
   return { status: 'success', message: 'Rekod cas berjaya dikemaskini' };
 }
@@ -467,8 +560,11 @@ function updateEVCharging(data) {
 function getEVData(month, year) {
   var sheet = getOptionalSheet(EV_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues()
-    .map(function(row, index) { return { rowId: index+2, date: row[0], type: row[1], cpo: row[2], kwh: row[3], pricePerKwh: row[4], location: row[5], total: row[6] }; })
+  var offset = getSheetRecordOffset(sheet);
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 7 + offset).getValues()
+    .map(function(row, index) {
+      return { rowId: index+2, recordId: offset ? (row[0] || '') : '', date: row[offset ? 1 : 0], type: row[offset ? 2 : 1], cpo: row[offset ? 3 : 2], kwh: row[offset ? 4 : 3], pricePerKwh: row[offset ? 5 : 4], location: row[offset ? 6 : 5], total: row[offset ? 7 : 6] };
+    })
     .filter(function(item) { var d = new Date(item.date); return (month ? (d.getMonth()+1)==month : true) && (d.getFullYear()==year); })
     .map(function(item) { return Object.assign({}, item, { date: item.date instanceof Date ? Utilities.formatDate(item.date,'GMT+8','yyyy-MM-dd') : item.date }); })
     .reverse();
@@ -491,16 +587,18 @@ function getEVYearlyData(year) {
   var data = Array(12).fill(0);
   var evSheet = getOptionalSheet(EV_SHEET);
   if (evSheet && evSheet.getLastRow() >= 2) {
-    evSheet.getRange(2, 1, evSheet.getLastRow()-1, 7).getValues().forEach(function(row) {
-      var d = new Date(row[0]);
-      if (d.getFullYear() == year) data[d.getMonth()] += parseSheetNumberOrZero(row[6], 'Jumlah EV');
+    var evOffset = getSheetRecordOffset(evSheet);
+    evSheet.getRange(2, 1, evSheet.getLastRow()-1, 7 + evOffset).getValues().forEach(function(row) {
+      var d = new Date(row[evOffset ? 1 : 0]);
+      if (d.getFullYear() == year) data[d.getMonth()] += parseSheetNumberOrZero(row[evOffset ? 7 : 6], 'Jumlah EV');
     });
   }
   var petrolSheet = getOptionalSheet(PETROL_SHEET);
   if (petrolSheet && petrolSheet.getLastRow() >= 2) {
-    petrolSheet.getRange(2, 1, petrolSheet.getLastRow()-1, 5).getValues().forEach(function(row) {
-      var d = new Date(row[0]);
-      if (d.getFullYear() == year) data[d.getMonth()] += parseSheetNumberOrZero(row[4], 'Jumlah minyak');
+    var petrolOffset = getSheetRecordOffset(petrolSheet);
+    petrolSheet.getRange(2, 1, petrolSheet.getLastRow()-1, 5 + petrolOffset).getValues().forEach(function(row) {
+      var d = new Date(row[petrolOffset ? 1 : 0]);
+      if (d.getFullYear() == year) data[d.getMonth()] += parseSheetNumberOrZero(row[petrolOffset ? 5 : 4], 'Jumlah minyak');
     });
   }
   cacheSet(ck, JSON.stringify(data));
@@ -532,8 +630,10 @@ function addPetrolRecord(data) {
   var total = liter * price;
   var safeNote = sanitize(data.note, 500);
   
-  getRequiredSheet(PETROL_SHEET)
-    .appendRow([toSheetDate(data.date), safeStation, liter, price, total, safeNote]);
+  var sheet = getRequiredSheet(PETROL_SHEET);
+  var row = [toSheetDate(data.date), safeStation, liter, price, total, safeNote];
+  if (sheetHasLeadingRecordId(sheet)) row.unshift(generateRecordId('PET'));
+  sheet.appendRow(row);
     invalidateEVCache();
   return { status: 'success', message: 'Rekod minyak berjaya ditambah' };
 }
@@ -553,9 +653,13 @@ function updatePetrolRecord(data) {
   var total = liter * price;
   var safeNote = sanitize(data.note, 500);
   
+  var offset = sheetHasLeadingRecordId(sheet) ? 1 : 0;
+  var current = sheet.getRange(safeRowId, 1, 1, 6 + offset).getValues()[0];
+  var row = [toSheetDate(data.date), safeStation, liter, price, total, safeNote];
+  if (offset) row.unshift(current[0] || sanitize(data.recordId || '', 100) || generateRecordId('PET'));
   sheet
-    .getRange(safeRowId, 1, 1, 6)
-    .setValues([[toSheetDate(data.date), safeStation, liter, price, total, safeNote]]);
+    .getRange(safeRowId, 1, 1, 6 + offset)
+    .setValues([row]);
     invalidateEVCache();
   return { status: 'success', message: 'Rekod minyak berjaya dikemaskini' };
 }
@@ -563,8 +667,9 @@ function updatePetrolRecord(data) {
 function getPetrolData(month, year) {
   var sheet = getOptionalSheet(PETROL_SHEET);
   if (!sheet || sheet.getLastRow() < 2) return [];
-  return sheet.getRange(2, 1, sheet.getLastRow()-1, 6).getValues()
-    .map(function(row, index) { return { rowId: index+2, date: row[0], station: row[1], liter: row[2], pricePerLiter: row[3], total: row[4], note: row[5] }; })
+  var offset = getSheetRecordOffset(sheet);
+  return sheet.getRange(2, 1, sheet.getLastRow()-1, 6 + offset).getValues()
+    .map(function(row, index) { return { rowId: index+2, recordId: offset ? (row[0] || '') : '', date: row[offset ? 1 : 0], station: row[offset ? 2 : 1], liter: row[offset ? 3 : 2], pricePerLiter: row[offset ? 4 : 3], total: row[offset ? 5 : 4], note: row[offset ? 6 : 5] }; })
     .filter(function(item) { var d = new Date(item.date); return (month ? (d.getMonth()+1)==month : true) && (d.getFullYear()==year); })
     .map(function(item) { return Object.assign({}, item, { date: item.date instanceof Date ? Utilities.formatDate(item.date,'GMT+8','yyyy-MM-dd') : item.date }); })
     .reverse();
@@ -589,6 +694,8 @@ function addBulkEVRecords(rows) {
   var petrolRows = [];
   var needsEV = false;
   var needsPetrol = false;
+  var evSheet = null;
+  var petrolSheet = null;
 
   rows.forEach(function(row, index) {
     var label = 'Baris ' + (index + 1) + ': ';
@@ -617,14 +724,21 @@ function addBulkEVRecords(rows) {
     }
   });
 
-  var evSheet = needsEV ? getRequiredSheet(EV_SHEET) : null;
-  var petrolSheet = needsPetrol ? getRequiredSheet(PETROL_SHEET) : null;
+  evSheet = needsEV ? getRequiredSheet(EV_SHEET) : null;
+  petrolSheet = needsPetrol ? getRequiredSheet(PETROL_SHEET) : null;
+
+  if (evSheet && sheetHasLeadingRecordId(evSheet)) {
+    evRows = evRows.map(function(r) { return [generateRecordId('EV')].concat(r); });
+  }
+  if (petrolSheet && sheetHasLeadingRecordId(petrolSheet)) {
+    petrolRows = petrolRows.map(function(r) { return [generateRecordId('PET')].concat(r); });
+  }
 
   if (evRows.length > 0) {
-    evSheet.getRange(evSheet.getLastRow() + 1, 1, evRows.length, 7).setValues(evRows);
+    evSheet.getRange(evSheet.getLastRow() + 1, 1, evRows.length, evRows[0].length).setValues(evRows);
   }
   if (petrolRows.length > 0) {
-    petrolSheet.getRange(petrolSheet.getLastRow() + 1, 1, petrolRows.length, 6).setValues(petrolRows);
+    petrolSheet.getRange(petrolSheet.getLastRow() + 1, 1, petrolRows.length, petrolRows[0].length).setValues(petrolRows);
   }
 
   invalidateEVCache();
@@ -836,18 +950,20 @@ function getSolarData(month, year) {
     if (month && year) cacheSet(ck, JSON.stringify([]), TTL_SHORT);
     return [];
   }
-  var result = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues()
+  var offset = getSheetRecordOffset(sheet);
+  var result = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8 + offset).getValues()
     .map(function(row, index) {
       return {
         rowId: index + 2,
-        tahun: parseInt(row[0]),
-        bulan: parseInt(row[1]),
-        janaTNB: parseSheetNumberOrZero(row[2], 'Jana TNB'),
-        gunaTNB: parseSheetNumberOrZero(row[3], 'Guna TNB'),
-        baki: parseSheetNumberOrZero(row[4], 'Baki solar'),
-        jumlahBaki: parseSheetNumberOrZero(row[5], 'Jumlah baki solar'),
-        janaApps: parseSheetNumberOrZero(row[6], 'Jana Apps'),
-        luarGrid: parseSheetNumberOrZero(row[7], 'Luar Grid')
+        recordId: offset ? (row[0] || '') : '',
+        tahun: parseInt(row[offset ? 1 : 0]),
+        bulan: parseInt(row[offset ? 2 : 1]),
+        janaTNB: parseSheetNumberOrZero(row[offset ? 3 : 2], 'Jana TNB'),
+        gunaTNB: parseSheetNumberOrZero(row[offset ? 4 : 3], 'Guna TNB'),
+        baki: parseSheetNumberOrZero(row[offset ? 5 : 4], 'Baki solar'),
+        jumlahBaki: parseSheetNumberOrZero(row[offset ? 6 : 5], 'Jumlah baki solar'),
+        janaApps: parseSheetNumberOrZero(row[offset ? 7 : 6], 'Jana Apps'),
+        luarGrid: parseSheetNumberOrZero(row[offset ? 8 : 7], 'Luar Grid')
       };
     })
     .filter(function(item) {
@@ -863,11 +979,12 @@ function getSolarData(month, year) {
 
 function findSolarRecordRow(sheet, tahun, bulan, excludeRowId) {
   if (!sheet || sheet.getLastRow() < 2) return null;
-  var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues();
+  var offset = getSheetRecordOffset(sheet);
+  var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2 + offset).getValues();
   for (var i = 0; i < rows.length; i++) {
     var rowId = i + 2;
     if (excludeRowId && rowId === excludeRowId) continue;
-    if (parseInt(rows[i][0]) === parseInt(tahun) && parseInt(rows[i][1]) === parseInt(bulan)) {
+    if (parseInt(rows[i][offset ? 1 : 0]) === parseInt(tahun) && parseInt(rows[i][offset ? 2 : 1]) === parseInt(bulan)) {
       return rowId;
     }
   }
@@ -892,7 +1009,9 @@ function addSolarRecord(data) {
   if (findSolarRecordRow(sheet, tahun, bulan)) {
     throw new Error('Rekod solar untuk bulan/tahun ini sudah wujud. Sila edit rekod sedia ada.');
   }
-  sheet.appendRow([tahun, bulan, janaTNB, gunaTNB, baki, 0, janaApps, luarGrid]);
+  var row = [tahun, bulan, janaTNB, gunaTNB, baki, 0, janaApps, luarGrid];
+  if (sheetHasLeadingRecordId(sheet)) row.unshift(generateRecordId('SOL'));
+  sheet.appendRow(row);
   recalculateSolarRunningBalance();
   invalidateSolarCache();
   return { status: 'success', message: 'Rekod solar berjaya ditambah' };
@@ -916,7 +1035,11 @@ function updateSolarRecord(data) {
     throw new Error('Rekod solar untuk bulan/tahun ini sudah wujud. Sila pilih bulan lain atau edit rekod sedia ada.');
   }
 
-  sheet.getRange(safeRowId, 1, 1, 8).setValues([[tahun, bulan, janaTNB, gunaTNB, baki, 0, janaApps, luarGrid]]);
+  var offset = sheetHasLeadingRecordId(sheet) ? 1 : 0;
+  var current = sheet.getRange(safeRowId, 1, 1, 8 + offset).getValues()[0];
+  var row = [tahun, bulan, janaTNB, gunaTNB, baki, 0, janaApps, luarGrid];
+  if (offset) row.unshift(current[0] || sanitize(data.recordId || '', 100) || generateRecordId('SOL'));
+  sheet.getRange(safeRowId, 1, 1, 8 + offset).setValues([row]);
   recalculateSolarRunningBalance();
   invalidateSolarCache();
   return { status: 'success', message: 'Rekod solar berjaya dikemaskini' };
@@ -935,7 +1058,8 @@ function recalculateSolarRunningBalance() {
   var sheet = getRequiredSheet(SOLAR_SHEET);
   if (sheet.getLastRow() < 2) return;
 
-  var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues().map(function(row, index) {
+  var offset = getSheetRecordOffset(sheet);
+  var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8 + offset).getValues().map(function(row, index) {
     return { rowId: index + 2, values: row };
   });
 
@@ -953,18 +1077,18 @@ function recalculateSolarRunningBalance() {
   var currentYear = null;
   rows.forEach(function(item) {
     var row = item.values;
-    var rowYear = parseInt(row[0]);
+    var rowYear = parseInt(row[offset ? 1 : 0]);
     if (currentYear !== rowYear) {
       currentYear = rowYear;
       running = 0;
     }
-    var janaTNB = parseSheetNumberOrZero(row[2], 'Jana TNB');
-    var gunaTNB = parseSheetNumberOrZero(row[3], 'Guna TNB');
-    var janaApps = parseSheetNumberOrZero(row[6], 'Jana Apps');
+    var janaTNB = parseSheetNumberOrZero(row[offset ? 3 : 2], 'Jana TNB');
+    var gunaTNB = parseSheetNumberOrZero(row[offset ? 4 : 3], 'Guna TNB');
+    var janaApps = parseSheetNumberOrZero(row[offset ? 7 : 6], 'Jana Apps');
     var baki = janaTNB - gunaTNB;
     var luarGrid = janaApps - janaTNB;
     running += baki;
-    sheet.getRange(item.rowId, 5, 1, 4).setValues([[baki, running, janaApps, luarGrid]]);
+    sheet.getRange(item.rowId, offset ? 6 : 5, 1, 4).setValues([[baki, running, janaApps, luarGrid]]);
   });
 }
 
@@ -979,17 +1103,18 @@ function getSolarYearlyData(year) {
     cacheSet(ck, JSON.stringify(data), TTL_SHORT);
     return data;
   }
-  var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues();
+  var offset = getSheetRecordOffset(sheet);
+  var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8 + offset).getValues();
   var running = 0;
   for (var i = 0; i < 12; i++) {
     var found = false;
     rows.forEach(function(r) {
-      if (parseInt(r[0]) == year && parseInt(r[1]) === i + 1) {
-        data.jana[i] = parseSheetNumberOrZero(r[2], 'Jana TNB');
-        data.guna[i] = parseSheetNumberOrZero(r[3], 'Guna TNB');
-        data.baki[i] = parseSheetNumberOrZero(r[4], 'Baki solar');
-        data.luarGrid[i] = parseSheetNumberOrZero(r[7], 'Luar Grid');
-        running += parseSheetNumberOrZero(r[4], 'Baki solar');
+      if (parseInt(r[offset ? 1 : 0]) == year && parseInt(r[offset ? 2 : 1]) === i + 1) {
+        data.jana[i] = parseSheetNumberOrZero(r[offset ? 3 : 2], 'Jana TNB');
+        data.guna[i] = parseSheetNumberOrZero(r[offset ? 4 : 3], 'Guna TNB');
+        data.baki[i] = parseSheetNumberOrZero(r[offset ? 5 : 4], 'Baki solar');
+        data.luarGrid[i] = parseSheetNumberOrZero(r[offset ? 8 : 7], 'Luar Grid');
+        running += parseSheetNumberOrZero(r[offset ? 5 : 4], 'Baki solar');
         found = true;
       }
     });
