@@ -23,6 +23,8 @@
 - Escape semua nilai daripada Google Sheet sebelum dimasukkan ke `innerHTML`.
 - CSV export mesti escape tanda petik dan lindungi nilai yang bermula dengan `=`, `+`, `-`, atau `@` supaya tidak ditafsir sebagai formula spreadsheet.
 - Selepas tambah, edit, atau padam rekod solar, kira semula `JUMLAH_BAKI` supaya baki kumulatif kekal tepat.
+- `DATA`, `EV_CHARGING`, `MINYAK`, dan `SOLAR` menyokong kolum pertama `RECORD_ID`; rekod baharu mesti menjana ID automatik jika header ini wujud.
+- `migrateRecordIds()` digunakan untuk mengisi `RECORD_ID` kosong pada rekod lama dalam `DATA`, `EV_CHARGING`, `MINYAK`, dan `SOLAR`.
 - `parseRowId()` dan semakan row wujud wajib digunakan untuk semua operasi edit/padam; `rowId < 2` mesti ditolak supaya header sheet tidak boleh terpadam.
 - Validasi tarikh wajib ketat pada format `yyyy-mm-dd` dan menolak tarikh tidak wujud.
 - Rekod bertarikh harian tidak boleh menggunakan tarikh masa hadapan, termasuk rekod pukal.

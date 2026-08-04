@@ -50,8 +50,9 @@ Buat 8 sheet tabs dengan nama berikut (case-sensitive):
 
 **Tab DATA** — Header di baris pertama:
 ```
-Tarikh | Amaun | Kategori | Nota | Bayaran
+RECORD_ID | Tarikh | Amaun | Kategori | Nota | Bayaran
 ```
+> `RECORD_ID` dijana automatik oleh Apps Script. Jangan isi manual untuk rekod baharu.
 
 **Tab KATEGORI** — Header di baris pertama, kemudian isi kategori:
 ```
@@ -67,7 +68,7 @@ Lain-lain | 📦
 
 **Tab EV_CHARGING** — Header di baris pertama:
 ```
-Tarikh | Jenis | CPO | kWh | Harga/kWh | Lokasi | Jumlah
+RECORD_ID | Tarikh | Jenis | CPO | kWh | Harga/kWh | Lokasi | Jumlah
 ```
 
 **Tab JENIS_CPO** — Header di baris pertama, kemudian isi senarai CPO:
@@ -84,7 +85,7 @@ JomCas
 
 **Tab MINYAK** — Header di baris pertama:
 ```
-Tarikh | Stesen | Liter | Harga/Liter | Jumlah | Nota
+RECORD_ID | Tarikh | Stesen | Liter | Harga/Liter | Jumlah | Nota
 ```
 
 **Tab BIL_TEMPLATE** — Header di baris pertama, kemudian isi senarai bil:
@@ -109,7 +110,7 @@ TAHUN | BULAN | LOKASI | NAMA | KATEGORI | AMAUN | STATUS | TARIKH_BAYAR | BIL_D
 
 **Tab SOLAR** — Header di baris pertama:
 ```
-TAHUN | BULAN | JANA_TNB | GUNA_TNB | BAKI | JUMLAH_BAKI | JANA_APPS | GUNA_LUAR_GRID
+RECORD_ID | TAHUN | BULAN | JANA_TNB | GUNA_TNB | BAKI | JUMLAH_BAKI | JANA_APPS | GUNA_LUAR_GRID
 ```
 > `BAKI`, `JUMLAH_BAKI`, dan `GUNA_LUAR_GRID` dikira secara automatik. Kamu cuma isi `TAHUN`, `BULAN`, `JANA_TNB`, `GUNA_TNB`, dan `JANA_APPS`.
 
@@ -121,6 +122,12 @@ TAHUN | BULAN | JANA_TNB | GUNA_TNB | BAKI | JUMLAH_BAKI | JANA_APPS | GUNA_LUAR
 4. Klik **File → New → HTML** dan namakan `index`
 5. Copy keseluruhan kandungan `index.html` dari repo ini dan paste
 6. Klik **Save** (ikon disket)
+
+### Langkah 4A: Migrasi RECORD_ID
+
+Jika sheet sudah mempunyai kolum `RECORD_ID`, jalankan fungsi `migrateRecordIds()` sekali dalam Apps Script selepas deploy atau selepas menambah kolum tersebut. Fungsi ini mengisi ID untuk rekod lama dalam `DATA`, `EV_CHARGING`, `MINYAK`, dan `SOLAR`.
+
+`BIL_REKOD` tidak menggunakan `RECORD_ID`; kekalkan struktur 11 kolum asal.
 
 ### Langkah 5: Deploy sebagai Web App
 

@@ -12,6 +12,8 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - CSV export escape tanda petik berganda dan melindungi nilai bermula `=`, `+`, `-`, atau `@` supaya tidak ditafsir sebagai formula spreadsheet.
 - Output dinamik daripada Google Sheet di-escape sebelum dimasukkan ke `innerHTML`.
 - Harga minyak yang dihantar ke backend mesti lebih daripada `0`; nilai kosong masih menggunakan `DEFAULT_PETROL_PRICE` sebagai fallback.
+- `DATA`, `EV_CHARGING`, `MINYAK`, dan `SOLAR` menyokong kolum pertama `RECORD_ID` untuk ID rekod kekal.
+- `migrateRecordIds()` boleh dijalankan sekali untuk mengisi `RECORD_ID` kosong pada rekod lama.
 
 ## Belanja Harian
 
@@ -22,8 +24,10 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Pagination ditetapkan kepada 25 rekod per halaman.
 - Dropdown pagination dijana dengan DOM API, bukan `innerHTML +=`.
 - Rekod pukal Belanja dihadkan kepada maksimum 50 rekod sekali simpan.
+- Rekod pukal Belanja mempunyai guard double-submit supaya batch tidak tersimpan dua kali akibat klik berganda.
 - Kategori, trend, dan data tahunan menggunakan cache.
 - Cache trend kategori menggunakan key bulan/tahun sebenar selepas fallback bulan semasa dikira.
+- Trend kategori memaparkan kategori fallback jika transaksi lama menggunakan kategori yang tiada lagi dalam sheet `KATEGORI`.
 
 ## EV Cas & Minyak
 
@@ -48,11 +52,13 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Status bil diterima berasingan daripada status bayaran.
 - Menanda bil sebagai dibayar turut menetapkan `BIL_DITERIMA` kepada `Ya`.
 - Perubahan `Bil Ada`, checkbox bayaran, dan `Semua` dipending di client dan disimpan secara batch mengikut lokasi.
+- Simpan batch status bil mengikut lokasi mempunyai guard double-submit di client.
 - `batchUpdateBil()` mengesahkan row wujud, bulan, tahun, lokasi, `STATUS`, dan `BIL_DITERIMA` sebelum sebarang tulis ke sheet supaya batch tidak tersimpan separuh atau tersasar lokasi.
 - `BIL_TEMPLATE` dibaca sebagai sheet wajib supaya konfigurasi sheet yang hilang memaparkan ralat jelas.
 - `BIL_REKOD` juga dibaca sebagai sheet wajib supaya sheet yang hilang tidak disenyapkan sebagai senarai kosong.
 - Fungsi bil lama `toggolBilStatus()`, `toggolBilDiterima()`, dan `tandaiSemuaBilLokasi()` dinyahaktifkan dan hanya memberi error jika dipanggil.
 - Selepas amaun bil tak tetap disimpan, ringkasan bil dimuat semula supaya jumlah tepat.
+- Input amaun bil dilumpuhkan sementara semasa simpan supaya request amaun tidak bertindih.
 
 ## Solar Tracker
 
@@ -64,6 +70,7 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Selepas tambah, edit, atau padam rekod Solar, `JUMLAH_BAKI` dikira semula.
 - `JUMLAH_BAKI` reset pada permulaan tahun baharu; kumulatif Solar dikira dalam sempadan tahun yang sama.
 - Data Solar bulanan dan tahunan menggunakan cache.
+- Modal padam Solar menggunakan ikon Solar dalam `iconMap` yang sama dengan modul lain.
 
 ## Ringkasan
 
