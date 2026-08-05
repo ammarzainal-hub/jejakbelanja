@@ -938,6 +938,16 @@ var CATEGORY_COLORS = {
       return d > today;
     }
 
+    function getDateParts(dateStr) {
+      var parts = String(dateStr || '').split('-');
+      return { year: Number(parts[0]), month: Number(parts[1]), day: Number(parts[2]) };
+    }
+
+    function formatShortDate(dateStr) {
+      var date = getDateParts(dateStr);
+      return date.day + ' ' + MONTHS[date.month - 1];
+    }
+
     function getSupportedYear(year) {
       var y = parseInt(year, 10);
       if (isNaN(y) || y < 2026) return 2026;
@@ -1018,17 +1028,21 @@ var CATEGORY_COLORS = {
       if (isFutureDate(data.date)) return { valid: false, message: 'Tarikh tidak boleh pada masa hadapan' };
 
       if (type === 'expense') {
-        if (!data.amount || parseFloat(data.amount) <= 0) return { valid: false, message: 'Amaun mesti lebih dari RM 0' };
+        var amount = Number(data.amount);
+        if (data.amount === '' || !Number.isFinite(amount) || amount <= 0) return { valid: false, message: 'Amaun mesti lebih dari RM 0' };
         if (!data.category) return { valid: false, message: 'Sila pilih kategori' };
-        if (parseFloat(data.amount) > 999999) return { valid: false, message: 'Amaun terlalu besar' };
+        if (amount > 999999) return { valid: false, message: 'Amaun terlalu besar' };
       } else if (type === 'ev') {
-        if (!data.kwh || parseFloat(data.kwh) <= 0) return { valid: false, message: 'kWh mesti lebih dari 0' };
-        if (!data.pricePerKwh || parseFloat(data.pricePerKwh) <= 0) return { valid: false, message: 'Harga/kWh mesti lebih dari 0' };
+        var kwh = Number(data.kwh);
+        var pricePerKwh = Number(data.pricePerKwh);
+        if (data.kwh === '' || !Number.isFinite(kwh) || kwh <= 0) return { valid: false, message: 'kWh mesti lebih dari 0' };
+        if (data.pricePerKwh === '' || !Number.isFinite(pricePerKwh) || pricePerKwh <= 0) return { valid: false, message: 'Harga/kWh mesti lebih dari 0' };
         if (data.type === 'Luar' && !data.cpo) return { valid: false, message: 'Sila pilih CPO' };
       } else if (type === 'petrol') {
-        if (!data.liter || parseFloat(data.liter) <= 0) return { valid: false, message: 'Liter mesti lebih dari 0' };
+        var liter = Number(data.liter);
+        if (data.liter === '' || !Number.isFinite(liter) || liter <= 0) return { valid: false, message: 'Liter mesti lebih dari 0' };
         if (!data.station) return { valid: false, message: 'Sila pilih stesen' };
-        if (parseFloat(data.liter) > 999) return { valid: false, message: 'Liter terlalu besar' };
+        if (liter > 999) return { valid: false, message: 'Liter terlalu besar' };
       }
 
       return { valid: true };
@@ -1103,7 +1117,7 @@ var CATEGORY_COLORS = {
             renderSumBarChart(b.expYearly, b.evYearly, y);
             google.script.run.withSuccessHandler(function(s) {
               if (s.records && s.records.length > 0) {
-                updateSolarSummary(s.records);
+                updateSolarSummary(s.records, m);
               } else {
                 document.getElementById('sumSolarCard').classList.add('hidden');
               }
@@ -1247,10 +1261,10 @@ var CATEGORY_COLORS = {
 
       if (expenseSearchQuery) {
         filteredTransactions = filteredTransactions.filter(function(t) {
-          return (t.category && t.category.toLowerCase().indexOf(expenseSearchQuery) !== -1)
-              || (t.note && t.note.toLowerCase().indexOf(expenseSearchQuery) !== -1)
-              || (t.amount && t.amount.toString().indexOf(expenseSearchQuery) !== -1)
-              || (t.payment && t.payment.toLowerCase().indexOf(expenseSearchQuery) !== -1);
+          return String(t.category || '').toLowerCase().indexOf(expenseSearchQuery) !== -1
+              || String(t.note || '').toLowerCase().indexOf(expenseSearchQuery) !== -1
+              || String(t.amount || '').indexOf(expenseSearchQuery) !== -1
+              || String(t.payment || '').toLowerCase().indexOf(expenseSearchQuery) !== -1;
         });
       }
 
@@ -1646,9 +1660,9 @@ var CATEGORY_COLORS = {
     function renderSumMonthlyTable(eArr, vArr, pArr, year) {
       var m = [];
       for (var i = 0; i < 12; i++) m.push({ e: 0, v: 0, p: 0 });
-      eArr.forEach(function(i) { var x = new Date(i.date).getMonth(); m[x].e += parseFloat(i.amount); });
-      vArr.forEach(function(i) { var x = new Date(i.date).getMonth(); m[x].v += parseFloat(i.total); });
-      pArr.forEach(function(i) { var x = new Date(i.date).getMonth(); m[x].p += parseFloat(i.total); });
+      eArr.forEach(function(i) { var x = getDateParts(i.date).month - 1; m[x].e += parseFloat(i.amount) || 0; });
+      vArr.forEach(function(i) { var x = getDateParts(i.date).month - 1; m[x].v += parseFloat(i.total) || 0; });
+      pArr.forEach(function(i) { var x = getDateParts(i.date).month - 1; m[x].p += parseFloat(i.total) || 0; });
       var html = '';
       m.forEach(function(r, i) {
         var t = r.e + r.v + r.p;
@@ -2214,7 +2228,7 @@ function confirmPetrolDelete(id) {
     }
 
     function applySort() {
-      var data = filteredTransactions.length ? filteredTransactions : displayedData.slice();
+      var data = filteredTransactions.slice();
       data.sort(function(a, b) {
         var vA = a[sortConfig.key], vB = b[sortConfig.key];
         if (sortConfig.key === 'amount') { vA = parseFloat(vA); vB = parseFloat(vB); }
@@ -2240,9 +2254,9 @@ function confirmPetrolDelete(id) {
       var mxD = null, mnD = null;
       Object.keys(ds).forEach(function(d) { if (ds[d] === mx) mxD = d; if (ds[d] === mn) mnD = d; });
       document.getElementById('maxSpend').innerText = 'RM ' + fRM(mx);
-      document.getElementById('maxSpendDate').innerText = new Date(mxD).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' });
+      document.getElementById('maxSpendDate').innerText = formatShortDate(mxD);
       document.getElementById('minSpend').innerText = 'RM ' + fRM(mn);
-      document.getElementById('minSpendDate').innerText = new Date(mnD).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' });
+      document.getElementById('minSpendDate').innerText = formatShortDate(mnD);
       document.getElementById('noSpendDays').innerText = month !== '' ? (new Date(year, month, 0).getDate() - Object.keys(ds).length) + ' Hari' : getDaysInPeriod(year, Object.keys(ds).length);
     }
 
@@ -2488,7 +2502,7 @@ function confirmPetrolDelete(id) {
     function loadBilData() {
       var today = new Date();
       var m = today.getMonth() + 1;
-      var y = today.getFullYear();
+      var y = getSupportedYear(today.getFullYear());
       document.getElementById('bilFilterMonth').value = m;
       document.getElementById('bilFilterYear').value = y;
       initAndLoadBil(m, y);
@@ -2697,7 +2711,7 @@ function confirmPetrolDelete(id) {
           var isDone = r.status === 'Dibayar';
           var isDiterima = r.bilDiterima === 'Ya';
           var tpl = templateMap[getBilTemplateKey(r.lokasi, r.nama)] || {};
-          var isTetap = tpl.tetap || false;
+          var isTetap = tpl.tetap === true || String(tpl.tetap || '').toLowerCase() === 'ya';
           var katIkon = r._ikonKategori || '';
           var catatan = r.catatan || tpl.catatan || '';
           r._catatanPaparan = catatan;
@@ -2789,7 +2803,7 @@ function confirmPetrolDelete(id) {
         var r = bilPendingChanges[rid];
         var found = (bilData.rekod || []).find(function(x) { return x.rowId == rid; });
         if (found && found.lokasi === lokasi) {
-          lokasiItems.push({ rowId: parseInt(rid), status: r.status, bilDiterima: r.bilDiterima });
+          lokasiItems.push({ rowId: parseInt(rid), status: r.status, bilDiterima: r.bilDiterima, tarikhBayar: r.tarikhBayar || '', tarikhBil: r.tarikhBil || '' });
         }
       }
       if (lokasiItems.length === 0) { showToast('Tiada perubahan untuk disimpan', 'info'); return; }
@@ -2839,7 +2853,7 @@ function confirmPetrolDelete(id) {
         var todayStr = formatLocalDate();
         bilPendingChanges[rowId] = { status: newStatus, bilDiterima: 'Ya', tarikhBayar: todayStr, tarikhBil: (r.bilDiterima === 'Ya' && r.tarikhBil) ? r.tarikhBil : todayStr };
       } else {
-        bilPendingChanges[rowId] = { status: newStatus, tarikhBayar: '' };
+        bilPendingChanges[rowId] = { status: newStatus, bilDiterima: r.bilDiterima || 'Tidak', tarikhBayar: '', tarikhBil: r.bilDiterima === 'Ya' ? (r.tarikhBil || formatLocalDate()) : '' };
       }
       updateBilUI(bilData);
     }
@@ -2851,6 +2865,11 @@ function confirmPetrolDelete(id) {
       var currentDiterima = (bilPendingChanges[rowId] && bilPendingChanges[rowId].bilDiterima !== undefined) ? bilPendingChanges[rowId].bilDiterima : r.bilDiterima;
       var newVal = currentDiterima === 'Ya' ? 'Tidak' : 'Ya';
       bilPendingChanges[rowId] = bilPendingChanges[rowId] || {};
+      var currentStatus = bilPendingChanges[rowId].status !== undefined ? bilPendingChanges[rowId].status : r.status;
+      if (currentStatus === 'Dibayar' && newVal === 'Tidak') {
+        showToast('Bil yang sudah dibayar mesti ditanda sebagai diterima', 'error');
+        return;
+      }
       bilPendingChanges[rowId].bilDiterima = newVal;
       bilPendingChanges[rowId].tarikhBil = newVal === 'Ya' ? formatLocalDate() : '';
       updateBilUI(bilData);
@@ -3020,7 +3039,7 @@ function confirmPetrolDelete(id) {
 
     function renderSolarUI(records, yearly, year) {
       solarRecords = records;
-      var isAllMonths = records.length > 1;
+      var isAllMonths = !document.getElementById('solarFilterMonth').value;
       var jana, guna, apps, luar, bakiVal, jmlBaki;
 
       if (isAllMonths) {
@@ -3029,7 +3048,8 @@ function confirmPetrolDelete(id) {
         apps = records.reduce(function(s, r) { return s + (r.janaApps || 0); }, 0);
         luar = records.reduce(function(s, r) { return s + (r.luarGrid || 0); }, 0);
         bakiVal = jana - guna;
-        jmlBaki = records[records.length - 1].jumlahBaki;
+        var chronological = records.slice().sort(function(a, b) { return (a.tahun * 100 + a.bulan) - (b.tahun * 100 + b.bulan); });
+        jmlBaki = chronological[chronological.length - 1].jumlahBaki;
       } else {
         var latest = records.length > 0 ? records[0] : { janaTNB: 0, gunaTNB: 0, janaApps: 0, luarGrid: 0, baki: 0, jumlahBaki: 0 };
         jana = latest.janaTNB;
@@ -3170,9 +3190,12 @@ function confirmPetrolDelete(id) {
 
     function handleSolarSubmit(f) {
       var d = { rowId: f.rowId.value, bulan: f.bulan.value, tahun: f.tahun.value, janaTNB: f.janaTNB.value, gunaTNB: f.gunaTNB.value, janaApps: f.janaApps.value };
-      if (!d.janaTNB || parseFloat(d.janaTNB) < 0) { showToast('Jana TNB mesti >= 0', 'error'); return false; }
-      if (!d.gunaTNB || parseFloat(d.gunaTNB) < 0) { showToast('Guna TNB mesti >= 0', 'error'); return false; }
-      if (d.janaApps !== '' && parseFloat(d.janaApps) < 0) { showToast('Jana Apps mesti >= 0', 'error'); return false; }
+      var janaTNB = Number(d.janaTNB);
+      var gunaTNB = Number(d.gunaTNB);
+      var janaApps = d.janaApps === '' ? 0 : Number(d.janaApps);
+      if (d.janaTNB === '' || !Number.isFinite(janaTNB) || janaTNB < 0) { showToast('Jana TNB mesti >= 0', 'error'); return false; }
+      if (d.gunaTNB === '' || !Number.isFinite(gunaTNB) || gunaTNB < 0) { showToast('Guna TNB mesti >= 0', 'error'); return false; }
+      if (!Number.isFinite(janaApps) || janaApps < 0) { showToast('Jana Apps mesti >= 0', 'error'); return false; }
 
       var submitBtn = f.querySelector('button[type="submit"]');
       var originalText = submitBtn.innerText;
@@ -3197,10 +3220,10 @@ function confirmPetrolDelete(id) {
 
     function confirmSolarDelete(id) { openDeleteModal('solar', id, '☀️', 'Padam rekod solar ini?'); }
 
-    function updateSolarSummary(records) {
+    function updateSolarSummary(records, month) {
       var card = document.getElementById('sumSolarCard');
       card.classList.remove('hidden');
-      var isAllMonths = records.length > 1;
+      var isAllMonths = !month;
 
       var jana, guna, bakiVal;
       if (isAllMonths) {

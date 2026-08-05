@@ -1064,11 +1064,11 @@ function recalculateSolarRunningBalance() {
   });
 
   rows.sort(function(a, b) {
-    var aYear = parseInt(a.values[0]);
-    var bYear = parseInt(b.values[0]);
+    var aYear = parseInt(a.values[offset ? 1 : 0]);
+    var bYear = parseInt(b.values[offset ? 1 : 0]);
     if (aYear !== bYear) return aYear - bYear;
-    var aMonth = parseInt(a.values[1]);
-    var bMonth = parseInt(b.values[1]);
+    var aMonth = parseInt(a.values[offset ? 2 : 1]);
+    var bMonth = parseInt(b.values[offset ? 2 : 1]);
     if (aMonth !== bMonth) return aMonth - bMonth;
     return a.rowId - b.rowId;
   });
