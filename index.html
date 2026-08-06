@@ -1149,8 +1149,9 @@ var CATEGORY_COLORS = {
               } else {
                 displayedData = transactionsData.slice();
               }
-              
+
               initCategoryFilter();
+              filteredTransactions = displayedData.slice();
               applySort();
               renderCategoryChart();
               calculateInsights(transactionsData, m, y);
