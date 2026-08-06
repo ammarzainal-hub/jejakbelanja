@@ -22,6 +22,8 @@
 
 - Escape semua nilai daripada Google Sheet sebelum dimasukkan ke `innerHTML`.
 - CSV export mesti escape tanda petik dan lindungi nilai yang bermula dengan `=`, `+`, `-`, atau `@` supaya tidak ditafsir sebagai formula spreadsheet.
+- Modul Belanja mesti memaparkan semua transaksi yang dimuatkan sebaik sahaja tab dibuka; perubahan filter/sorting tidak boleh bergantung pada pengguna menekan `Select All` atau sort dahulu untuk memulakan paparan.
+- State `filteredTransactions` mesti diselaraskan dengan `displayedData` selepas data Belanja dimuatkan supaya jumlah, kiraan transaksi, pagination, dan jadual tidak kosong secara tidak sengaja.
 - Selepas tambah, edit, atau padam rekod solar, kira semula `JUMLAH_BAKI` supaya baki kumulatif kekal tepat.
 - `DATA`, `EV_CHARGING`, `MINYAK`, dan `SOLAR` menyokong kolum pertama `RECORD_ID`; rekod baharu mesti menjana ID automatik jika header ini wujud.
 - `migrateRecordIds()` digunakan untuk mengisi `RECORD_ID` kosong pada rekod lama dalam `DATA`, `EV_CHARGING`, `MINYAK`, dan `SOLAR`.
