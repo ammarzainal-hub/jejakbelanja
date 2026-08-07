@@ -961,7 +961,7 @@ function getSolarData(month, year) {
         janaTNB: parseSheetNumberOrZero(row[offset ? 3 : 2], 'Jana TNB'),
         gunaTNB: parseSheetNumberOrZero(row[offset ? 4 : 3], 'Guna TNB'),
         baki: parseSheetNumberOrZero(row[offset ? 5 : 4], 'Baki solar'),
-        jumlahBaki: parseSheetNumberOrZero(row[offset ? 6 : 5], 'Jumlah baki solar'),
+        jumlahBaki: Math.max(0, parseSheetNumberOrZero(row[offset ? 6 : 5], 'Jumlah baki solar')),
         janaApps: parseSheetNumberOrZero(row[offset ? 7 : 6], 'Jana Apps'),
         luarGrid: parseSheetNumberOrZero(row[offset ? 8 : 7], 'Luar Grid')
       };
@@ -1088,6 +1088,7 @@ function recalculateSolarRunningBalance() {
     var baki = janaTNB - gunaTNB;
     var luarGrid = janaApps - janaTNB;
     running += baki;
+    if (running < 0) running = 0;
     sheet.getRange(item.rowId, offset ? 6 : 5, 1, 4).setValues([[baki, running, janaApps, luarGrid]]);
   });
 }
@@ -1115,6 +1116,7 @@ function getSolarYearlyData(year) {
         data.baki[i] = parseSheetNumberOrZero(r[offset ? 5 : 4], 'Baki solar');
         data.luarGrid[i] = parseSheetNumberOrZero(r[offset ? 8 : 7], 'Luar Grid');
         running += parseSheetNumberOrZero(r[offset ? 5 : 4], 'Baki solar');
+        if (running < 0) running = 0;
         found = true;
       }
     });

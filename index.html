@@ -69,6 +69,9 @@
     body.dark .border-amber-300 { border-color: rgba(251,191,36,0.35) !important; }
     body.dark .text-amber-800 { color: #fbbf24 !important; }
     body.dark .text-amber-600 { color: #f59e0b !important; }
+    body.dark .solar-negative-card { background-color: rgba(239,68,68,0.18) !important; border-color: rgba(248,113,113,0.45) !important; box-shadow: 0 0 0 1px rgba(248,113,113,0.18), 0 12px 32px rgba(127,29,29,0.28) !important; }
+    body.dark .solar-negative-label { color: #fca5a5 !important; }
+    body.dark .solar-negative-value { color: #fecaca !important; }
     body.dark .bg-purple-50   { background-color: rgba(147,51,234,0.15) !important; border-color: rgba(147,51,234,0.25) !important; }
     body.dark .bg-purple-100  { background-color: rgba(147,51,234,0.2) !important; }
     body.dark .border-purple-100 { border-color: rgba(147,51,234,0.25) !important; }
@@ -600,7 +603,7 @@
         <div class="shadow-card bg-white p-5 rounded-3xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">🏠 Guna TNB</p><p id="solGunaTNB" class="text-xl font-black text-slate-700 mt-1">0 kWh</p></div>
         <div class="shadow-card bg-white p-5 rounded-3xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">📡 Jana Apps</p><p id="solJanaApps" class="text-xl font-black text-blue-700 mt-1">0 kWh</p></div>
         <div class="shadow-card bg-white p-5 rounded-3xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">⚠️ Luar Grid</p><p id="solLuarGrid" class="text-xl font-black text-red-600 mt-1">0 kWh</p></div>
-        <div class="shadow-card bg-emerald-50 p-5 rounded-3xl border border-emerald-100"><p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">📊 Baki</p><p id="solBaki" class="text-xl font-black text-emerald-700 mt-1">0 kWh</p></div>
+        <div id="solarBakiCard" class="shadow-card bg-amber-50 p-5 rounded-3xl border border-amber-100"><p id="solarBakiLabel" class="text-[9px] font-black text-amber-600 uppercase tracking-widest">📊 Baki</p><p id="solBaki" class="text-xl font-black text-amber-700 mt-1">0 kWh</p></div>
         <div class="shadow-card bg-amber-50 p-5 rounded-3xl border border-amber-100"><p class="text-[9px] font-black text-amber-600 uppercase tracking-widest">💰 Jml Baki</p><p id="solJmlBaki" class="text-xl font-black text-amber-800 mt-1">0 kWh</p></div>
         <button onclick="openSolarModal(null)" class="btn-gradient-amber text-white rounded-3xl font-black text-[10px] uppercase py-4 shadow-lg active:scale-95 transition-all tracking-widest lg:col-span-2">+ Rekod Baru</button>
       </div>
@@ -3050,7 +3053,7 @@ function confirmPetrolDelete(id) {
         luar = records.reduce(function(s, r) { return s + (r.luarGrid || 0); }, 0);
         bakiVal = jana - guna;
         var chronological = records.slice().sort(function(a, b) { return (a.tahun * 100 + a.bulan) - (b.tahun * 100 + b.bulan); });
-        jmlBaki = chronological[chronological.length - 1].jumlahBaki;
+        jmlBaki = Math.max(0, chronological[chronological.length - 1].jumlahBaki || 0);
       } else {
         var latest = records.length > 0 ? records[0] : { janaTNB: 0, gunaTNB: 0, janaApps: 0, luarGrid: 0, baki: 0, jumlahBaki: 0 };
         jana = latest.janaTNB;
@@ -3058,15 +3061,27 @@ function confirmPetrolDelete(id) {
         apps = latest.janaApps;
         luar = latest.luarGrid;
         bakiVal = latest.baki;
-        jmlBaki = latest.jumlahBaki;
+        jmlBaki = Math.max(0, latest.jumlahBaki || 0);
       }
 
       document.getElementById('solJanaTNB').innerText = fRM(jana) + ' kWh';
       document.getElementById('solGunaTNB').innerText = fRM(guna) + ' kWh';
       document.getElementById('solJanaApps').innerText = fRM(apps) + ' kWh';
       document.getElementById('solLuarGrid').innerText = fRM(luar) + ' kWh';
-      document.getElementById('solBaki').innerText = (bakiVal >= 0 ? '+' : '') + fRM(bakiVal) + ' kWh';
-      document.getElementById('solJmlBaki').innerText = fRM(jmlBaki) + ' kWh';
+      var bakiCard = document.getElementById('solarBakiCard');
+      var bakiLabel = document.getElementById('solarBakiLabel');
+      var bakiValue = document.getElementById('solBaki');
+      if (bakiVal < 0) {
+        bakiCard.className = 'solar-negative-card shadow-card bg-red-50 p-5 rounded-3xl border border-red-100';
+        bakiLabel.className = 'solar-negative-label text-[9px] font-black text-red-600 uppercase tracking-widest';
+        bakiValue.className = 'solar-negative-value text-xl font-black text-red-700 mt-1';
+      } else {
+        bakiCard.className = 'shadow-card bg-amber-50 p-5 rounded-3xl border border-amber-100';
+        bakiLabel.className = 'text-[9px] font-black text-amber-600 uppercase tracking-widest';
+        bakiValue.className = 'text-xl font-black text-amber-700 mt-1';
+      }
+      bakiValue.innerText = (bakiVal >= 0 ? '+' : '') + fRM(bakiVal) + ' kWh';
+      document.getElementById('solJmlBaki').innerText = fRM(Math.max(0, jmlBaki)) + ' kWh';
 
       updateSolarSortIcons();
       renderSolarTable(records);
@@ -3082,7 +3097,7 @@ function confirmPetrolDelete(id) {
         else if (solarSortConfig.key === 'apps')   { vA = a.janaApps;   vB = b.janaApps; }
         else if (solarSortConfig.key === 'luar')   { vA = a.luarGrid;   vB = b.luarGrid; }
         else if (solarSortConfig.key === 'baki')   { vA = a.baki;       vB = b.baki; }
-        else if (solarSortConfig.key === 'jumlah') { vA = a.jumlahBaki; vB = b.jumlahBaki; }
+        else if (solarSortConfig.key === 'jumlah') { vA = Math.max(0, a.jumlahBaki || 0); vB = Math.max(0, b.jumlahBaki || 0); }
         if (solarSortConfig.direction === 'asc') return vA > vB ? 1 : -1;
         return vA < vB ? 1 : -1;
       });
@@ -3100,7 +3115,7 @@ function confirmPetrolDelete(id) {
         html += '<td class="px-4 py-3 text-right text-sm font-bold text-blue-600">' + fRM(r.janaApps) + '</td>';
         html += '<td class="px-4 py-3 text-right text-sm font-bold text-red-500">' + fRM(r.luarGrid) + '</td>';
         html += '<td class="px-4 py-3 text-right text-sm font-bold ' + (r.baki >= 0 ? 'text-emerald-600' : 'text-red-500') + '">' + (r.baki >= 0 ? '+' : '') + fRM(r.baki) + '</td>';
-        html += '<td class="px-4 py-3 text-right font-black text-sm text-amber-700">' + fRM(r.jumlahBaki) + '</td>';
+        html += '<td class="px-4 py-3 text-right font-black text-sm text-amber-700">' + fRM(Math.max(0, r.jumlahBaki || 0)) + '</td>';
         html += '</tr>';
       });
       document.getElementById('solarTableBody').innerHTML = html || '<tr><td colspan="8" class="px-4 py-8 text-center text-slate-400 text-xs font-bold">Tiada rekod solar</td></tr>';
