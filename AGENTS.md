@@ -7,6 +7,7 @@
 - Data/cache aplikasi disasarkan untuk tahun 2026 hingga 2031.
 - Nilai solar `Jana TNB`, `Guna TNB`, dan `Jana Apps` boleh bernilai `0` jika bacaan bulan tersebut memang sifar.
 - `JUMLAH_BAKI` solar reset semula pada permulaan tahun baharu; kumulatif solar dikira dalam sempadan tahun yang sama.
+- `JUMLAH_BAKI` solar mengikut konsep baki NEM TNB: jika kumulatif menjadi negatif, nilai disimpan dan dipaparkan sebagai `0`.
 - Rekod Solar boleh dipindah bulan/tahun semasa edit, tetapi gabungan `TAHUN + BULAN` mesti kekal unik.
 - Status bil diterima adalah berasingan daripada status bayaran: bil boleh diterima tetapi belum dibayar.
 - Menandakan bil sebagai dibayar mesti turut menetapkan `BIL_DITERIMA` kepada `Ya`.
@@ -25,6 +26,7 @@
 - Modul Belanja mesti memaparkan semua transaksi yang dimuatkan sebaik sahaja tab dibuka; perubahan filter/sorting tidak boleh bergantung pada pengguna menekan `Select All` atau sort dahulu untuk memulakan paparan.
 - State `filteredTransactions` mesti diselaraskan dengan `displayedData` selepas data Belanja dimuatkan supaya jumlah, kiraan transaksi, pagination, dan jadual tidak kosong secara tidak sengaja.
 - Selepas tambah, edit, atau padam rekod solar, kira semula `JUMLAH_BAKI` supaya baki kumulatif kekal tepat.
+- Kad ringkasan solar `Baki` perlu berwarna merah bila nilai negatif dan amber/oren bila `0` atau positif; kad `Jml Baki` kekal amber/oren.
 - `DATA`, `EV_CHARGING`, `MINYAK`, dan `SOLAR` menyokong kolum pertama `RECORD_ID`; rekod baharu mesti menjana ID automatik jika header ini wujud.
 - `migrateRecordIds()` digunakan untuk mengisi `RECORD_ID` kosong pada rekod lama dalam `DATA`, `EV_CHARGING`, `MINYAK`, dan `SOLAR`.
 - `parseRowId()` dan semakan row wujud wajib digunakan untuk semua operasi edit/padam; `rowId < 2` mesti ditolak supaya header sheet tidak boleh terpadam.
