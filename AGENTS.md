@@ -14,6 +14,7 @@
 - Perubahan status bil (`Bil Ada`, dibayar, dan tandai semua) dipending di client dan disimpan secara batch mengikut lokasi.
 - `Batal` membuang pending changes lokasi sebelum simpan. Selepas simpan, pembetulan dibuat dengan ubah semula status dan simpan sekali lagi.
 - Perubahan amaun bil disimpan terus apabila input berubah; ia bukan sebahagian daripada batch status.
+- Perubahan amaun bil direct mesti sahkan row wujud, bulan, tahun, lokasi, dan nama bil sebelum tulis ke sheet.
 - Selepas perubahan amaun bil berjaya disimpan, paparan ringkasan bil perlu dikira semula.
 - Bil tahunan dalam `BIL_TEMPLATE` hanya dijana pada `BULAN_AKTIF`.
 - `CATATAN` dalam `BIL_TEMPLATE` ialah rujukan tetap untuk `LOKASI + NAMA` dan dipaparkan setiap bulan pada item bil.

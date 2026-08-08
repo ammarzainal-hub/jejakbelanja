@@ -2885,6 +2885,8 @@ function confirmPetrolDelete(id) {
       if (isNaN(val) || val <= 0) { showToast('Amaun mesti lebih dari 0', 'error'); loadBilData(); return; }
       var m = document.getElementById('bilFilterMonth').value;
       var y = document.getElementById('bilFilterYear').value;
+      var record = (bilData.rekod || []).find(function(r) { return r.rowId == rowId; });
+      if (!record) { showToast('Rekod bil tidak dijumpai', 'error'); loadBilData(); return; }
       bilAmountSaveInProgress[rowId] = true;
       input.disabled = true;
       google.script.run
@@ -2905,7 +2907,7 @@ function confirmPetrolDelete(id) {
           input.disabled = false;
           showToast('Error: ' + e.message, 'error');
         })
-        .kemaskiniBilAmount(rowId, input.value);
+        .kemaskiniBilAmount(rowId, input.value, m, y, record.lokasi, record.nama);
     }
 
     var expenseSearchQuery = '';
@@ -2950,7 +2952,7 @@ function confirmPetrolDelete(id) {
       var csv = rows.map(function(row) {
         return row.map(function(cell) {
           var val = String(cell == null ? '' : cell);
-          if (/^[=+\-@]/.test(val)) val = "'" + val;
+          if (/^\s*[=+\-@]/.test(val)) val = "'" + val;
           return '"' + val.replace(/"/g, '""') + '"';
         }).join(',');
       }).join('\n');
@@ -2992,7 +2994,8 @@ function confirmPetrolDelete(id) {
         showLoader(true);
         var m = document.getElementById('solarFilterMonth').value;
         var y = document.getElementById('solarFilterYear').value;
-        filename = 'jejak_belanja_solar_' + y + '_' + (m.length === 1 ? '0' + m : m) + '.csv';
+        var monthPart = m ? (m.length === 1 ? '0' + m : m) : 'semua_bulan';
+        filename = 'jejak_belanja_solar_' + y + '_' + monthPart + '.csv';
         rows.push(['Tahun', 'Bulan', 'Jana TNB (kWh)', 'Guna TNB (kWh)', 'Jana Apps (kWh)', 'Luar Grid (kWh)', 'Baki (kWh)', 'Jumlah Baki (kWh)']);
         google.script.run.withSuccessHandler(function(batch) {
           batch.records.forEach(function(r) { rows.push([r.tahun, r.bulan, r.janaTNB, r.gunaTNB, r.janaApps, r.luarGrid, r.baki, r.jumlahBaki]); });
@@ -3053,7 +3056,8 @@ function confirmPetrolDelete(id) {
         luar = records.reduce(function(s, r) { return s + (r.luarGrid || 0); }, 0);
         bakiVal = jana - guna;
         var chronological = records.slice().sort(function(a, b) { return (a.tahun * 100 + a.bulan) - (b.tahun * 100 + b.bulan); });
-        jmlBaki = Math.max(0, chronological[chronological.length - 1].jumlahBaki || 0);
+        var latestChronological = chronological.length ? chronological[chronological.length - 1] : null;
+        jmlBaki = latestChronological ? Math.max(0, latestChronological.jumlahBaki || 0) : 0;
       } else {
         var latest = records.length > 0 ? records[0] : { janaTNB: 0, gunaTNB: 0, janaApps: 0, luarGrid: 0, baki: 0, jumlahBaki: 0 };
         jana = latest.janaTNB;

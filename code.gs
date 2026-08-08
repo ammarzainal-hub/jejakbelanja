@@ -851,12 +851,18 @@ function toggolBilDiterima(rowId) {
   throw new Error('Guna batchUpdateBil(): perubahan status bil mesti dipending dan disimpan mengikut lokasi.');
 }
 
-function kemaskiniBilAmount(rowId, amaunBaru) {
+function kemaskiniBilAmount(rowId, amaunBaru, month, year, lokasi, nama) {
   if (!rowId) throw new Error('ID rekod diperlukan');
   var amt = parseRequiredPositiveNumber(amaunBaru, 'Amaun');
 
   var sheet = getRequiredSheet(BIL_REKOD_SHEET);
-  sheet.getRange(assertExistingRow(sheet, rowId, 'ID rekod'), 6).setValue(amt);
+  var safeRowId = assertExistingRow(sheet, rowId, 'ID rekod');
+  var row = sheet.getRange(safeRowId, 1, 1, 11).getValues()[0];
+  if (parseInt(row[1], 10) !== parseInt(month, 10)) throw new Error('Rekod bil tidak sepadan dengan bulan dipilih');
+  if (parseInt(row[0], 10) !== parseInt(year, 10)) throw new Error('Rekod bil tidak sepadan dengan tahun dipilih');
+  if (sanitize(row[2], 200) !== sanitize(lokasi, 200)) throw new Error('Rekod bil tidak sepadan dengan lokasi dipilih');
+  if (sanitize(row[3], 200) !== sanitize(nama, 200)) throw new Error('Rekod bil tidak sepadan dengan nama bil dipilih');
+  sheet.getRange(safeRowId, 6).setValue(amt);
   return { status: 'success', amaun: amt };
 }
 
