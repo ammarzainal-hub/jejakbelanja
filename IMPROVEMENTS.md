@@ -14,6 +14,9 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Harga minyak yang dihantar ke backend mesti lebih daripada `0`; nilai kosong masih menggunakan `DEFAULT_PETROL_PRICE` sebagai fallback.
 - `DATA`, `EV_CHARGING`, `MINYAK`, dan `SOLAR` menyokong kolum pertama `RECORD_ID` untuk ID rekod kekal.
 - `migrateRecordIds()` boleh dijalankan sekali untuk mengisi `RECORD_ID` kosong pada rekod lama.
+- Operasi edit/padam bagi sheet yang mempunyai `RECORD_ID` mengesahkan `rowId` masih sepadan dengan `RECORD_ID` sebelum tulis atau padam.
+- Operasi tulis utama menggunakan `LockService` untuk mengelakkan request serentak menulis atau mengira data secara bertindih.
+- Parser nombor backend menguatkuasakan had maksimum munasabah untuk amaun, kWh, liter, harga, dan bacaan solar.
 
 ## Belanja Harian
 
@@ -34,12 +37,12 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Rekod EV menyokong Cas Rumah dan Cas Luar.
 - Cas Luar tidak menggunakan harga default Cas Rumah; medan harga dikosongkan supaya kadar sebenar perlu diisi.
 - Cas Luar kini divalidasi di backend juga supaya CPO wajib diisi.
-- Rekod Minyak menggunakan harga default petrol yang dipusatkan.
+- Rekod Minyak menggunakan harga default petrol yang dipusatkan di `code.gs` dan dimuatkan ke frontend melalui `getAppConfig()`.
 - EV/Minyak pukal menyokong campuran Cas Rumah, Cas Luar, dan Minyak dengan tarikh berasingan setiap baris.
 - EV/Minyak pukal dihadkan kepada maksimum 50 rekod sekali simpan.
 - `addBulkEVRecords()` membuat preflight sheet wajib sebelum sebarang tulis supaya batch tidak masuk separuh.
 - CPO dan data tahunan EV/Minyak menggunakan cache.
-- Harga default frontend dipusatkan melalui `DEFAULT_HOME_KWH_PRICE` dan `DEFAULT_PETROL_PRICE` di `index.html`.
+- Harga default hanya perlu diubah di `code.gs`; frontend menggunakan nilai konfigurasi backend semasa startup.
 
 ## Bil Bulanan
 
@@ -59,6 +62,7 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Fungsi bil lama `toggolBilStatus()`, `toggolBilDiterima()`, dan `tandaiSemuaBilLokasi()` dinyahaktifkan dan hanya memberi error jika dipanggil.
 - Selepas amaun bil tak tetap disimpan, ringkasan bil dimuat semula supaya jumlah tepat.
 - Input amaun bil dilumpuhkan sementara semasa simpan supaya request amaun tidak bertindih.
+- Pengguna diberi amaran jika cuba tukar bulan/tab atau reload ketika masih ada pending changes bil yang belum disimpan.
 
 ## Solar Tracker
 
@@ -98,3 +102,15 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Fungsi bil menambah baik kesejajaran template/load flow supaya render UI bil tidak bergantung pada template yang dimuat lambat secara berasingan.
 - Cache template bil dibuang melalui `invalidateBilTemplateCache()`.
 - Butang refresh menggunakan ikon `🔄` dan memanggil fungsi refresh backend yang berkaitan.
+- Cache kategori frontend `localStorage` mempunyai TTL 6 jam dan turut dibuang apabila Refresh Belanja atau Refresh Semua ditekan.
+
+## Backup
+
+- `backupSpreadsheetNow()` menyalin keseluruhan spreadsheet ke folder Google Drive backup dengan nama fail mingguan seperti `Backup Jejak Belanja 10/16-08-2026`.
+- `installWeeklyBackupTrigger()` memasang trigger mingguan pada Ahad jam 11 malam untuk menjalankan backup automatik.
+
+## Way Forward
+
+- Tambah audit log dalam sheet `AUDIT_LOG` untuk aksi penting seperti tambah, edit, padam, batch bil, perubahan amaun bil, dan perubahan solar.
+- Optimasi `recalculateSolarRunningBalance()` kepada batch write hanya jika data solar semakin besar atau operasi recalculate mula perlahan.
+- Jangan gabungkan semua nested `google.script.run` secara agresif tanpa keperluan prestasi yang jelas; flow berasingan lebih selamat kerana kegagalan satu bahagian tidak semestinya menggagalkan semua data halaman.

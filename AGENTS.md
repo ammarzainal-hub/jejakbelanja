@@ -13,6 +13,7 @@
 - Menandakan bil sebagai dibayar mesti turut menetapkan `BIL_DITERIMA` kepada `Ya`.
 - Perubahan status bil (`Bil Ada`, dibayar, dan tandai semua) dipending di client dan disimpan secara batch mengikut lokasi.
 - `Batal` membuang pending changes lokasi sebelum simpan. Selepas simpan, pembetulan dibuat dengan ubah semula status dan simpan sekali lagi.
+- Jika ada pending changes bil, pengguna perlu diberi amaran sebelum tukar bulan/tab atau reload supaya perubahan tidak hilang tanpa sedar.
 - Perubahan amaun bil disimpan terus apabila input berubah; ia bukan sebahagian daripada batch status.
 - Perubahan amaun bil direct mesti sahkan row wujud, bulan, tahun, lokasi, dan nama bil sebelum tulis ke sheet.
 - Selepas perubahan amaun bil berjaya disimpan, paparan ringkasan bil perlu dikira semula.
@@ -31,6 +32,7 @@
 - `DATA`, `EV_CHARGING`, `MINYAK`, dan `SOLAR` menyokong kolum pertama `RECORD_ID`; rekod baharu mesti menjana ID automatik jika header ini wujud.
 - `migrateRecordIds()` digunakan untuk mengisi `RECORD_ID` kosong pada rekod lama dalam `DATA`, `EV_CHARGING`, `MINYAK`, dan `SOLAR`.
 - `parseRowId()` dan semakan row wujud wajib digunakan untuk semua operasi edit/padam; `rowId < 2` mesti ditolak supaya header sheet tidak boleh terpadam.
+- Jika sheet mempunyai `RECORD_ID`, operasi edit/padam mesti sahkan `rowId` masih sepadan dengan `RECORD_ID` sebelum menulis atau memadam.
 - Validasi tarikh wajib ketat pada format `yyyy-mm-dd` dan menolak tarikh tidak wujud.
 - Rekod bertarikh harian tidak boleh menggunakan tarikh masa hadapan, termasuk rekod pukal.
 - Rekod pukal Belanja dan EV/Minyak dihadkan kepada maksimum 50 rekod sekali simpan.
@@ -41,10 +43,14 @@
 - `CATATAN` dalam `BIL_REKOD` disalin daripada `BIL_TEMPLATE` semasa auto-jana bil baharu; rekod lama boleh fallback kepada catatan template semasa paparan.
 - Struktur `BIL_TEMPLATE` ialah 11 kolum: `NAMA`, `KATEGORI`, `ANGGARAN`, `TETAP`, `LOKASI`, `IKON_LOKASI`, `IKON_KATEGORI`, `CYCLE_HARI`, `FREKUENSI`, `BULAN_AKTIF`, `CATATAN`.
 - Rekod pukal EV/Minyak mesti menyokong campuran `Cas Rumah`, `Cas Luar`, dan `Minyak` dengan tarikh berasingan setiap baris.
-- Harga default Cas Rumah dan Minyak mesti dikemas kini di constant frontend `index.html` dan constant backend `code.gs`.
+- Harga default Cas Rumah dan Minyak mesti dikemas kini di constant backend `code.gs`; frontend memuatkan nilai melalui `getAppConfig()`.
 - Cas Luar tiada harga default tetap; frontend tidak boleh memenuhkan harga Cas Rumah apabila pengguna memilih Cas Luar.
 - Harga minyak yang dihantar ke backend mesti lebih daripada `0`; nilai kosong boleh fallback kepada `DEFAULT_PETROL_PRICE`.
 - Parser nombor backend mesti menolak nilai bukan nombor dan membezakan medan wajib positif, wajib bukan negatif, dan optional fallback.
+- Parser nombor backend mesti menguatkuasakan had maksimum munasabah untuk amaun, kWh, liter, harga, dan bacaan solar supaya input ekstrem ditolak.
+- Operasi tulis utama mesti menggunakan `LockService` supaya request serentak tidak menulis atau mengira data secara bertindih.
 - Operasi tulis mesti menggunakan helper sheet wajib supaya sheet yang hilang menghasilkan mesej ralat yang jelas.
 - `BIL_TEMPLATE` mesti dibaca melalui helper sheet wajib supaya sheet template yang hilang tidak disenyapkan sebagai senarai kosong.
 - Fungsi baca agregat yang kembali kosong juga boleh cache hasil kosong untuk kurangkan bacaan sheet berulang.
+- Cache kategori frontend `localStorage` mesti mempunyai TTL dan dibuang apabila Refresh Belanja atau Refresh Semua ditekan.
+- Backup mingguan spreadsheet penuh disimpan ke folder Google Drive melalui `backupSpreadsheetNow()`; trigger dipasang dengan `installWeeklyBackupTrigger()`.

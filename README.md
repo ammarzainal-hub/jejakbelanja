@@ -170,7 +170,7 @@ jejak-belanja/
 - Minyak: RM 1.99/liter
 - Cas EV Luar: tiada harga default tetap; harga/kWh diisi mengikut rekod.
 
-Harga Cas Rumah dan Minyak digunakan di frontend dan backend, termasuk rekod pukal. Jika kadar berubah, kemas kini constant `DEFAULT_HOME_KWH_PRICE` dan `DEFAULT_PETROL_PRICE` dalam `index.html` serta `code.gs`. Untuk Cas Luar, medan harga dikosongkan supaya kadar sebenar perlu diisi dan tidak tersimpan menggunakan harga Cas Rumah secara tidak sengaja.
+Harga Cas Rumah dan Minyak digunakan di frontend dan backend, termasuk rekod pukal. Jika kadar berubah, kemas kini constant `DEFAULT_HOME_KWH_PRICE` dan `DEFAULT_PETROL_PRICE` dalam `code.gs` sahaja; frontend memuatkan nilai melalui `getAppConfig()`. Untuk Cas Luar, medan harga dikosongkan supaya kadar sebenar perlu diisi dan tidak tersimpan menggunakan harga Cas Rumah secara tidak sengaja.
 
 ## Business Rules
 
@@ -214,13 +214,15 @@ Edit senarai dalam tab `BIL_TEMPLATE` di Google Sheet. Setiap bulan baru, app ak
 
 ### Tukar Harga Default
 
-Dalam `index.html`, cari dan ubah constant frontend:
+Dalam `code.gs`, kemas kini constant backend yang digunakan oleh server dan dimuatkan ke frontend melalui `getAppConfig()`:
 - `DEFAULT_HOME_KWH_PRICE` untuk harga cas rumah
 - `DEFAULT_PETROL_PRICE` untuk harga minyak
 
-Dalam `code.gs`, kemas kini constant backend yang digunakan untuk rekod pukal dan fallback server:
-- `DEFAULT_HOME_KWH_PRICE` untuk harga cas rumah
-- `DEFAULT_PETROL_PRICE` untuk harga minyak
+### Backup Mingguan
+
+Fungsi `backupSpreadsheetNow()` menyalin keseluruhan spreadsheet ke folder Google Drive backup. Nama fail menggunakan minggu backup dalam format `Backup Jejak Belanja dd/dd-mm-yyyy`, contohnya `Backup Jejak Belanja 10/16-08-2026`.
+
+Jalankan `installWeeklyBackupTrigger()` sekali dalam Apps Script untuk memasang trigger backup mingguan pada Ahad jam 11 malam. Folder sasaran ditetapkan melalui constant `BACKUP_FOLDER_ID` dalam `code.gs`.
 
 ## Limitasi
 
@@ -230,6 +232,12 @@ Dalam `code.gs`, kemas kini constant backend yang digunakan untuk rekod pukal da
 - Rekod pukal Belanja dan EV/Minyak dihadkan kepada 50 rekod sekali simpan untuk elak timeout Apps Script
 - Tidak boleh deploy sebagai GitHub Pages (kerana bergantung kepada Google Apps Script)
 - Maksimum 50MB data (limitasi Google Apps Script)
+
+## Way Forward
+
+- **Audit log** — Tambah sheet `AUDIT_LOG` untuk merekod aksi penting seperti tambah, edit, padam, batch bil, perubahan amaun bil, dan perubahan solar. Ini memudahkan semakan jika data tersalah ubah/padam.
+- **Optimasi Solar** — `recalculateSolarRunningBalance()` boleh dioptimumkan kemudian dengan batch write jika data solar semakin besar. Buat hanya jika perlu kerana data sasaran 2026-2031 masih kecil.
+- **Load flow frontend** — Kekalkan flow `google.script.run` berasingan untuk modul yang kompleks supaya kegagalan satu bahagian tidak menjatuhkan semua data halaman. Gabungan batch load hanya dibuat jika ada isu prestasi jelas.
 
 ## Lisensi
 
