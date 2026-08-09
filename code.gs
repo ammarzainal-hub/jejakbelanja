@@ -6,6 +6,9 @@ const CATEGORY_SHEET = 'KATEGORI';
 const EV_SHEET       = 'EV_CHARGING';
 const CPO_SHEET      = 'JENIS_CPO';
 const PETROL_SHEET   = 'MINYAK';
+const SETTINGS_SHEET = 'SETTINGS';
+const PETROL_STATION_SHEET = 'STESEN_MINYAK';
+const PAYMENT_METHOD_SHEET = 'PAYMENT_METHOD';
 const BIL_TEMPLATE_SHEET = 'BIL_TEMPLATE';
 const BIL_REKOD_SHEET    = 'BIL_REKOD';
 const SOLAR_SHEET        = 'SOLAR';
@@ -22,10 +25,13 @@ const MAX_SOLAR_KWH = 99999;
 const BACKUP_FOLDER_ID = '1CUBYnUyAC9sIjxQCopmHwqB-fgopyQzB';
 
 function getAppConfig() {
+  ensureReferenceSheets();
   return {
-    defaultHomeKwhPrice: DEFAULT_HOME_KWH_PRICE,
-    defaultPetrolPrice: DEFAULT_PETROL_PRICE,
-    maxBulkRows: MAX_BULK_ROWS
+    defaultHomeKwhPrice: getSettingValue('DEFAULT_HOME_KWH_PRICE', DEFAULT_HOME_KWH_PRICE, 'number'),
+    defaultPetrolPrice: getSettingValue('DEFAULT_PETROL_PRICE', DEFAULT_PETROL_PRICE, 'number'),
+    maxBulkRows: getSettingValue('MAX_BULK_ROWS', MAX_BULK_ROWS, 'number'),
+    paymentMethods: getPaymentMethods(false),
+    petrolStations: getPetrolStations(false)
   };
 }
 
@@ -77,6 +83,7 @@ function invalidateEVCache() {
 function clearDashboardCache() {
   invalidateExpenseCache();
   invalidateEVCache();
+  clearReferenceCache();
   cacheDel('cpo_types');
   invalidateBilTemplateCache();
   invalidateSolarCache();
@@ -93,6 +100,260 @@ function refreshEVOnly() {
   cacheDel('cpo_types');
   return { status: 'success', message: '✅ Cache EV/Minyak dikosongkan.' };
 }
+
+function clearReferenceCache() {
+  cacheDel('app_settings');
+  cacheDel('payment_methods');
+  cacheDel('petrol_stations');
+}
+
+function getHeaderMap(sheet) {
+  var map = {};
+  if (!sheet || sheet.getLastColumn() < 1) return map;
+  sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].forEach(function(h, i) {
+    var key = normalizeHeaderName(h);
+    if (key) map[key] = i;
+  });
+  return map;
+}
+
+function ensureSheetHeaders(sheetName, headers) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
+  if (sheet.getLastRow() < 1 || sheet.getLastColumn() < 1 || !sheet.getRange(1, 1).getValue()) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    return sheet;
+  }
+  var map = getHeaderMap(sheet);
+  headers.forEach(function(header) {
+    if (map[normalizeHeaderName(header)] === undefined) {
+      sheet.getRange(1, sheet.getLastColumn() + 1).setValue(header);
+    }
+  });
+  return sheet;
+}
+
+function ensureDefaultRows(sheet, rows, keyColumn) {
+  if (sheet.getLastRow() < 2) {
+    sheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
+    return;
+  }
+  var existing = {};
+  sheet.getRange(2, keyColumn, sheet.getLastRow() - 1, 1).getValues().forEach(function(row) {
+    existing[sanitize(row[0], 100).toLowerCase()] = true;
+  });
+  var missing = rows.filter(function(row) { return !existing[sanitize(row[keyColumn - 1], 100).toLowerCase()]; });
+  if (missing.length) sheet.getRange(sheet.getLastRow() + 1, 1, missing.length, missing[0].length).setValues(missing);
+}
+
+function fillReferenceDefaults(sheetName, nameHeaders) {
+  var sheet = ensureSheetHeaders(sheetName, nameHeaders);
+  if (sheet.getLastRow() < 2) return sheet;
+  var map = getHeaderMap(sheet);
+  var activeCol = map.aktif;
+  var orderCol = map.susunan;
+  var width = sheet.getLastColumn();
+  var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, width).getValues();
+  var changed = false;
+  values.forEach(function(row, i) {
+    if (activeCol !== undefined && !row[activeCol]) { row[activeCol] = 'Ya'; changed = true; }
+    if (orderCol !== undefined && (row[orderCol] === '' || row[orderCol] === null)) { row[orderCol] = i + 1; changed = true; }
+  });
+  if (changed) sheet.getRange(2, 1, values.length, width).setValues(values);
+  return sheet;
+}
+
+function ensureReferenceSheets() {
+  var settings = ensureSheetHeaders(SETTINGS_SHEET, ['KEY', 'VALUE', 'TYPE', 'MODULE', 'CATATAN']);
+  ensureDefaultRows(settings, [
+    ['DEFAULT_HOME_KWH_PRICE', DEFAULT_HOME_KWH_PRICE, 'number', 'EV', 'Harga cas rumah RM/kWh'],
+    ['DEFAULT_PETROL_PRICE', DEFAULT_PETROL_PRICE, 'number', 'MINYAK', 'Harga petrol default RM/L'],
+    ['MAX_BULK_ROWS', MAX_BULK_ROWS, 'number', 'SYSTEM', 'Had rekod pukal']
+  ], 1);
+  ensureDefaultRows(ensureSheetHeaders(PETROL_STATION_SHEET, ['NAMA', 'AKTIF', 'SUSUNAN']), [
+    ['Petronas', 'Ya', 1], ['Shell', 'Ya', 2], ['BHP', 'Ya', 3], ['Caltex', 'Ya', 4], ['Petron', 'Ya', 5]
+  ], 1);
+  ensureDefaultRows(ensureSheetHeaders(PAYMENT_METHOD_SHEET, ['NAMA', 'AKTIF', 'SUSUNAN']), [
+    ['💳 CC', 'Ya', 1], ['𖣯 QR', 'Ya', 2], ['🏦 Transfer', 'Ya', 3], ['👛 E-Wallet', 'Ya', 4], ['💵 Cash', 'Ya', 5]
+  ], 1);
+  fillReferenceDefaults(CATEGORY_SHEET, ['NAMA', 'IKON', 'AKTIF', 'SUSUNAN']);
+  fillReferenceDefaults(CPO_SHEET, ['NAMA', 'AKTIF', 'SUSUNAN']);
+}
+
+function getSettingsMap() {
+  var cached = cacheGet('app_settings');
+  if (cached) return JSON.parse(cached);
+  ensureReferenceSheets();
+  var sheet = getRequiredSheet(SETTINGS_SHEET);
+  var map = {};
+  if (sheet.getLastRow() >= 2) {
+    sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues().forEach(function(row) {
+      var key = sanitize(row[0], 100);
+      if (key) map[key] = { value: row[1], type: sanitize(row[2], 30) };
+    });
+  }
+  cacheSet('app_settings', JSON.stringify(map), TTL_LONG);
+  return map;
+}
+
+function getSettingValue(key, fallback, type) {
+  try {
+    var item = getSettingsMap()[key];
+    if (!item) return fallback;
+    if (type === 'number') {
+      var n = Number(item.value);
+      return isFinite(n) ? n : fallback;
+    }
+    return item.value;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function parseOptionalOrder(value) {
+  if (value === '' || value === null || value === undefined) return '';
+  var n = Number(value);
+  if (!isFinite(n) || Math.floor(n) !== n || n < 0 || n > 9999) throw new Error('Susunan mesti nombor integer 0 hingga 9999');
+  return n;
+}
+
+function readReferenceList(sheetName, config, skipEnsure) {
+  if (!skipEnsure) ensureReferenceSheets();
+  var sheet = getOptionalSheet(sheetName);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  var map = getHeaderMap(sheet);
+  var nameCol = map.nama !== undefined ? map.nama : 0;
+  var iconCol = config.hasIcon ? (map.ikon !== undefined ? map.ikon : 1) : -1;
+  var activeCol = map.aktif;
+  var orderCol = map.susunan;
+  var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues().map(function(row, idx) {
+    var aktif = activeCol === undefined || !row[activeCol] ? 'Ya' : sanitize(row[activeCol], 20);
+    return {
+      rowId: idx + 2,
+      name: sanitize(row[nameCol], 100),
+      icon: config.hasIcon ? (sanitize(row[iconCol], 20) || '🕵🏼') : undefined,
+      aktif: aktif === 'Tidak' ? 'Tidak' : 'Ya',
+      susunan: orderCol === undefined ? '' : row[orderCol],
+      _order: orderCol === undefined || row[orderCol] === '' || row[orderCol] === null || isNaN(Number(row[orderCol])) ? idx + 1 : Number(row[orderCol]),
+      _idx: idx
+    };
+  }).filter(function(item) { return item.name; });
+  rows.sort(function(a, b) { return a._order === b._order ? a._idx - b._idx : a._order - b._order; });
+  return rows.map(function(item) { delete item._order; delete item._idx; return item; });
+}
+
+function saveReferenceItem(sheetName, payload, config) {
+  return withWriteLock(function() {
+    ensureReferenceSheets();
+    payload = payload || {};
+    var sheet = getRequiredSheet(sheetName);
+    var map = getHeaderMap(sheet);
+    var name = sanitize(payload.name, 100);
+    if (!name) throw new Error('Nama diperlukan');
+    var rowId = payload.rowId ? assertExistingRow(sheet, payload.rowId, 'ID rujukan') : null;
+    var rows = readReferenceList(sheetName, config, true);
+    rows.forEach(function(item) {
+      if (item.name.toLowerCase() === name.toLowerCase() && item.rowId !== rowId) {
+        throw new Error('Nama sudah wujud. Aktifkan semula item sedia ada jika perlu.');
+      }
+    });
+    var values = [];
+    values[map.nama !== undefined ? map.nama : 0] = name;
+    if (config.hasIcon) values[map.ikon !== undefined ? map.ikon : 1] = sanitize(payload.icon, 20) || '🕵🏼';
+    if (map.aktif !== undefined) values[map.aktif] = payload.aktif === 'Tidak' ? 'Tidak' : 'Ya';
+    if (map.susunan !== undefined) values[map.susunan] = parseOptionalOrder(payload.susunan);
+    var width = sheet.getLastColumn();
+    if (rowId) {
+      var current = sheet.getRange(rowId, 1, 1, width).getValues()[0];
+      for (var i = 0; i < width; i++) if (values[i] !== undefined) current[i] = values[i];
+      sheet.getRange(rowId, 1, 1, width).setValues([current]);
+    } else {
+      var row = Array(width).fill('');
+      for (var j = 0; j < width; j++) if (values[j] !== undefined) row[j] = values[j];
+      sheet.appendRow(row);
+    }
+    if (sheetName === CATEGORY_SHEET) invalidateExpenseCache();
+    else if (sheetName === CPO_SHEET) cacheDel('cpo_types');
+    else if (sheetName === PETROL_STATION_SHEET) cacheDel('petrol_stations');
+    else if (sheetName === PAYMENT_METHOD_SHEET) cacheDel('payment_methods');
+    return { status: 'success', message: 'Rujukan berjaya disimpan', items: readReferenceList(sheetName, config, true) };
+  });
+}
+
+function setReferenceItemActive(sheetName, rowId, active, config) {
+  return withWriteLock(function() {
+    ensureReferenceSheets();
+    var sheet = getRequiredSheet(sheetName);
+    var safeRowId = assertExistingRow(sheet, rowId, 'ID rujukan');
+    var map = getHeaderMap(sheet);
+    if (map.aktif === undefined) throw new Error('Kolum AKTIF tidak wujud');
+    if (active === false) {
+      var activeCount = readReferenceList(sheetName, config, true).filter(function(item) { return item.aktif !== 'Tidak'; }).length;
+      if (activeCount <= 1) throw new Error('Tidak boleh nyahaktif item aktif terakhir.');
+    }
+    sheet.getRange(safeRowId, map.aktif + 1).setValue(active === false ? 'Tidak' : 'Ya');
+    if (sheetName === CATEGORY_SHEET) invalidateExpenseCache();
+    else if (sheetName === CPO_SHEET) cacheDel('cpo_types');
+    else if (sheetName === PETROL_STATION_SHEET) cacheDel('petrol_stations');
+    else if (sheetName === PAYMENT_METHOD_SHEET) cacheDel('payment_methods');
+    return { status: 'success', message: 'Status rujukan dikemaskini', items: readReferenceList(sheetName, config, true) };
+  });
+}
+
+function updateSetting(key, value) {
+  return withWriteLock(function() {
+    ensureReferenceSheets();
+    if (key !== 'DEFAULT_HOME_KWH_PRICE' && key !== 'DEFAULT_PETROL_PRICE') throw new Error('Tetapan tidak boleh dikemaskini');
+    var max = key === 'DEFAULT_HOME_KWH_PRICE' ? MAX_EV_PRICE_PER_KWH : MAX_PETROL_PRICE_PER_LITER;
+    var safeValue = parseRequiredPositiveNumberMax(value, key, max);
+    var sheet = getRequiredSheet(SETTINGS_SHEET);
+    var rows = sheet.getRange(2, 1, Math.max(sheet.getLastRow() - 1, 1), 1).getValues();
+    for (var i = 0; i < rows.length; i++) {
+      if (sanitize(rows[i][0], 100) === key) {
+        sheet.getRange(i + 2, 2).setValue(safeValue);
+        cacheDel('app_settings');
+        return { status: 'success', message: 'Tetapan berjaya disimpan', settings: { defaultHomeKwhPrice: getSettingValue('DEFAULT_HOME_KWH_PRICE', DEFAULT_HOME_KWH_PRICE, 'number'), defaultPetrolPrice: getSettingValue('DEFAULT_PETROL_PRICE', DEFAULT_PETROL_PRICE, 'number'), maxBulkRows: getSettingValue('MAX_BULK_ROWS', MAX_BULK_ROWS, 'number') } };
+      }
+    }
+    throw new Error('Tetapan tidak wujud');
+  });
+}
+
+function getCategoriesForSettings() { return readReferenceList(CATEGORY_SHEET, { hasIcon: true }); }
+function getCPOTypesForSettings() { return readReferenceList(CPO_SHEET, { hasIcon: false }); }
+function getPaymentMethods(includeInactive) {
+  var cached = !includeInactive && cacheGet('payment_methods');
+  if (cached) return JSON.parse(cached);
+  var result = readReferenceList(PAYMENT_METHOD_SHEET, { hasIcon: false });
+  if (!includeInactive) result = result.filter(function(item) { return item.aktif !== 'Tidak'; }).map(function(item) { return item.name; });
+  if (!includeInactive) cacheSet('payment_methods', JSON.stringify(result), TTL_LONG);
+  return result;
+}
+function getPetrolStations(includeInactive) {
+  var cached = !includeInactive && cacheGet('petrol_stations');
+  if (cached) return JSON.parse(cached);
+  var result = readReferenceList(PETROL_STATION_SHEET, { hasIcon: false });
+  if (!includeInactive) result = result.filter(function(item) { return item.aktif !== 'Tidak'; }).map(function(item) { return item.name; });
+  if (!includeInactive) cacheSet('petrol_stations', JSON.stringify(result), TTL_LONG);
+  return result;
+}
+function getSettingsData() {
+  return {
+    settings: { defaultHomeKwhPrice: getSettingValue('DEFAULT_HOME_KWH_PRICE', DEFAULT_HOME_KWH_PRICE, 'number'), defaultPetrolPrice: getSettingValue('DEFAULT_PETROL_PRICE', DEFAULT_PETROL_PRICE, 'number'), maxBulkRows: getSettingValue('MAX_BULK_ROWS', MAX_BULK_ROWS, 'number') },
+    categories: getCategoriesForSettings(),
+    cpoTypes: getCPOTypesForSettings(),
+    petrolStations: getPetrolStations(true),
+    paymentMethods: getPaymentMethods(true)
+  };
+}
+function saveCategory(payload) { return saveReferenceItem(CATEGORY_SHEET, payload, { hasIcon: true }); }
+function setCategoryActive(rowId, active) { return setReferenceItemActive(CATEGORY_SHEET, rowId, active, { hasIcon: true }); }
+function saveCPOType(payload) { return saveReferenceItem(CPO_SHEET, payload, { hasIcon: false }); }
+function setCPOTypeActive(rowId, active) { return setReferenceItemActive(CPO_SHEET, rowId, active, { hasIcon: false }); }
+function savePetrolStation(payload) { return saveReferenceItem(PETROL_STATION_SHEET, payload, { hasIcon: false }); }
+function setPetrolStationActive(rowId, active) { return setReferenceItemActive(PETROL_STATION_SHEET, rowId, active, { hasIcon: false }); }
+function savePaymentMethod(payload) { return saveReferenceItem(PAYMENT_METHOD_SHEET, payload, { hasIcon: false }); }
+function setPaymentMethodActive(rowId, active) { return setReferenceItemActive(PAYMENT_METHOD_SHEET, rowId, active, { hasIcon: false }); }
 
 function getWeekBackupLabel(date) {
   var d = date || new Date();
@@ -336,18 +597,13 @@ function getCategories() {
   var cached = cacheGet('categories');
   if (cached) return JSON.parse(cached);
 
-  var sheet = getOptionalSheet(CATEGORY_SHEET);
-  if (!sheet) return [{ name: 'Umum', icon: '🕵🏼' }];
-  var lastRow = sheet.getLastRow();
-  if (lastRow < 2) return [{ name: 'Umum', icon: '🕵🏼' }];
-  
-  var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
-  var result = data.map(function(row) {
+  var result = getCategoriesForSettings().filter(function(cat) { return cat.aktif !== 'Tidak'; }).map(function(row) {
     return {
-      name: row[0] || 'Umum',
-      icon: row[1] || '🕵🏼'
+      name: row.name || 'Umum',
+      icon: row.icon || '🕵🏼'
     };
   }).filter(function(cat) { return cat.name; });
+  if (!result.length) result = [{ name: 'Umum', icon: '🕵🏼' }];
 
   cacheSet('categories', JSON.stringify(result), TTL_LONG);
   return result;
@@ -594,11 +850,8 @@ function getCPOTypes() {
   var cached = cacheGet('cpo_types');
   if (cached) return JSON.parse(cached);
 
-  var sheet = getOptionalSheet(CPO_SHEET);
-  if (!sheet) return ['Lain-lain'];
-  var lastRow = sheet.getLastRow();
-  if (lastRow < 2) return ['Lain-lain'];
-  var result = sheet.getRange(2, 1, lastRow - 1, 1).getValues().flat().filter(String);
+  var result = getCPOTypesForSettings().filter(function(item) { return item.aktif !== 'Tidak'; }).map(function(item) { return item.name; }).filter(String);
+  if (!result.length) result = ['Lain-lain'];
 
   cacheSet('cpo_types', JSON.stringify(result), TTL_LONG);
   return result;

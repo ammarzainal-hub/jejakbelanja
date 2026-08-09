@@ -20,6 +20,15 @@
 - Bil tahunan dalam `BIL_TEMPLATE` hanya dijana pada `BULAN_AKTIF`.
 - `CATATAN` dalam `BIL_TEMPLATE` ialah rujukan tetap untuk `LOKASI + NAMA` dan dipaparkan setiap bulan pada item bil.
 - `batchUpdateBil()` mesti sahkan row wujud, bulan, tahun, lokasi, `STATUS`, dan `BIL_DITERIMA` sebelum sebarang tulis ke sheet supaya batch tidak tersimpan separuh atau melangkau konteks lokasi.
+- Modul Tetapan ialah pusat kemaskini data rujukan untuk kategori Belanja, CPO EV, stesen minyak, kaedah bayaran, dan harga default.
+- Tetapan dibuka melalui butang gear fixed top dan bukan item bottom nav; bottom nav kekal untuk Ringkasan, Belanja, EV Cas, Bil, dan Solar sahaja.
+- Membuka Tetapan mesti menghormati pending changes Bil; pengguna perlu disahkan dahulu sebelum pending changes dibuang.
+- Data rujukan Tetapan menggunakan soft delete melalui status `AKTIF`, bukan hard delete.
+- Item rujukan inactive tidak muncul untuk rekod baharu, tetapi rekod lama dengan nilai inactive mesti masih boleh diedit melalui option sementara.
+- Nama item rujukan Tetapan mesti unik merentas aktif dan inactive; duplicate inactive perlu diaktifkan semula, bukan ditambah semula.
+- Harga default dalam Tetapan hanya digunakan untuk rekod baharu; edit rekod EV/Minyak lama mesti mengekalkan harga asal rekod.
+- `MAX_BULK_ROWS` dipaparkan sebagai read-only dalam Tetapan dan tidak diedit melalui UI fasa semasa.
+- Editor penuh `BIL_TEMPLATE` belum dilaksanakan dalam Tetapan; kad Bil Template hanya placeholder `Akan datang`.
 
 ## Implementation Notes
 
@@ -54,3 +63,11 @@
 - Fungsi baca agregat yang kembali kosong juga boleh cache hasil kosong untuk kurangkan bacaan sheet berulang.
 - Cache kategori frontend `localStorage` mesti mempunyai TTL dan dibuang apabila Refresh Belanja atau Refresh Semua ditekan.
 - Backup mingguan spreadsheet penuh disimpan ke folder Google Drive melalui `backupSpreadsheetNow()`; trigger dipasang dengan `installWeeklyBackupTrigger()`.
+- `getAppConfig()` mesti memanggil migration rujukan secara idempotent dan memulangkan config kecil termasuk `paymentMethods` dan `petrolStations` untuk startup.
+- Sheet `SETTINGS` menyimpan `DEFAULT_HOME_KWH_PRICE`, `DEFAULT_PETROL_PRICE`, dan `MAX_BULK_ROWS`.
+- Sheet `STESEN_MINYAK` dan `PAYMENT_METHOD` menggunakan struktur `NAMA`, `AKTIF`, `SUSUNAN`.
+- Sheet `KATEGORI` mengekalkan `NAMA`, `IKON` dan menyokong tambahan `AKTIF`, `SUSUNAN` secara backward-compatible.
+- Sheet `JENIS_CPO` mengekalkan `NAMA` dan menyokong tambahan `AKTIF`, `SUSUNAN` secara backward-compatible.
+- Dropdown kategori, CPO, stesen minyak, dan kaedah bayaran mesti dijana daripada state Tetapan/backend, termasuk modal tunggal dan modal rekod pukal.
+- Selepas simpan Tetapan, kemaskini state/dropdown berkaitan sahaja; jangan panggil `loadAllData()` kecuali operasi sistem memang refresh cache.
+- Save/toggle item Tetapan mesti invalidate cache rujukan yang berkaitan dan update state frontend supaya perubahan muncul tanpa reload transaksi.
