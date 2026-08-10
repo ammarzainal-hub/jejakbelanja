@@ -409,7 +409,7 @@
         <div class="shadow-card bg-white p-6 rounded-3xl border border-slate-100 transition-all" id="statCardAmount"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Jumlah Belanja</p><p class="text-2xl font-black text-slate-900 mt-1">RM <span id="totalAmount">0.00</span></p></div>
         <div class="shadow-card bg-white p-6 rounded-3xl border border-slate-100 transition-all" id="statCardCount"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaksi</p><p id="totalCount" class="text-2xl font-black text-slate-900 mt-1">0</p></div>
           <button onclick="openAddModal()" class="btn-gradient-emerald text-white rounded-3xl font-black text-[10px] uppercase py-4 shadow-lg active:scale-95 transition-all tracking-widest">+ Rekod Baru</button>
-          <button onclick="toggleModal('bulkModal', true)" class="btn-gradient-slate text-white rounded-3xl font-black text-[10px] uppercase py-4 shadow-lg active:scale-95 transition-all tracking-widest">Rekod Pukal</button>
+          <button onclick="openBulkModal()" class="btn-gradient-slate text-white rounded-3xl font-black text-[10px] uppercase py-4 shadow-lg active:scale-95 transition-all tracking-widest">Rekod Pukal</button>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="shadow-card bg-emerald-50 p-5 rounded-3xl border border-emerald-100 flex justify-between items-center"><div><p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Hari Tanpa Belanja</p><p id="noSpendDays" class="text-xl font-black text-emerald-800">0 Hari</p></div><span class="text-2xl">&#x1F389;</span></div>
@@ -1072,6 +1072,12 @@ var CATEGORY_COLORS = {
       }
 
       return { valid: true };
+    }
+
+    function parseExpenseAmountInput(value) {
+      var normalized = String(value || '').trim().replace(',', '.');
+      if (!normalized) return NaN;
+      return Number(normalized);
     }
 
     window.onload = function() {
@@ -2452,6 +2458,13 @@ function confirmPetrolDelete(id) {
       con.appendChild(div);
     }
 
+    function openBulkModal() {
+      document.getElementById('bulkDateMain').value = formatLocalDate();
+      document.getElementById('bulkRowsContainer').innerHTML = '';
+      for (var i = 0; i < 3; i++) addBulkRow();
+      toggleModal('bulkModal', true);
+    }
+
     function handleSort(k) {
       if (sortConfig.key === k) sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
       else { sortConfig.key = k; sortConfig.direction = 'asc'; }
@@ -2580,11 +2593,27 @@ function confirmPetrolDelete(id) {
       if (!date) { showToast('Tarikh diperlukan', 'error'); return; }
       if (!isValidDateString(date)) { showToast('Format tarikh mesti yyyy-mm-dd dan tarikh wujud', 'error'); return; }
       if (isFutureDate(date)) { showToast('Tarikh tidak boleh pada masa hadapan', 'error'); return; }
+      if (!document.querySelectorAll('.bulk-row').length) {
+        for (var i = 0; i < 3; i++) addBulkRow();
+        showToast('Sila isi amaun rekod pukal dahulu', 'error');
+        return;
+      }
       var rows = [];
-      document.querySelectorAll('.bulk-row').forEach(function(r) {
-        var a = r.querySelector('.bulk-amt').value;
-      if (a && parseFloat(a) > 0) rows.push({ date: date, category: r.querySelector('.bulk-cat').value, amount: a, note: r.querySelector('.bulk-note').value, payment: r.querySelector('.bulk-pay').value });
+      var invalidMessage = '';
+      document.querySelectorAll('.bulk-row').forEach(function(r, idx) {
+        if (invalidMessage) return;
+        var rowNo = idx + 1;
+        var amountInput = r.querySelector('.bulk-amt');
+        var a = amountInput ? amountInput.value : '';
+        var hasContent = String(a || '').trim() || String(r.querySelector('.bulk-note').value || '').trim();
+        if (!hasContent) return;
+        var amount = parseExpenseAmountInput(a);
+        if (!Number.isFinite(amount) || amount <= 0) { invalidMessage = 'Baris ' + rowNo + ': Amaun mesti lebih dari RM 0'; return; }
+        if (amount > 999999) { invalidMessage = 'Baris ' + rowNo + ': Amaun terlalu besar'; return; }
+        if (!r.querySelector('.bulk-cat').value) { invalidMessage = 'Baris ' + rowNo + ': Sila pilih kategori'; return; }
+        rows.push({ date: date, category: r.querySelector('.bulk-cat').value, amount: amount, note: r.querySelector('.bulk-note').value, payment: r.querySelector('.bulk-pay').value });
       });
+      if (invalidMessage) { showToast(invalidMessage, 'error'); return; }
       if (!rows.length) { showToast('Tiada data untuk disimpan', 'info'); return; }
       if (rows.length > MAX_BULK_ROWS) { showToast('Maksimum ' + MAX_BULK_ROWS + ' rekod sekali simpan', 'error'); return; }
       bulkSubmitInProgress = true;
