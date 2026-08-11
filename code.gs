@@ -817,10 +817,10 @@ dataToAppend.push([
   }
   
   var offset = sheetHasLeadingRecordId(sheet) ? 1 : 0;
-  var rows = dataToAppend.map(function(r) {
+  var rowsToAppend = dataToAppend.map(function(r) {
     return offset ? [generateRecordId('EXP')].concat(r) : r;
   });
-  sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, 5 + offset).setValues(rows);
+  sheet.getRange(sheet.getLastRow() + 1, 1, rowsToAppend.length, 5 + offset).setValues(rowsToAppend);
   invalidateExpenseCache();
   return { status: 'success', message: dataToAppend.length + ' transaksi berjaya ditambah' };
   });

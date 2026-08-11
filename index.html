@@ -2634,7 +2634,8 @@ function confirmPetrolDelete(id) {
           document.getElementById('bulkRowsContainer').innerHTML = '';
           for (var i = 0; i < 3; i++) addBulkRow();
           toggleModal('bulkModal', false);
-          if (result && result.message) showToast(result.message, 'success');
+          showLoader(false);
+          showToast((result && result.message) || (rows.length + ' transaksi berjaya ditambah'), 'success');
           loadAllData();
         })
         .withFailureHandler(function(e) {
