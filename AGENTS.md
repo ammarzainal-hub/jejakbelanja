@@ -52,9 +52,9 @@
 - `CATATAN` dalam `BIL_REKOD` disalin daripada `BIL_TEMPLATE` semasa auto-jana bil baharu; rekod lama boleh fallback kepada catatan template semasa paparan.
 - Struktur `BIL_TEMPLATE` ialah 11 kolum: `NAMA`, `KATEGORI`, `ANGGARAN`, `TETAP`, `LOKASI`, `IKON_LOKASI`, `IKON_KATEGORI`, `CYCLE_HARI`, `FREKUENSI`, `BULAN_AKTIF`, `CATATAN`.
 - Rekod pukal EV/Minyak mesti menyokong campuran `Cas Rumah`, `Cas Luar`, dan `Minyak` dengan tarikh berasingan setiap baris.
-- Harga default Cas Rumah dan Minyak mesti dikemas kini di constant backend `code.gs`; frontend memuatkan nilai melalui `getAppConfig()`.
+- Harga default Cas Rumah dan Minyak dikemas kini melalui modul Tetapan dan disimpan dalam sheet `SETTINGS`; constant backend `code.gs` hanya fallback awal jika tetapan belum wujud.
 - Cas Luar tiada harga default tetap; frontend tidak boleh memenuhkan harga Cas Rumah apabila pengguna memilih Cas Luar.
-- Harga minyak yang dihantar ke backend mesti lebih daripada `0`; nilai kosong boleh fallback kepada `DEFAULT_PETROL_PRICE`.
+- Harga minyak yang dihantar ke backend mesti lebih daripada `0`; nilai kosong untuk rekod baharu fallback kepada `DEFAULT_PETROL_PRICE` semasa daripada sheet `SETTINGS`.
 - Parser nombor backend mesti menolak nilai bukan nombor dan membezakan medan wajib positif, wajib bukan negatif, dan optional fallback.
 - Parser nombor backend mesti menguatkuasakan had maksimum munasabah untuk amaun, kWh, liter, harga, dan bacaan solar supaya input ekstrem ditolak.
 - Operasi tulis utama mesti menggunakan `LockService` supaya request serentak tidak menulis atau mengira data secara bertindih.

@@ -1188,8 +1188,8 @@ var CATEGORY_COLORS = {
     }
 
     function switchTab(tab) {
-      if (settingsOpen) closeSettingsPage(true);
       if (tab !== activeTab && !confirmDiscardPendingBilChanges()) return;
+      if (settingsOpen) closeSettingsPage(true);
       activeTab = tab;
       document.getElementById('page-summary').classList.toggle('hidden', tab !== 'summary');
       document.getElementById('page-expense').classList.toggle('hidden', tab !== 'expense');
@@ -2213,9 +2213,17 @@ function confirmEVDelete(id) {
       showLoader(true);
       var home = document.getElementById('settingsHomePrice').value;
       var petrol = document.getElementById('settingsPetrolPrice').value;
-      google.script.run.withSuccessHandler(function() {
-        google.script.run.withSuccessHandler(function() { DEFAULT_HOME_KWH_PRICE = Number(home); DEFAULT_PETROL_PRICE = Number(petrol); applyAppConfig({ defaultHomeKwhPrice: home, defaultPetrolPrice: petrol, maxBulkRows: MAX_BULK_ROWS, paymentMethods: globalPaymentMethods, petrolStations: globalPetrolStations }); showLoader(false); showToast('Harga default disimpan', 'success'); }).updateSetting('DEFAULT_PETROL_PRICE', petrol);
-      }).withFailureHandler(function(e) { showLoader(false); showToast('Error: ' + e.message, 'error'); }).updateSetting('DEFAULT_HOME_KWH_PRICE', home);
+      google.script.run.withSuccessHandler(function(r) {
+        DEFAULT_HOME_KWH_PRICE = Number(r.settings.defaultHomeKwhPrice);
+        DEFAULT_PETROL_PRICE = Number(r.settings.defaultPetrolPrice);
+        settingsData.settings = r.settings;
+        applyAppConfig({ defaultHomeKwhPrice: DEFAULT_HOME_KWH_PRICE, defaultPetrolPrice: DEFAULT_PETROL_PRICE, maxBulkRows: MAX_BULK_ROWS, paymentMethods: globalPaymentMethods, petrolStations: globalPetrolStations });
+        showLoader(false);
+        showToast(r.message, 'success');
+      }).withFailureHandler(function(e) {
+        showLoader(false);
+        showToast('Error: ' + e.message, 'error');
+      }).updateDefaultPrices(home, petrol);
     }
 
     function saveReferenceFromRow(btn) {
@@ -2791,7 +2799,9 @@ function confirmPetrolDelete(id) {
 
     function confirmDiscardPendingBilChanges() {
       if (!hasPendingBilChanges()) return true;
-      return window.confirm('Ada perubahan bil belum disimpan. Tekan OK untuk abaikan perubahan, atau Cancel untuk kekal dan tekan Simpan/Batal dahulu.');
+      if (!window.confirm('Ada perubahan bil belum disimpan. Tekan OK untuk abaikan perubahan, atau Cancel untuk kekal dan tekan Simpan/Batal dahulu.')) return false;
+      bilPendingChanges = {};
+      return true;
     }
 
     function loadBilData() {

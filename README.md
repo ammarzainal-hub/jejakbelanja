@@ -170,7 +170,7 @@ jejak-belanja/
 - Minyak: RM 1.99/liter
 - Cas EV Luar: tiada harga default tetap; harga/kWh diisi mengikut rekod.
 
-Harga Cas Rumah dan Minyak digunakan di frontend dan backend, termasuk rekod pukal. Jika kadar berubah, kemas kini constant `DEFAULT_HOME_KWH_PRICE` dan `DEFAULT_PETROL_PRICE` dalam `code.gs` sahaja; frontend memuatkan nilai melalui `getAppConfig()`. Untuk Cas Luar, medan harga dikosongkan supaya kadar sebenar perlu diisi dan tidak tersimpan menggunakan harga Cas Rumah secara tidak sengaja.
+Harga Cas Rumah dan Minyak digunakan di frontend dan backend, termasuk rekod pukal. Jika kadar berubah, kemas kini melalui modul Tetapan; nilai semasa disimpan dalam sheet `SETTINGS` dan dimuatkan melalui `getAppConfig()`. Constant `DEFAULT_HOME_KWH_PRICE` dan `DEFAULT_PETROL_PRICE` dalam `code.gs` hanya menjadi fallback awal jika tetapan belum wujud. Rekod lama mengekalkan harga asalnya. Untuk Cas Luar, medan harga dikosongkan supaya kadar sebenar perlu diisi dan tidak tersimpan menggunakan harga Cas Rumah secara tidak sengaja.
 
 ## Business Rules
 
@@ -214,9 +214,7 @@ Edit senarai dalam tab `BIL_TEMPLATE` di Google Sheet. Setiap bulan baru, app ak
 
 ### Tukar Harga Default
 
-Dalam `code.gs`, kemas kini constant backend yang digunakan oleh server dan dimuatkan ke frontend melalui `getAppConfig()`:
-- `DEFAULT_HOME_KWH_PRICE` untuk harga cas rumah
-- `DEFAULT_PETROL_PRICE` untuk harga minyak
+Buka modul Tetapan melalui butang gear dan kemas kini harga Cas Rumah atau Minyak pada kad Harga Default. Nilai disimpan dalam sheet `SETTINGS` dan digunakan untuk rekod baharu sahaja; edit rekod EV/Minyak lama mengekalkan harga asal rekod tersebut.
 
 ### Backup Mingguan
 

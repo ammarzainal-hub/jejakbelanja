@@ -37,12 +37,12 @@ Ringkasan perubahan semasa yang masih relevan untuk `code.gs` dan `index.html`.
 - Rekod EV menyokong Cas Rumah dan Cas Luar.
 - Cas Luar tidak menggunakan harga default Cas Rumah; medan harga dikosongkan supaya kadar sebenar perlu diisi.
 - Cas Luar kini divalidasi di backend juga supaya CPO wajib diisi.
-- Rekod Minyak menggunakan harga default petrol yang dipusatkan di `code.gs` dan dimuatkan ke frontend melalui `getAppConfig()`.
+- Rekod Minyak menggunakan harga default petrol daripada sheet `SETTINGS` dan dimuatkan ke frontend melalui `getAppConfig()`; constant dalam `code.gs` hanya fallback awal.
 - EV/Minyak pukal menyokong campuran Cas Rumah, Cas Luar, dan Minyak dengan tarikh berasingan setiap baris.
 - EV/Minyak pukal dihadkan kepada maksimum 50 rekod sekali simpan.
 - `addBulkEVRecords()` membuat preflight sheet wajib sebelum sebarang tulis supaya batch tidak masuk separuh.
 - CPO dan data tahunan EV/Minyak menggunakan cache.
-- Harga default hanya perlu diubah di `code.gs`; frontend menggunakan nilai konfigurasi backend semasa startup.
+- Harga default Cas Rumah dan Minyak diubah melalui modul Tetapan, disimpan dalam sheet `SETTINGS`, dan digunakan secara konsisten oleh frontend serta backend untuk rekod baharu.
 
 ## Bil Bulanan
 
