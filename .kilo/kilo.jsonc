@@ -1,0 +1,17 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "agent": {
+    "project-planner": {
+      "description": "Analyse this project and produce implementation plans without modifying files.",
+      "mode": "subagent",
+      "steps": 25,
+      "hidden": false,
+      "color": "#4F46E5",
+      "prompt": "{file:./prompts/project-planner.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": "deny"
+      }
+    }
+  }
+}
